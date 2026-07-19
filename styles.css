@@ -253,15 +253,15 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   transition: var(--transition-normal);
-  background-color: rgba(244, 239, 230, 0.9); /* Warm cream translucent backdrop */
+  background-color: var(--color-primary); /* Greener: Olive green brand color */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .header.scrolled {
-  background-color: rgba(244, 239, 230, 0.98);
-  box-shadow: var(--shadow-sm);
+  background-color: #2c4439; /* Greener: Darker olive green on scroll */
+  box-shadow: var(--shadow-md);
   height: 75px;
 }
 
@@ -284,7 +284,7 @@ button, input, select, textarea {
   gap: 10px;
   font-weight: 700;
   font-size: 1.5rem;
-  color: var(--color-primary); /* Forest Green brand logo */
+  color: #ffffff; /* High contrast white for olive header */
 }
 
 .logo img {
@@ -295,26 +295,26 @@ button, input, select, textarea {
 }
 
 .logo span {
-  color: var(--color-sage); /* Sage Green span text */
+  color: #ccd7d2; /* Light sage/cream span text */
 }
 
 .logo-icon {
   width: 32px;
   height: 32px;
-  background-color: var(--color-primary);
+  background-color: #ffffff;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-white);
+  color: var(--color-primary);
   font-weight: 800;
 }
 
 /* Admin Portal Button in Header */
 .admin-portal-btn {
-  background-color: rgba(53, 82, 69, 0.05);
-  border: 1px solid var(--color-border);
-  color: var(--color-primary);
+  background-color: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
   padding: 6px 14px;
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
@@ -327,8 +327,8 @@ button, input, select, textarea {
 }
 
 .admin-portal-btn:hover {
-  background-color: rgba(53, 82, 69, 0.1);
-  border-color: var(--color-primary);
+  background-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
 }
 
 .nav-menu {
@@ -342,12 +342,12 @@ button, input, select, textarea {
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-slate-gray); /* Sage gray text */
+  color: rgba(255, 255, 255, 0.85); /* High contrast white-gray */
   position: relative;
 }
 
 .nav-link:hover, .nav-link.active {
-  color: var(--color-primary);
+  color: #ffffff;
 }
 
 .nav-link::after {
@@ -357,7 +357,7 @@ button, input, select, textarea {
   left: 0;
   width: 0;
   height: 2px;
-  background-color: var(--color-primary);
+  background-color: #ffffff;
   transition: var(--transition-fast);
 }
 
@@ -376,7 +376,7 @@ button, input, select, textarea {
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: var(--color-primary);
+  color: #ffffff;
 }
 
 /* Hero Section */
@@ -2156,7 +2156,7 @@ button, input, select, textarea {
 .dark-mode-toggle-btn {
   background: none;
   border: none;
-  color: var(--color-primary);
+  color: #ffffff; /* White icon for olive header */
   font-size: 1.15rem;
   cursor: pointer;
   width: 40px;
@@ -2170,7 +2170,7 @@ button, input, select, textarea {
 }
 
 .dark-mode-toggle-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(255, 255, 255, 0.1);
   transform: scale(1.05);
 }
 
@@ -2221,7 +2221,7 @@ body.dark-theme .nav-link:hover, body.dark-theme .nav-link.active {
 }
 
 body.dark-theme .nav-link::after {
-  background-color: #38bdf8;
+  background-color: var(--color-primary);
 }
 
 body.dark-theme .menu-toggle {

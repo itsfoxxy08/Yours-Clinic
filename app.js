@@ -275,29 +275,32 @@ function setupModal() {
   if (!modal) return;
 
   // Open modal on card click
-  document.getElementById('disease-grid').addEventListener('click', (e) => {
-    const card = e.target.closest('.disease-card');
-    if (!card) return;
+  const grid = document.getElementById('disease-grid');
+  if (grid) {
+    grid.addEventListener('click', (e) => {
+      const card = e.target.closest('.disease-card');
+      if (!card) return;
 
-    const key = card.getAttribute('data-key');
-    const item = diseasesData[key];
+      const key = card.getAttribute('data-key');
+      const item = diseasesData[key];
 
-    if (item) {
-      document.getElementById('modal-title').textContent = item.title;
-      document.getElementById('modal-desc').textContent = item.short;
-      
-      const symptomsList = document.getElementById('modal-symptoms');
-      symptomsList.innerHTML = item.symptoms.map(s => `<li>${s}</li>`).join('');
-      
-      document.getElementById('modal-whentosee').textContent = item.whenToSee;
-      
-      const preventionList = document.getElementById('modal-prevention');
-      preventionList.innerHTML = item.prevention.map(p => `<li>${p}</li>`).join('');
+      if (item) {
+        document.getElementById('modal-title').textContent = item.title;
+        document.getElementById('modal-desc').textContent = item.short;
+        
+        const symptomsList = document.getElementById('modal-symptoms');
+        symptomsList.innerHTML = item.symptoms.map(s => `<li>${s}</li>`).join('');
+        
+        document.getElementById('modal-whentosee').textContent = item.whenToSee;
+        
+        const preventionList = document.getElementById('modal-prevention');
+        preventionList.innerHTML = item.prevention.map(p => `<li>${p}</li>`).join('');
 
-      modal.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
-  });
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+  }
 
   const closeModal = () => {
     modal.classList.remove('active');
