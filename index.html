@@ -18,9 +18,12 @@
   <!-- Floating Header / Navbar -->
   <header class="header" id="header">
     <div class="container nav-container">
-      <a href="#home" class="logo" id="nav-logo">
-        <img src="images/logo.png" alt="Yours Clinic Logo" style="height: 40px; width: auto; object-fit: contain;">
-      </a>
+      <div class="header-left">
+        <a href="#home" class="logo" id="nav-logo">
+          <img src="images/logo.png" alt="Yours Clinic Logo" style="height: 40px; width: auto; object-fit: contain;">
+        </a>
+        <button class="admin-portal-btn" id="admin-portal-btn"><i class="fa-solid fa-user-gear"></i> Admin Portal</button>
+      </div>
       
       <nav>
         <ul class="nav-menu" id="nav-menu">
@@ -550,6 +553,17 @@
             </div>
           </div>
         </div>
+
+        <!-- Awards Showcase Sub-section -->
+        <div class="team-subsection scroll-reveal" style="margin-top: 80px; padding-top: 80px; border-top: 1px solid var(--color-border);">
+          <h3 class="text-center" style="font-size: 2rem; margin-bottom: 12px;">Awards & Recognitions</h3>
+          <p class="text-center" style="max-width: 600px; margin: 0 auto 40px auto;">Accredited standards of medical care and excellence achieved by Yours Clinic.</p>
+          
+          <div class="awards-grid" id="public-awards-grid">
+            <!-- Dynamic awards will be loaded here from JS/localStorage -->
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -602,6 +616,268 @@
       </div>
     </div>
   </footer>
+
+  <!-- ====================================================
+       Admin Portal Login Modal
+       ==================================================== -->
+  <div class="admin-modal" id="admin-login-modal">
+    <div class="admin-modal-overlay" id="admin-login-overlay"></div>
+    <div class="admin-login-container">
+      <div class="admin-login-header">
+        <i class="fa-solid fa-user-shield"></i>
+        <h3>Admin Portal Login</h3>
+      </div>
+      <div class="admin-login-body">
+        <div class="admin-error-msg" id="admin-login-error">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span id="admin-error-text">Invalid credentials.</span>
+        </div>
+        
+        <form id="admin-login-form">
+          <div class="form-group" style="margin-bottom: 20px;">
+            <label for="admin-username">Username</label>
+            <input type="text" id="admin-username" required placeholder="Enter admin username" autocomplete="username">
+          </div>
+          <div class="form-group" style="margin-bottom: 24px;">
+            <label for="admin-password">Password</label>
+            <input type="password" id="admin-password" required placeholder="Enter admin password" autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn btn-primary login-submit-btn">
+            <span id="login-btn-text">Authenticate Securely</span>
+            <i class="fa-solid fa-spinner spinner-icon" id="login-spinner"></i>
+          </button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 20px;">
+          <a href="#" id="close-login-btn" style="font-size: 0.9rem; color: var(--color-slate-gray); text-decoration: underline;">Cancel</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================
+       Admin Portal Fullscreen Dashboard
+       ==================================================== -->
+  <div class="admin-dashboard" id="admin-dashboard">
+    <!-- Sidebar Navigation -->
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-top">
+        <h3><i class="fa-solid fa-house-chimney-medical"></i> Yours<span>Clinic</span></h3>
+        <nav>
+          <ul class="admin-nav">
+            <li class="admin-nav-item active" data-target="admin-view-overview">
+              <i class="fa-solid fa-chart-pie"></i>
+              Overview
+            </li>
+            <li class="admin-nav-item" data-target="admin-view-patients">
+              <i class="fa-solid fa-hospital-user"></i>
+              Patient Entry
+            </li>
+            <li class="admin-nav-item" data-target="admin-view-awards">
+              <i class="fa-solid fa-trophy"></i>
+              Update Awards
+            </li>
+          </ul>
+        </nav>
+      </div>
+      
+      <div class="admin-sidebar-footer">
+        <button class="admin-logout-btn" id="admin-logout-btn">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          Exit Admin Portal
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="admin-content-pane">
+      
+      <!-- 1. Overview Tab -->
+      <section class="admin-view-section active" id="admin-view-overview">
+        <div class="admin-section-header">
+          <h2>Dashboard Overview</h2>
+          <span style="font-size: 0.9rem; color: var(--color-slate-gray); font-weight: 500;">Secure Session | Active</span>
+        </div>
+        
+        <div class="admin-card-grid">
+          <div class="admin-card-stat">
+            <div class="admin-card-stat-icon" style="background-color: #ecfdf5; color: var(--color-success);">
+              <i class="fa-solid fa-user-injured"></i>
+            </div>
+            <div class="admin-card-stat-info">
+              <h4>Patients Logged</h4>
+              <p id="stat-patients-count">0</p>
+            </div>
+          </div>
+          
+          <div class="admin-card-stat">
+            <div class="admin-card-stat-icon" style="background-color: #fef8e7; color: #eab308;">
+              <i class="fa-solid fa-award"></i>
+            </div>
+            <div class="admin-card-stat-info">
+              <h4>Awards Listed</h4>
+              <p id="stat-awards-count">0</p>
+            </div>
+          </div>
+
+          <div class="admin-card-stat">
+            <div class="admin-card-stat-icon" style="background-color: #eff6ff; color: #3b82f6;">
+              <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <div class="admin-card-stat-info">
+              <h4>Online Appointments</h4>
+              <p>Active</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-panel" style="max-width: 800px;">
+          <h3>Clinic Management Guidelines</h3>
+          <p>Welcome to the Yours Clinic Admin Management system. This portal enables secure logging of patients and custom updates of rewards shown on the live website.</p>
+          <ul style="padding-left: 20px; color: var(--color-slate-gray); font-size: 0.95rem;">
+            <li style="margin-bottom: 8px;">Ensure patient details are treated with confidentiality.</li>
+            <li style="margin-bottom: 8px;">Verify doctor assignment before submitting entries.</li>
+            <li style="margin-bottom: 8px;">Changes to Awards are updated instantly on the public website.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 2. Patient Entry Tab -->
+      <section class="admin-view-section" id="admin-view-patients">
+        <div class="admin-section-header">
+          <h2>Patient Registry Panel</h2>
+        </div>
+        
+        <div class="admin-data-grid">
+          <!-- Form to add Patient -->
+          <div class="admin-panel">
+            <h3>Add New Record</h3>
+            <form id="admin-patient-form">
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label for="admin-p-name">Patient Name</label>
+                <input type="text" id="admin-p-name" required placeholder="e.g. John Smith">
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label for="admin-p-age">Age</label>
+                <input type="number" id="admin-p-age" required min="0" max="130" placeholder="e.g. 45">
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label for="admin-p-gender">Gender</label>
+                <select id="admin-p-gender" required>
+                  <option value="" disabled selected>Select...</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label for="admin-p-phone">Phone Number</label>
+                <input type="tel" id="admin-p-phone" required placeholder="e.g. (555) 019-2834">
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label for="admin-p-doctor">Assigned Doctor</label>
+                <select id="admin-p-doctor" required>
+                  <option value="" disabled selected>Choose physician...</option>
+                  <option value="Dr. Sarah Jenkins">Dr. Sarah Jenkins (General Medicine)</option>
+                  <option value="Dr. Marcus Vance">Dr. Marcus Vance (Cardiology)</option>
+                  <option value="Dr. Elena Rostova">Dr. Elena Rostova (Dermatology)</option>
+                  <option value="Dr. Amit Gupta">Dr. Amit Gupta (Endocrinology)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 20px;">
+                <label for="admin-p-notes">Condition / Reason</label>
+                <input type="text" id="admin-p-notes" required placeholder="e.g. Chronic Hypertension Checkup">
+              </div>
+              <button type="submit" class="btn btn-primary" style="width: 100%;">Save Record</button>
+            </form>
+          </div>
+
+          <!-- Patients List Table -->
+          <div class="admin-panel">
+            <h3>Registered Patients</h3>
+            <div class="admin-table-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="admin-patient-search" placeholder="Search registry..." class="form-group input">
+            </div>
+            
+            <div class="admin-table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Patient Name</th>
+                    <th>Age/Gender</th>
+                    <th>Doctor</th>
+                    <th>Condition</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-patients-list">
+                  <!-- Load dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Update Awards Tab -->
+      <section class="admin-view-section" id="admin-view-awards">
+        <div class="admin-section-header">
+          <h2>Awards Management Panel</h2>
+        </div>
+        
+        <div class="admin-data-grid">
+          <!-- Add Award Form -->
+          <div class="admin-panel">
+            <h3>Add Clinic Accolade</h3>
+            <form id="admin-award-form">
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label for="admin-a-title">Award Title</label>
+                <input type="text" id="admin-a-title" required placeholder="e.g. ISO Health Excellence 2026">
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label for="admin-a-icon">Award Icon Symbol</label>
+                <select id="admin-a-icon" required>
+                  <option value="🏆" selected>🏆 Trophy</option>
+                  <option value="🥇">🥇 Medal</option>
+                  <option value="🏅">🏅 Badge</option>
+                  <option value="🛡️">🛡️ Shield</option>
+                  <option value="🎀">🎀 Ribbon</option>
+                  <option value="🏥">🏥 Clinic</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 20px;">
+                <label for="admin-a-desc">Short Description</label>
+                <textarea id="admin-a-desc" required placeholder="Describe the significance of this award..." style="min-height: 80px;"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary" style="width: 100%;">Publish Award</button>
+            </form>
+          </div>
+
+          <!-- Awards List -->
+          <div class="admin-panel">
+            <h3>Current Accolades List</h3>
+            <div class="admin-table-container">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Icon</th>
+                    <th>Award Title</th>
+                    <th>Description</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-awards-list">
+                  <!-- Load dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
 
   <script src="app.js"></script>
 </body>

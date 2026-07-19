@@ -187,6 +187,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Scroll Reveal Animations
   setupScrollReveal();
+
+  // Setup Admin Portal Logic
+  setupAdminPortal();
 });
 
 // Render Disease Cards Function
@@ -611,4 +614,341 @@ function setupScrollReveal() {
   });
 
   revealElements.forEach(el => observer.observe(el));
+}
+
+// ----------------------------------------------------
+// 5. Admin Portal Login & Dashboard Logic
+// ----------------------------------------------------
+function setupAdminPortal() {
+  const adminBtn = document.getElementById('admin-portal-btn');
+  const loginModal = document.getElementById('admin-login-modal');
+  const closeLoginBtn = document.getElementById('close-login-btn');
+  const loginForm = document.getElementById('admin-login-form');
+  const errorPanel = document.getElementById('admin-login-error');
+  const errorText = document.getElementById('admin-error-text');
+  const submitBtnText = document.getElementById('login-btn-text');
+  const spinner = document.getElementById('login-spinner');
+  
+  const dashboard = document.getElementById('admin-dashboard');
+  const logoutBtn = document.getElementById('admin-logout-btn');
+  const navItems = document.querySelectorAll('.admin-nav-item');
+  const viewSections = document.querySelectorAll('.admin-view-section');
+  
+  // Data lists
+  let patients = JSON.parse(localStorage.getItem('yoursClinicPatients')) || [];
+  let awards = JSON.parse(localStorage.getItem('yoursClinicAwards')) || [
+    { id: '1', title: 'Best Community Healthcare Clinic 2025', icon: '🏆', desc: 'Awarded for exceptional medical services and high patient safety ratings.' },
+    { id: '2', title: 'Accredited ISO Quality Standard', icon: '🛡️', desc: 'Certified for compliance with global medical safety protocols and procedures.' },
+    { id: '3', title: 'Digital Health Innovation Award', icon: '🥇', desc: 'Recognized for pioneering online symptoms triage and patient intake workflows.' }
+  ];
+
+  // Save initial seed awards if empty
+  if (!localStorage.getItem('yoursClinicAwards')) {
+    localStorage.setItem('yoursClinicAwards', JSON.stringify(awards));
+  }
+
+  // Open login modal
+  if (adminBtn && loginModal) {
+    adminBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      // If already logged in, skip login and open dashboard
+      if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
+        openDashboard();
+      } else {
+        loginModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+  }
+
+  // Close login modal
+  const closeLogin = () => {
+    if (loginModal) {
+      loginModal.classList.remove('active');
+      document.body.style.overflow = '';
+      if (loginForm) loginForm.reset();
+      if (errorPanel) errorPanel.style.display = 'none';
+    }
+  };
+
+  if (closeLoginBtn) {
+    closeLoginBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      closeLogin();
+    });
+  }
+  
+  const overlay = document.getElementById('admin-login-overlay');
+  if (overlay) {
+    overlay.addEventListener('click', closeLogin);
+  }
+
+  // Login Authentication Handler
+  if (loginForm) {
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const user = document.getElementById('admin-username').value;
+      const pass = document.getElementById('admin-password').value;
+
+      if (errorPanel) errorPanel.style.display = 'none';
+      if (spinner) spinner.style.display = 'inline-block';
+      if (submitBtnText) submitBtnText.textContent = 'Authenticating...';
+
+      // Mock delay for a secure feel
+      setTimeout(() => {
+        if (user === 'YoursClinicTeam' && pass === 'admin@123') {
+          sessionStorage.setItem('isAdminLoggedIn', 'true');
+          closeLogin();
+          openDashboard();
+        } else {
+          if (errorPanel) {
+            errorPanel.style.display = 'flex';
+            errorText.textContent = 'Incorrect credentials. Access denied.';
+          }
+          if (spinner) spinner.style.display = 'none';
+          if (submitBtnText) submitBtnText.textContent = 'Authenticate Securely';
+        }
+      }, 1000);
+    });
+  }
+
+  // Check login state on load
+  if (sessionStorage.getItem('isAdminLoggedIn') === 'true') {
+    openDashboard();
+  } else {
+    renderPublicAwards();
+  }
+
+  function openDashboard() {
+    if (dashboard) {
+      dashboard.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      // Reset view to overview tab
+      switchTab('admin-view-overview');
+      initDashboardStats();
+      renderPatients();
+      renderAdminAwards();
+      renderPublicAwards();
+    }
+  }
+
+  function closeDashboard() {
+    if (dashboard) {
+      dashboard.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  }
+
+  // Logout Handler
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      sessionStorage.removeItem('isAdminLoggedIn');
+      closeDashboard();
+      // Reset button states
+      if (spinner) spinner.style.display = 'none';
+      if (submitBtnText) submitBtnText.textContent = 'Authenticate Securely';
+    });
+  }
+
+  // Tab switching in Admin Dashboard
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      navItems.forEach(nav => nav.classList.remove('active'));
+      item.classList.add('active');
+      
+      const target = item.getAttribute('data-target');
+      switchTab(target);
+    });
+  });
+
+  function switchTab(targetId) {
+    viewSections.forEach(section => {
+      if (section.getAttribute('id') === targetId) {
+        section.classList.add('active');
+      } else {
+        section.classList.remove('active');
+      }
+    });
+  }
+
+  function initDashboardStats() {
+    const patientsCountEl = document.getElementById('stat-patients-count');
+    const awardsCountEl = document.getElementById('stat-awards-count');
+    
+    if (patientsCountEl) patientsCountEl.textContent = patients.length;
+    if (awardsCountEl) awardsCountEl.textContent = awards.length;
+  }
+
+  // --- Patients Panel CRUD ---
+  const patientForm = document.getElementById('admin-patient-form');
+  const patientsListContainer = document.getElementById('admin-patients-list');
+  const patientSearchInput = document.getElementById('admin-patient-search');
+
+  if (patientForm) {
+    patientForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const newPatient = {
+        id: Date.now().toString(),
+        name: document.getElementById('admin-p-name').value,
+        age: document.getElementById('admin-p-age').value,
+        gender: document.getElementById('admin-p-gender').value,
+        phone: document.getElementById('admin-p-phone').value,
+        doctor: document.getElementById('admin-p-doctor').value,
+        notes: document.getElementById('admin-p-notes').value
+      };
+
+      patients.push(newPatient);
+      localStorage.setItem('yoursClinicPatients', JSON.stringify(patients));
+      
+      patientForm.reset();
+      renderPatients();
+      initDashboardStats();
+    });
+  }
+
+  function renderPatients() {
+    if (!patientsListContainer) return;
+    
+    const filterText = patientSearchInput ? patientSearchInput.value.toLowerCase() : '';
+    patientsListContainer.innerHTML = '';
+    
+    const filteredPatients = patients.filter(p => 
+      p.name.toLowerCase().includes(filterText) || 
+      p.doctor.toLowerCase().includes(filterText) ||
+      p.notes.toLowerCase().includes(filterText)
+    );
+
+    if (filteredPatients.length === 0) {
+      patientsListContainer.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-slate-gray);">No patients found.</td></tr>`;
+      return;
+    }
+
+    filteredPatients.forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-weight: 500;">${escapeHtml(p.name)}</td>
+        <td>${p.age} yrs / ${p.gender}</td>
+        <td>${escapeHtml(p.doctor)}</td>
+        <td>${escapeHtml(p.notes)}</td>
+        <td>
+          <button class="admin-action-btn admin-action-btn-delete" data-id="${p.id}" title="Delete Record">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </td>
+      `;
+      patientsListContainer.appendChild(tr);
+    });
+
+    // Delete hooks
+    const deleteBtns = patientsListContainer.querySelectorAll('.admin-action-btn-delete');
+    deleteBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        patients = patients.filter(p => p.id !== id);
+        localStorage.setItem('yoursClinicPatients', JSON.stringify(patients));
+        renderPatients();
+        initDashboardStats();
+      });
+    });
+  }
+
+  if (patientSearchInput) {
+    patientSearchInput.addEventListener('input', renderPatients);
+  }
+
+  // --- Awards Panel CRUD ---
+  const awardForm = document.getElementById('admin-award-form');
+  const adminAwardsListContainer = document.getElementById('admin-awards-list');
+  const publicAwardsGrid = document.getElementById('public-awards-grid');
+
+  if (awardForm) {
+    awardForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const newAward = {
+        id: Date.now().toString(),
+        title: document.getElementById('admin-a-title').value,
+        icon: document.getElementById('admin-a-icon').value,
+        desc: document.getElementById('admin-a-desc').value
+      };
+
+      awards.push(newAward);
+      localStorage.setItem('yoursClinicAwards', JSON.stringify(awards));
+      
+      awardForm.reset();
+      renderAdminAwards();
+      renderPublicAwards();
+      initDashboardStats();
+    });
+  }
+
+  function renderAdminAwards() {
+    if (!adminAwardsListContainer) return;
+    adminAwardsListContainer.innerHTML = '';
+
+    if (awards.length === 0) {
+      adminAwardsListContainer.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--color-slate-gray);">No accolades published.</td></tr>`;
+      return;
+    }
+
+    awards.forEach(a => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-size: 1.5rem; text-align: center;">${a.icon}</td>
+        <td style="font-weight: 500;">${escapeHtml(a.title)}</td>
+        <td>${escapeHtml(a.desc)}</td>
+        <td>
+          <button class="admin-action-btn admin-action-btn-delete" data-id="${a.id}" title="Remove Accolade">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </td>
+      `;
+      adminAwardsListContainer.appendChild(tr);
+    });
+
+    // Delete hooks
+    const deleteBtns = adminAwardsListContainer.querySelectorAll('.admin-action-btn-delete');
+    deleteBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        awards = awards.filter(a => a.id !== id);
+        localStorage.setItem('yoursClinicAwards', JSON.stringify(awards));
+        renderAdminAwards();
+        renderPublicAwards();
+        initDashboardStats();
+      });
+    });
+  }
+
+  function renderPublicAwards() {
+    if (!publicAwardsGrid) return;
+    publicAwardsGrid.innerHTML = '';
+
+    if (awards.length === 0) {
+      publicAwardsGrid.innerHTML = `<p class="text-center" style="grid-column: span 3; color: var(--color-slate-gray);">No awards published yet.</p>`;
+      return;
+    }
+
+    awards.forEach(a => {
+      const card = document.createElement('div');
+      card.className = 'award-card';
+      card.innerHTML = `
+        <div class="award-card-icon">${a.icon}</div>
+        <div class="award-card-info">
+          <h4>${escapeHtml(a.title)}</h4>
+          <p>${escapeHtml(a.desc)}</p>
+        </div>
+      `;
+      publicAwardsGrid.appendChild(card);
+    });
+  }
+
+  // HTML escaping helper
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.innerText = text;
+    return div.innerHTML;
+  }
 }
