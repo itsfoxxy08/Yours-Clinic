@@ -20,7 +20,7 @@
     <div class="container nav-container">
       <div class="header-left">
         <a href="#home" class="logo" id="nav-logo">
-          <img src="images/logo.png" alt="Yours Clinic Logo" style="height: 40px; width: auto; object-fit: contain;">
+          <img src="images/logo.png" alt="Yours Clinic Logo" style="height: 52px; width: auto; object-fit: contain;">
         </a>
         <button class="admin-portal-btn" id="admin-portal-btn"><i class="fa-solid fa-user-gear"></i> Admin Portal</button>
       </div>
@@ -36,6 +36,9 @@
       </nav>
 
       <div class="nav-cta">
+        <button id="dark-mode-toggle" class="dark-mode-toggle-btn" aria-label="Toggle Dark Mode">
+          <i class="fa-solid fa-moon"></i>
+        </button>
         <a href="#book" class="btn btn-primary" style="padding: 8px 18px; font-size: 0.9rem;">Book Now</a>
         <button class="menu-toggle" id="menu-toggle" aria-label="Toggle Navigation">☰</button>
       </div>
@@ -569,49 +572,64 @@
 
   </main>
 
+  <!-- Join Our Team Banner -->
+  <section class="join-team-banner">
+    <h2>Join Our Team</h2>
+    <button class="join-team-btn" id="join-team-btn">Submit Your All Details Here</button>
+  </section>
+
   <!-- Footer Section -->
   <footer class="footer">
     <div class="container footer-grid">
+      
+      <!-- Column 1: Brand Logo & Bio -->
       <div class="footer-brand">
-        <img src="images/logo.png" alt="Yours Clinic Logo" style="height: 40px; width: auto; object-fit: contain; margin-bottom: 20px;">
-        <p>A high-quality medical clinic committed to simple, professional healthcare. Ensuring safety, care, and accessibility.</p>
-        <p style="margin-top: 18px; font-size: 0.85rem; color: #64748b;">© 2026 Yours Clinic. All rights reserved.</p>
+        <img src="images/logo.png" alt="Yours Clinic Logo" style="height: 52px; width: auto; object-fit: contain;">
+        <p>Welcome to Yours Clinic, one of India's premier online homeopathy clinics. Our clinic is led by an experienced team of dedicated homeopathic doctors who are committed to providing natural and holistic remedies for a wide range of health concerns.</p>
       </div>
 
+      <!-- Column 2: Clinics Location List -->
       <div class="footer-col">
-        <h4>Navigation</h4>
-        <ul class="footer-links">
-          <li><a href="#home">Home</a></li>
-          <li><a href="#diseases">Disease Guide</a></li>
-          <li><a href="#treatment">Treatment Now</a></li>
+        <h4>Our Clinics</h4>
+        <ul class="footer-list">
+          <li><i class="fa-solid fa-location-dot"></i> Delhi</li>
+          <li><i class="fa-solid fa-location-dot"></i> Mumbai</li>
+          <li><i class="fa-solid fa-location-dot"></i> Bangalore</li>
+          <li><i class="fa-solid fa-location-dot"></i> Darbhanga</li>
+        </ul>
+      </div>
+
+      <!-- Column 3: Quick Links -->
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul class="footer-list">
+          <li><a href="#" id="footer-link-disclaimer">Disclaimer</a></li>
+          <li><a href="#" id="footer-link-privacy">Privacy Policy</a></li>
+          <li><a href="#book" id="footer-link-contact">Contact Us</a></li>
           <li><a href="#book">Book Appointment</a></li>
-          <li><a href="#about">About Us</a></li>
         </ul>
       </div>
 
+      <!-- Column 4: Contact details -->
       <div class="footer-col">
-        <h4>Specialties</h4>
-        <ul class="footer-links">
-          <li><a href="#diseases">General Health</a></li>
-          <li><a href="#diseases">Cardiovascular Wellness</a></li>
-          <li><a href="#diseases">Dermatology Care</a></li>
-          <li><a href="#diseases">Diabetes Management</a></li>
+        <h4>Get In Touch</h4>
+        <ul class="footer-list">
+          <li style="display: block;">
+            <strong>Email:</strong> <a href="mailto:care@yoursclinic.com" style="color: inherit;">care@yoursclinic.com</a>
+          </li>
+          <li style="display: block; margin-top: 10px;">
+            <strong>Phone:</strong> <a href="tel:+919155577760" style="color: inherit;">+91 91555 77760</a>
+          </li>
         </ul>
       </div>
 
-      <div class="footer-col">
-        <h4>Contact & Urgent</h4>
-        <p style="margin-bottom: 12px;"><i class="fa-solid fa-phone" style="color: var(--color-primary); margin-right: 8px;"></i> +1 (800) 555-0199</p>
-        <p style="margin-bottom: 12px;"><i class="fa-solid fa-envelope" style="color: var(--color-primary); margin-right: 8px;"></i> care@yoursclinic.com</p>
-        <p><i class="fa-solid fa-map-location-dot" style="color: var(--color-primary); margin-right: 8px;"></i> 122 Medical Heights Blvd, NY</p>
-      </div>
     </div>
     
     <div class="container">
       <div class="footer-bottom">
-        <p>Accredited Health Service Provider | HIPAA Compliant Data Infrastructure</p>
+        <p>© 2026 Yours Clinic | India's Premier Online Homeopathy Platform</p>
         <p class="footer-disclaimer">
-          Disclaimer: This website is for informational and scheduling purposes only. In the event of severe or acute physical pain, difficulty breathing, or symptoms of high severity, please proceed immediately to an emergency room or contact your local emergency response line (e.g. 911). Do not rely solely on the self-assessment symptom checklist.
+          Disclaimer: Homeopathy treatment outcomes may vary from person to person. The self-triage diagnostic helper is for educational guidance only. In case of acute conditions or emergencies, please consult a hospital immediately.
         </p>
       </div>
     </div>
@@ -677,6 +695,10 @@
               <i class="fa-solid fa-trophy"></i>
               Update Awards
             </li>
+            <li class="admin-nav-item" data-target="admin-view-applicants">
+              <i class="fa-solid fa-file-invoice"></i>
+              Applicants Log
+            </li>
           </ul>
         </nav>
       </div>
@@ -727,6 +749,16 @@
             <div class="admin-card-stat-info">
               <h4>Online Appointments</h4>
               <p>Active</p>
+            </div>
+          </div>
+
+          <div class="admin-card-stat">
+            <div class="admin-card-stat-icon" style="background-color: #fce8e6; color: var(--color-danger);">
+              <i class="fa-solid fa-briefcase"></i>
+            </div>
+            <div class="admin-card-stat-info">
+              <h4>Team Applications</h4>
+              <p id="stat-applicants-count">0</p>
             </div>
           </div>
         </div>
@@ -876,7 +908,142 @@
         </div>
       </section>
 
+      <!-- 4. Applicants Registry Log Tab -->
+      <section class="admin-view-section" id="admin-view-applicants">
+        <div class="admin-section-header">
+          <h2>Careers & Applicants Log</h2>
+        </div>
+        
+        <div class="admin-panel">
+          <h3>Submitted Applications</h3>
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Candidate Name</th>
+                  <th>Email & Phone</th>
+                  <th>Position</th>
+                  <th>Experience</th>
+                  <th>Bio / Credentials</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="admin-applicants-list">
+                <!-- Loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
     </main>
+  </div>
+
+  <!-- ====================================================
+       Join Our Team / Careers Modal
+       ==================================================== -->
+  <div class="modal" id="careers-modal">
+    <div class="modal-overlay" id="careers-overlay"></div>
+    <div class="modal-container" style="max-width: 550px;">
+      <div class="modal-header">
+        <h3>Join Yours Clinic Team</h3>
+        <button class="modal-close" id="careers-close-btn" aria-label="Close Careers Modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="careers-form">
+          <div class="form-grid" style="grid-template-columns: 1fr;">
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label for="career-name">Full Name</label>
+              <input type="text" id="career-name" required placeholder="Dr. Jane Smith">
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label for="career-email">Email Address</label>
+              <input type="email" id="career-email" required placeholder="jane.smith@example.com">
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label for="career-phone">Phone Number</label>
+              <input type="tel" id="career-phone" required placeholder="+91 98765 43210">
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label for="career-role">Preferred Position</label>
+              <select id="career-role" required>
+                <option value="" disabled selected>Select position...</option>
+                <option value="Homeopathic Physician">Homeopathic Physician</option>
+                <option value="General Practitioner">General Practitioner</option>
+                <option value="Clinic Administrator">Clinic Administrator</option>
+                <option value="Lab Technician">Lab Technician</option>
+                <option value="Nursing Staff">Nursing Staff</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label for="career-experience">Years of Experience</label>
+              <input type="number" id="career-experience" required min="0" placeholder="e.g. 5">
+            </div>
+            <div class="form-group" style="margin-bottom: 18px;">
+              <label for="career-notes">Brief Bio / Credentials (Optional)</label>
+              <textarea id="career-notes" placeholder="Describe your credentials, qualifications, or past clinics..." style="min-height: 80px;"></textarea>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">Submit Application Details</button>
+        </form>
+
+        <!-- Career submission success -->
+        <div id="careers-success-msg" style="display: none; text-align: center; padding: 20px 0;">
+          <div class="success-icon" style="margin-bottom: 16px;">
+            <i class="fa-solid fa-file-circle-check"></i>
+          </div>
+          <h3>Application Received!</h3>
+          <p style="margin-top: 10px; font-size: 0.95rem; color: var(--color-slate-gray);">Thank you for applying. The HR department of Yours Clinic will review your credentials and contact you shortly.</p>
+          <button class="btn btn-secondary" id="careers-success-close" style="margin-top: 20px;">Close Window</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================
+       Disclaimer Modal
+       ==================================================== -->
+  <div class="modal" id="disclaimer-modal">
+    <div class="modal-overlay" id="disclaimer-overlay"></div>
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Medical Disclaimer</h3>
+        <button class="modal-close" id="disclaimer-close-btn">✕</button>
+      </div>
+      <div class="modal-body" style="font-size: 0.95rem; color: var(--color-slate-gray);">
+        <p style="margin-bottom: 16px;">The information provided on Yours Clinic (yoursclinic.com) is for general educational and scheduling purposes only. It is not intended to be a substitute for professional medical advice, diagnosis, or treatment.</p>
+        <p style="margin-bottom: 16px;">Homeopathic treatments, clinical diagnoses, and prescriptions are personalized and outcomes vary between individuals. Always seek the advice of a qualified physician with any questions you may have regarding a medical condition.</p>
+        <p style="margin-bottom: 16px;">Do not ignore professional medical guidance or delay seeking evaluation because of information you read on this website. In cases of sudden pain, high fever, chest pain, or breathing complications, proceed directly to an emergency department or contact emergency services.</p>
+        <div style="text-align: right; margin-top: 24px;">
+          <button class="btn btn-primary" onclick="document.getElementById('disclaimer-close-btn').click()">I Understand</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================
+       Privacy Policy Modal
+       ==================================================== -->
+  <div class="modal" id="privacy-modal">
+    <div class="modal-overlay" id="privacy-overlay"></div>
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3>Privacy Policy & Patient Data Protection</h3>
+        <button class="modal-close" id="privacy-close-btn">✕</button>
+      </div>
+      <div class="modal-body" style="font-size: 0.95rem; color: var(--color-slate-gray);">
+        <p style="margin-bottom: 16px;">At Yours Clinic, we prioritize protecting the personal and medical data of our patients. This policy details how we collect and secure information.</p>
+        <h4 style="color: var(--color-dark); margin-bottom: 8px; font-size: 1rem;">1. Data Collection</h4>
+        <p style="margin-bottom: 16px;">We collect patient names, phone numbers, email addresses, date preferences, and symptom checklists solely to validate and schedule appointments. We store credentials strictly locally or securely encrypted.</p>
+        <h4 style="color: var(--color-dark); margin-bottom: 8px; font-size: 1rem;">2. Medical Records Protection</h4>
+        <p style="margin-bottom: 16px;">All patient entry records and credentials generated by our administration portal are protected by ISO-accredited clinic procedures. We comply with medical privacy acts (HIPAA compliant structures) to prevent data sharing.</p>
+        <h4 style="color: var(--color-dark); margin-bottom: 8px; font-size: 1rem;">3. Consent</h4>
+        <p style="margin-bottom: 16px;">By submitting any forms (booking scheduling, triage wizards, or career registrations), you explicitly grant Yours Clinic permission to process details for medical scheduling and team integrations.</p>
+        <div style="text-align: right; margin-top: 24px;">
+          <button class="btn btn-primary" onclick="document.getElementById('privacy-close-btn').click()">Acknowledge</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>

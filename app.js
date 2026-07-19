@@ -190,6 +190,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Setup Admin Portal Logic
   setupAdminPortal();
+
+  // Setup Dark Mode Theme Logic
+  setupDarkModeTheme();
+
+  // Setup Footer Modals & Join Our Team Logic
+  setupFooterModals();
 });
 
 // Render Disease Cards Function
@@ -641,6 +647,7 @@ function setupAdminPortal() {
     { id: '2', title: 'Accredited ISO Quality Standard', icon: '🛡️', desc: 'Certified for compliance with global medical safety protocols and procedures.' },
     { id: '3', title: 'Digital Health Innovation Award', icon: '🥇', desc: 'Recognized for pioneering online symptoms triage and patient intake workflows.' }
   ];
+  let applicants = JSON.parse(localStorage.getItem('yoursClinicApplicants')) || [];
 
   // Save initial seed awards if empty
   if (!localStorage.getItem('yoursClinicAwards')) {
@@ -730,6 +737,7 @@ function setupAdminPortal() {
       renderPatients();
       renderAdminAwards();
       renderPublicAwards();
+      renderApplicants();
     }
   }
 
@@ -775,9 +783,11 @@ function setupAdminPortal() {
   function initDashboardStats() {
     const patientsCountEl = document.getElementById('stat-patients-count');
     const awardsCountEl = document.getElementById('stat-awards-count');
+    const applicantsCountEl = document.getElementById('stat-applicants-count');
     
     if (patientsCountEl) patientsCountEl.textContent = patients.length;
     if (awardsCountEl) awardsCountEl.textContent = awards.length;
+    if (applicantsCountEl) applicantsCountEl.textContent = applicants.length;
   }
 
   // --- Patients Panel CRUD ---
@@ -945,10 +955,217 @@ function setupAdminPortal() {
     });
   }
 
+  // --- Applicants Log CRUD ---
+  const applicantsListContainer = document.getElementById('admin-applicants-list');
+
+  function renderApplicants() {
+    if (!applicantsListContainer) return;
+    applicantsListContainer.innerHTML = '';
+    
+    // Refresh applicants array from storage to stay in sync
+    applicants = JSON.parse(localStorage.getItem('yoursClinicApplicants')) || [];
+
+    if (applicants.length === 0) {
+      applicantsListContainer.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--color-slate-gray);">No applications submitted.</td></tr>`;
+      return;
+    }
+
+    applicants.forEach(a => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="font-weight: 500;">${escapeHtml(a.name)}</td>
+        <td>${escapeHtml(a.email)}<br><span style="font-size: 0.85rem; color: var(--color-slate-gray);">${escapeHtml(a.phone)}</span></td>
+        <td><span class="badge" style="margin-bottom:0;">${escapeHtml(a.role)}</span></td>
+        <td>${a.experience} yrs</td>
+        <td style="font-size: 0.875rem;">${escapeHtml(a.notes || 'N/A')}</td>
+        <td>
+          <button class="admin-action-btn admin-action-btn-delete admin-action-btn-delete-applicant" data-id="${a.id}" title="Remove Application">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </td>
+      `;
+      applicantsListContainer.appendChild(tr);
+    });
+
+    // Delete hooks
+    const deleteBtns = applicantsListContainer.querySelectorAll('.admin-action-btn-delete-applicant');
+    deleteBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        applicants = applicants.filter(a => a.id !== id);
+        localStorage.setItem('yoursClinicApplicants', JSON.stringify(applicants));
+        renderApplicants();
+        initDashboardStats();
+      });
+    });
+  }
+
   // HTML escaping helper
   function escapeHtml(text) {
     const div = document.createElement('div');
     div.innerText = text;
     return div.innerHTML;
   }
+}
+
+// ----------------------------------------------------
+// 6. Dark Mode Toggle & Preference Persistence
+// ----------------------------------------------------
+function setupDarkModeTheme() {
+  const toggleBtn = document.getElementById('dark-mode-toggle');
+  if (!toggleBtn) return;
+
+  const toggleIcon = toggleBtn.querySelector('i');
+  
+  // Load saved theme preference
+  const currentTheme = localStorage.getItem('yoursClinicTheme');
+  if (currentTheme === 'dark') {
+    document.body.classList.add('dark-theme');
+    if (toggleIcon) {
+      toggleIcon.className = 'fa-solid fa-sun';
+    }
+  } else {
+    document.body.classList.remove('dark-theme');
+    if (toggleIcon) {
+      toggleIcon.className = 'fa-solid fa-moon';
+    }
+  }
+
+  // Toggle theme click listener
+  toggleBtn.addEventListener('click', () => {
+    document.body.classList.toggle('dark-theme');
+    
+    if (document.body.classList.contains('dark-theme')) {
+      localStorage.setItem('yoursClinicTheme', 'dark');
+      if (toggleIcon) {
+        toggleIcon.className = 'fa-solid fa-sun';
+      }
+    } else {
+      localStorage.setItem('yoursClinicTheme', 'light');
+      if (toggleIcon) {
+        toggleIcon.className = 'fa-solid fa-moon';
+      }
+    }
+  });
+}
+
+// ----------------------------------------------------
+// 7. Footer Modals & Join Our Team Careers Flow
+// ----------------------------------------------------
+function setupFooterModals() {
+  // Join Team / Careers Modal
+  const joinBtn = document.getElementById('join-team-btn');
+  const careersModal = document.getElementById('careers-modal');
+  const careersClose = document.getElementById('careers-close-btn');
+  const careersOverlay = document.getElementById('careers-overlay');
+  const careersForm = document.getElementById('careers-form');
+  const successMsg = document.getElementById('careers-success-msg');
+  const successClose = document.getElementById('careers-success-close');
+
+  const openCareers = () => {
+    if (careersModal) {
+      careersModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      if (careersForm) {
+        careersForm.style.display = 'block';
+        careersForm.reset();
+      }
+      if (successMsg) successMsg.style.display = 'none';
+    }
+  };
+
+  const closeCareers = () => {
+    if (careersModal) {
+      careersModal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  };
+
+  if (joinBtn) joinBtn.addEventListener('click', openCareers);
+  if (careersClose) careersClose.addEventListener('click', closeCareers);
+  if (careersOverlay) careersOverlay.addEventListener('click', closeCareers);
+  if (successClose) successClose.addEventListener('click', closeCareers);
+
+  // Submit Application Form Handler
+  if (careersForm) {
+    careersForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const newApplicant = {
+        id: Date.now().toString(),
+        name: document.getElementById('career-name').value,
+        email: document.getElementById('career-email').value,
+        phone: document.getElementById('career-phone').value,
+        role: document.getElementById('career-role').value,
+        experience: document.getElementById('career-experience').value,
+        notes: document.getElementById('career-notes').value
+      };
+
+      const applicants = JSON.parse(localStorage.getItem('yoursClinicApplicants')) || [];
+      applicants.push(newApplicant);
+      localStorage.setItem('yoursClinicApplicants', JSON.stringify(applicants));
+
+      // Toggle views
+      careersForm.style.display = 'none';
+      if (successMsg) successMsg.style.display = 'block';
+
+      // Update admin stats if setup
+      const statsEl = document.getElementById('stat-applicants-count');
+      if (statsEl) statsEl.textContent = applicants.length;
+    });
+  }
+
+  // --- Disclaimer Modal Hooks ---
+  const disclaimerLink = document.getElementById('footer-link-disclaimer');
+  const disclaimerModal = document.getElementById('disclaimer-modal');
+  const disclaimerClose = document.getElementById('disclaimer-close-btn');
+  const disclaimerOverlay = document.getElementById('disclaimer-overlay');
+
+  const toggleDisclaimer = (show) => {
+    if (disclaimerModal) {
+      if (show) {
+        disclaimerModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      } else {
+        disclaimerModal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
+  };
+
+  if (disclaimerLink) {
+    disclaimerLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleDisclaimer(true);
+    });
+  }
+  if (disclaimerClose) disclaimerClose.addEventListener('click', () => toggleDisclaimer(false));
+  if (disclaimerOverlay) disclaimerOverlay.addEventListener('click', () => toggleDisclaimer(false));
+
+  // --- Privacy Modal Hooks ---
+  const privacyLink = document.getElementById('footer-link-privacy');
+  const privacyModal = document.getElementById('privacy-modal');
+  const privacyClose = document.getElementById('privacy-close-btn');
+  const privacyOverlay = document.getElementById('privacy-overlay');
+
+  const togglePrivacy = (show) => {
+    if (privacyModal) {
+      if (show) {
+        privacyModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      } else {
+        privacyModal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+    }
+  };
+
+  if (privacyLink) {
+    privacyLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      togglePrivacy(true);
+    });
+  }
+  if (privacyClose) privacyClose.addEventListener('click', () => togglePrivacy(false));
+  if (privacyOverlay) privacyOverlay.addEventListener('click', () => togglePrivacy(false));
 }
