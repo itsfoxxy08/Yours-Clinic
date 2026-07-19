@@ -753,9 +753,8 @@ function setupAdminPortal() {
     logoutBtn.addEventListener('click', () => {
       sessionStorage.removeItem('isAdminLoggedIn');
       closeDashboard();
-      // Reset button states
-      if (spinner) spinner.style.display = 'none';
-      if (submitBtnText) submitBtnText.textContent = 'Authenticate Securely';
+      // Reload page to clear states and display clean public view
+      window.location.reload();
     });
   }
 
