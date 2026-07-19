@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- SEO Tags -->
+  <title>Yours Clinic | Professional, Minimalistic Healthcare Services</title>
+  <meta name="description" content="Welcome to Yours Clinic. We provide clean, simple, and professional medical consulting, health diagnostics, treatment plans, and appointment scheduling.">
+  
+  <!-- Fonts & Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Floating Header / Navbar -->
+  <header class="header" id="header">
+    <div class="container nav-container">
+      <a href="#home" class="logo" id="nav-logo">
+        <div class="logo-icon">Y</div>
+        Yours<span>Clinic</span>
+      </a>
+      
+      <nav>
+        <ul class="nav-menu" id="nav-menu">
+          <li><a href="#home" class="nav-link active">Home</a></li>
+          <li><a href="#diseases" class="nav-link">Diseases</a></li>
+          <li><a href="#treatment" class="nav-link">Treatment Now</a></li>
+          <li><a href="#book" class="nav-link">Book Appointment</a></li>
+          <li><a href="#about" class="nav-link">About Us</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-cta">
+        <a href="#book" class="btn btn-primary" style="padding: 8px 18px; font-size: 0.9rem;">Book Now</a>
+        <button class="menu-toggle" id="menu-toggle" aria-label="Toggle Navigation">☰</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+    <!-- Hero / Home Section -->
+    <section id="home" class="hero">
+      <div class="container hero-grid">
+        <div class="hero-content scroll-reveal">
+          <span class="badge">Modern & Trusted Care</span>
+          <h1>Healthcare, <span>simplified.</span><br>Care you can trust.</h1>
+          <p>Yours Clinic offers personalized, professional medical consultations and treatment plans tailored to your life. Experience healthcare designed with simplicity and compassion.</p>
+          
+          <div class="hero-buttons">
+            <a href="#book" class="btn btn-primary">Book Appointment</a>
+            <a href="#treatment" class="btn btn-secondary">Check Symptoms Now</a>
+          </div>
+
+          <div class="hero-stats">
+            <div class="stat-item">
+              <span class="stat-number">24/7</span>
+              <span class="stat-label">Support Available</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-number">99%</span>
+              <span class="stat-label">Patient Satisfaction</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-number">15+</span>
+              <span class="stat-label">Specialist Doctors</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-image-container scroll-reveal" style="transition-delay: 0.2s;">
+          <div class="hero-img-wrapper">
+            <!-- Using generated medical visual image -->
+            <img src="hero_clinic.png" alt="Yours Clinic Minimal Care illustration" onerror="this.src='https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80'">
+          </div>
+          
+          <!-- Floating Status Badge 1 -->
+          <div class="floating-card floating-card-1">
+            <div class="floating-card-icon">
+              <i class="fa-solid fa-user-doctor"></i>
+            </div>
+            <div class="floating-card-info">
+              <h4>Consult Online</h4>
+              <p>Top medical professionals</p>
+            </div>
+          </div>
+
+          <!-- Floating Status Badge 2 -->
+          <div class="floating-card floating-card-2">
+            <div class="floating-card-icon" style="background-color: #fef2f2; color: #ef4444;">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="floating-card-info">
+              <h4>Certified Clinic</h4>
+              <p>ISO accredited standards</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Disease Section -->
+    <section id="diseases" class="disease-section section-padding">
+      <div class="container">
+        <div class="section-header text-center scroll-reveal">
+          <span class="badge">Healthcare Guide</span>
+          <h2>Conditions We Specialize In</h2>
+          <p>Find essential symptoms, care recommendations, and prevention guidelines for common medical concerns. Search below or filter by category.</p>
+        </div>
+
+        <!-- Filters & Search Bar -->
+        <div class="disease-filter-container scroll-reveal">
+          <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="disease-search" placeholder="Search conditions (e.g. Flu, Diabetes, Acid Reflux)..." aria-label="Search diseases">
+          </div>
+          
+          <div class="category-tags">
+            <button class="tag-btn active" data-filter="all">All</button>
+            <button class="tag-btn" data-filter="general">General</button>
+            <button class="tag-btn" data-filter="respiratory">Respiratory</button>
+            <button class="tag-btn" data-filter="chronic">Chronic</button>
+            <button class="tag-btn" data-filter="digestive">Digestive</button>
+          </div>
+        </div>
+
+        <!-- Disease Cards Grid (populated dynamically via app.js) -->
+        <div class="disease-grid scroll-reveal" id="disease-grid">
+          <!-- Dynamic cards inserted here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Disease Detail Modal -->
+    <div class="modal" id="disease-modal">
+      <div class="modal-overlay" id="modal-overlay"></div>
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3 id="modal-title">Condition Details</h3>
+          <button class="modal-close" id="modal-close" aria-label="Close Modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p id="modal-desc" style="font-size: 1.1rem; margin-bottom: 24px; font-weight: 500;"></p>
+          
+          <div class="modal-section">
+            <h4>Common Symptoms</h4>
+            <ul class="modal-list" id="modal-symptoms">
+              <!-- List elements -->
+            </ul>
+          </div>
+          
+          <div class="modal-section" style="background-color: var(--color-primary-light); padding: 16px; border-radius: var(--radius-md); border-left: 4px solid var(--color-primary);">
+            <h4 style="color: var(--color-primary-hover);">When to See a Professional</h4>
+            <p id="modal-whentosee" style="margin-bottom: 0; font-size: 0.95rem;"></p>
+          </div>
+          
+          <div class="modal-section" style="margin-top: 24px;">
+            <h4>Prevention & Lifestyle Management</h4>
+            <ul class="modal-list" id="modal-prevention">
+              <!-- List elements -->
+            </ul>
+          </div>
+          
+          <div style="margin-top: 32px; display: flex; justify-content: flex-end; gap: 12px;">
+            <button class="btn btn-secondary" onclick="document.getElementById('modal-close').click()">Close</button>
+            <a href="#book" class="btn btn-primary" onclick="document.getElementById('modal-close').click()">Book Consultation</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Treatment Now Section (Intake/Triage Questionnaire) -->
+    <section id="treatment" class="treatment-section section-padding">
+      <div class="container">
+        <div class="section-header text-center scroll-reveal">
+          <span class="badge">Immediate Assistance</span>
+          <h2>Treatment Now</h2>
+          <p>Not sure what care you need? Complete our simple, anonymous 3-step symptom evaluation to receive immediate guidance and next steps.</p>
+        </div>
+
+        <div class="triage-container scroll-reveal">
+          <!-- Progress Bar -->
+          <div class="triage-progress">
+            <div class="triage-bar" id="triage-bar"></div>
+          </div>
+
+          <div class="triage-content">
+            <!-- Step 1: Choose Area of Concern -->
+            <div class="triage-step active" data-step="1">
+              <h3 class="text-center" style="margin-bottom: 12px;">1. What is your primary area of concern?</h3>
+              <p class="text-center">Select the option that best fits what you are experiencing today.</p>
+              
+              <div class="triage-options-grid">
+                <div class="triage-option-card" data-type="concern" data-value="cold-flu">
+                  <i class="fa-solid fa-virus"></i>
+                  <h4>Cold, Flu & Fever</h4>
+                  <p style="font-size: 0.85rem; margin-top: 8px;">Coughing, sore throat, sinus congestions, temperature</p>
+                </div>
+                <div class="triage-option-card" data-type="concern" data-value="digestion">
+                  <i class="fa-solid fa-stomach"></i>
+                  <h4>Stomach & Digestion</h4>
+                  <p style="font-size: 0.85rem; margin-top: 8px;">Acid reflux, bloating, stomach aches, mild nausea</p>
+                </div>
+                <div class="triage-option-card" data-type="concern" data-value="chronic-check">
+                  <i class="fa-solid fa-heart-pulse"></i>
+                  <h4>Chronic Monitoring</h4>
+                  <p style="font-size: 0.85rem; margin-top: 8px;">Blood pressure checks, glucose levels, heart wellness</p>
+                </div>
+                <div class="triage-option-card" data-type="concern" data-value="skin-general">
+                  <i class="fa-solid fa-hand-dots"></i>
+                  <h4>Skin & Irritations</h4>
+                  <p style="font-size: 0.85rem; margin-top: 8px;">Dryness, red patches, rashes, minor burns or allergies</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2: Severity Assessment -->
+            <div class="triage-step" data-step="2">
+              <h3 class="text-center" style="margin-bottom: 12px;">2. How severe are your symptoms?</h3>
+              <p class="text-center">Please gauge the intensity and impact on your daily routines.</p>
+              
+              <div class="triage-options-grid" style="grid-template-columns: 1fr; max-width: 500px; margin: 24px auto;">
+                <div class="triage-option-card" data-type="severity" data-value="low" style="text-align: left; display: flex; align-items: center; gap: 16px;">
+                  <i class="fa-solid fa-circle-check" style="color: var(--color-success); font-size: 1.5rem; margin-bottom: 0;"></i>
+                  <div>
+                    <h4>Mild / Low Severity</h4>
+                    <p style="font-size: 0.85rem; margin-bottom: 0;">Slight discomfort, manageable, doesn't interfere with daily tasks.</p>
+                  </div>
+                </div>
+                
+                <div class="triage-option-card" data-type="severity" data-value="medium" style="text-align: left; display: flex; align-items: center; gap: 16px;">
+                  <i class="fa-solid fa-circle-exclamation" style="color: #d97706; font-size: 1.5rem; margin-bottom: 0;"></i>
+                  <div>
+                    <h4>Moderate / Medium Severity</h4>
+                    <p style="font-size: 0.85rem; margin-bottom: 0;">Noticeable pain or discomfort, interferes slightly with activities.</p>
+                  </div>
+                </div>
+                
+                <div class="triage-option-card" data-type="severity" data-value="high" style="text-align: left; display: flex; align-items: center; gap: 16px;">
+                  <i class="fa-solid fa-circle-xmark" style="color: var(--color-danger); font-size: 1.5rem; margin-bottom: 0;"></i>
+                  <div>
+                    <h4>Severe / High Severity</h4>
+                    <p style="font-size: 0.85rem; margin-bottom: 0;">Intense pain, difficulty breathing, majorly impacts vital functions.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3: Specific Symptoms List -->
+            <div class="triage-step" data-step="3">
+              <h3 class="text-center" style="margin-bottom: 12px;">3. Select any symptoms that apply</h3>
+              <p class="text-center">Choose one or more symptoms below to help us tailor our suggestion.</p>
+              
+              <div class="symptom-tag-grid">
+                <span class="symptom-tag" data-value="Fever">Fever</span>
+                <span class="symptom-tag" data-value="Dry Cough">Dry Cough</span>
+                <span class="symptom-tag" data-value="Sore Throat">Sore Throat</span>
+                <span class="symptom-tag" data-value="Headache">Headache</span>
+                <span class="symptom-tag" data-value="Body Aches">Body Aches</span>
+                <span class="symptom-tag" data-value="Heartburn">Heartburn</span>
+                <span class="symptom-tag" data-value="Stomach Cramps">Stomach Cramps</span>
+                <span class="symptom-tag" data-value="Skin Rash">Skin Rash</span>
+                <span class="symptom-tag" data-value="Extreme Fatigue">Extreme Fatigue</span>
+                <span class="symptom-tag" data-value="Shortness of Breath">Shortness of Breath</span>
+              </div>
+            </div>
+
+            <!-- Step 4: Diagnostic Result Panel -->
+            <div class="triage-step" id="triage-step-result">
+              <div class="triage-result">
+                <div class="result-badge" id="result-badge">
+                  <!-- Dynamic badge (Urgent/Consult/Home care) -->
+                </div>
+                <h3 id="result-title" style="font-size: 1.75rem; margin-bottom: 16px;">Result Headline</h3>
+                <p id="result-text" style="max-width: 550px; margin: 0 auto 24px auto;">Diagnostic breakdown...</p>
+                
+                <div class="triage-actions-result" id="result-cta-sec">
+                  <!-- Dynamic buttons -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Navigation Actions -->
+            <div class="triage-actions" id="triage-actions-nav">
+              <button class="btn btn-secondary" id="triage-prev" style="visibility: hidden;">Back</button>
+              <button class="btn btn-primary" id="triage-next" disabled>Continue</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Book Appointment Section -->
+    <section id="book" class="book-section section-padding">
+      <div class="container">
+        <div class="section-header text-center scroll-reveal">
+          <span class="badge">Appointment Booking</span>
+          <h2>Schedule Your Consultation</h2>
+          <p>Book an in-person clinic visit or secure online teleconsultation. Select your preferences and confirm your slot instantly.</p>
+        </div>
+
+        <div class="booking-wrapper scroll-reveal">
+          <!-- Sidebar Clinic Information -->
+          <div class="booking-info-sidebar">
+            <div>
+              <h3>Yours Clinic</h3>
+              <p style="margin-top: 10px; font-size: 0.95rem;">Providing high-quality medical services with modern care standards.</p>
+            </div>
+
+            <ul class="contact-info-list">
+              <li class="contact-info-item">
+                <i class="fa-solid fa-location-dot"></i>
+                <div>
+                  <p style="font-weight: 600;">Main Facility Location</p>
+                  <p style="opacity: 0.9;">122 Medical Heights Blvd, Suite 400, NY 10016</p>
+                </div>
+              </li>
+              
+              <li class="contact-info-item">
+                <i class="fa-solid fa-phone"></i>
+                <div>
+                  <p style="font-weight: 600;">Emergency / Reception Line</p>
+                  <p style="opacity: 0.9;">+1 (800) 555-0199</p>
+                </div>
+              </li>
+              
+              <li class="contact-info-item">
+                <i class="fa-solid fa-clock"></i>
+                <div>
+                  <p style="font-weight: 600;">Operating Hours</p>
+                  <p style="opacity: 0.9;">Mon – Fri: 8:00 AM – 7:00 PM<br>Sat – Sun: 9:00 AM – 3:00 PM</p>
+                </div>
+              </li>
+            </ul>
+
+            <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 0;">
+              * For immediate medical emergencies, please dial your local emergency services (e.g., 911) directly.
+            </p>
+          </div>
+
+          <!-- Booking Form -->
+          <div class="booking-form-container">
+            <!-- Normal Interactive Form -->
+            <form id="appointment-form">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="book-name">Full Name</label>
+                  <input type="text" id="book-name" required placeholder="John Doe">
+                </div>
+                
+                <div class="form-group">
+                  <label for="book-email">Email Address</label>
+                  <input type="email" id="book-email" required placeholder="john@example.com">
+                </div>
+                
+                <div class="form-group">
+                  <label for="book-phone">Phone Number</label>
+                  <input type="tel" id="book-phone" required placeholder="(555) 000-0000">
+                </div>
+
+                <div class="form-group">
+                  <label for="book-doctor">Select Department / Doctor</label>
+                  <select id="book-doctor" required>
+                    <option value="" disabled selected>Choose a physician...</option>
+                    <option value="dr-jenkins">Dr. Sarah Jenkins (General Medicine)</option>
+                    <option value="dr-vance">Dr. Marcus Vance (Cardiology)</option>
+                    <option value="dr-rostova">Dr. Elena Rostova (Dermatology)</option>
+                    <option value="dr-gupta">Dr. Amit Gupta (Endocrinology)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="book-date">Appointment Date</label>
+                  <input type="date" id="book-date" required>
+                </div>
+
+                <!-- Custom Selectable Time Slot Component -->
+                <div class="form-group">
+                  <label>Available Slots</label>
+                  <div class="time-slots-container">
+                    <input type="hidden" id="selected-slot" required>
+                    <div class="time-slots-grid" id="time-slots-grid">
+                      <!-- Grid populated dynamically by app.js -->
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group form-group-full">
+                  <label for="book-notes">Reason for Visit (Optional)</label>
+                  <textarea id="book-notes" placeholder="Please describe any symptoms or history..."></textarea>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px;">Confirm Booking & Send Code</button>
+            </form>
+
+            <!-- Success Confirmation Screen -->
+            <div class="booking-success" id="booking-success">
+              <div class="success-icon">
+                <i class="fa-solid fa-check"></i>
+              </div>
+              <h3>Appointment Reserved!</h3>
+              <p style="margin-top: 12px; font-size: 0.95rem;">We have sent a SMS confirmation code and email receipt. Below is a summary of your scheduled slot:</p>
+              
+              <div style="background-color: var(--color-light-gray); border-radius: var(--radius-md); padding: 20px; text-align: left; margin: 24px 0; border: 1px solid var(--color-border);">
+                <p style="margin-bottom: 8px; font-size: 0.9rem;"><strong>Patient Name:</strong> <span id="success-patient">-</span></p>
+                <p style="margin-bottom: 8px; font-size: 0.9rem;"><strong>Physician:</strong> <span id="success-doctor">-</span></p>
+                <p style="margin-bottom: 0; font-size: 0.9rem;"><strong>Schedule Date:</strong> <span id="success-time">-</span></p>
+              </div>
+
+              <button class="btn btn-secondary" onclick="resetBooking()">Schedule Another Appointment</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- About Us Section -->
+    <section id="about" class="about-section section-padding">
+      <div class="container">
+        <!-- Main Bio/Layout -->
+        <div class="about-grid">
+          <div class="scroll-reveal">
+            <span class="badge">Who We Are</span>
+            <h2>Modern Healthcare Clinic Built Around You</h2>
+            <p>At Yours Clinic, our commitment is simple: providing exceptional, professional care with a clean, uncomplicated patient experience. Founded in 2018, we have set a new standard for modern community clinics.</p>
+            <p>We combine cutting-edge triage methods, visual online appointment scheduling, and experienced specialist physicians to make seeking care stress-free and reliable.</p>
+            
+            <div class="about-features" style="margin-top: 32px;">
+              <div class="feature-item">
+                <div class="feature-icon">
+                  <i class="fa-solid fa-microscope"></i>
+                </div>
+                <div class="feature-info">
+                  <h4>Modern Diagnostics</h4>
+                  <p>Equipped with state-of-the-art lab tools for precise analysis.</p>
+                </div>
+              </div>
+              <div class="feature-item">
+                <div class="feature-icon">
+                  <i class="fa-solid fa-briefcase-medical"></i>
+                </div>
+                <div class="feature-info">
+                  <h4>Top Specialties</h4>
+                  <p>In-house cardiologists, dermatologists, and clinicians.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-image scroll-reveal" style="transition-delay: 0.2s;">
+            <div class="about-img-wrapper">
+              <img src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=800&q=80" alt="Yours Clinic Interior Lobby">
+            </div>
+          </div>
+        </div>
+
+        <!-- Doctor Showcase -->
+        <div class="team-subsection scroll-reveal">
+          <h3 class="text-center" style="font-size: 2rem; margin-bottom: 12px;">Our Specialists</h3>
+          <p class="text-center" style="max-width: 600px; margin: 0 auto 40px auto;">Consult with our accredited, highly-trained medical leadership team.</p>
+          
+          <div class="team-grid">
+            <!-- Doctor Card 1 -->
+            <div class="doctor-card">
+              <div class="doctor-img-container">
+                <!-- Inline SVG avatar for doctor for consistent, clean vector aesthetics -->
+                <svg viewBox="0 0 100 100" style="background-color: #cbd5e1; width: 100%; height: 100%;">
+                  <circle cx="50" cy="38" r="18" fill="#475569" />
+                  <path d="M50 60 C30 60, 20 74, 20 85 L80 85 C80 74, 70 60, 50 60 Z" fill="#475569" />
+                  <!-- Stethoscope visual details -->
+                  <path d="M38 52 C38 65, 62 65, 62 52" stroke="#0d9488" stroke-width="4" fill="none" />
+                  <circle cx="50" cy="65" r="5" fill="#0d9488" />
+                </svg>
+              </div>
+              <div class="doctor-info">
+                <h4>Dr. Sarah Jenkins</h4>
+                <p class="specialty">General Medicine & Wellness</p>
+                <p>Over 12 years of diagnostic experience focusing on preventative medicine and patient care.</p>
+                <div class="doctor-socials">
+                  <a href="#" class="social-link" aria-label="LinkedIn Profile"><i class="fa-brands fa-linkedin"></i></a>
+                  <a href="#" class="social-link" aria-label="ResearchGate Profile"><i class="fa-solid fa-graduation-cap"></i></a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Doctor Card 2 -->
+            <div class="doctor-card">
+              <div class="doctor-img-container">
+                <svg viewBox="0 0 100 100" style="background-color: #e2e8f0; width: 100%; height: 100%;">
+                  <circle cx="50" cy="38" r="18" fill="#334155" />
+                  <path d="M50 60 C30 60, 20 74, 20 85 L80 85 C80 74, 70 60, 50 60 Z" fill="#334155" />
+                  <path d="M38 52 C38 65, 62 65, 62 52" stroke="#0d9488" stroke-width="4" fill="none" />
+                  <circle cx="50" cy="65" r="5" fill="#0d9488" />
+                </svg>
+              </div>
+              <div class="doctor-info">
+                <h4>Dr. Marcus Vance</h4>
+                <p class="specialty">Cardiology Expert</p>
+                <p>Board-certified cardiologist specializing in coronary artery health and preventative cardiac screening.</p>
+                <div class="doctor-socials">
+                  <a href="#" class="social-link" aria-label="LinkedIn Profile"><i class="fa-brands fa-linkedin"></i></a>
+                  <a href="#" class="social-link" aria-label="ResearchGate Profile"><i class="fa-solid fa-graduation-cap"></i></a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Doctor Card 3 -->
+            <div class="doctor-card">
+              <div class="doctor-img-container">
+                <svg viewBox="0 0 100 100" style="background-color: #cbd5e1; width: 100%; height: 100%;">
+                  <circle cx="50" cy="38" r="18" fill="#1e293b" />
+                  <path d="M50 60 C30 60, 20 74, 20 85 L80 85 C80 74, 70 60, 50 60 Z" fill="#1e293b" />
+                  <path d="M38 52 C38 65, 62 65, 62 52" stroke="#0d9488" stroke-width="4" fill="none" />
+                  <circle cx="50" cy="65" r="5" fill="#0d9488" />
+                </svg>
+              </div>
+              <div class="doctor-info">
+                <h4>Dr. Elena Rostova</h4>
+                <p class="specialty">Dermatology Specialist</p>
+                <p>Expert in inflammatory skin conditions, moles, allergy screenings, and general skin preservation techniques.</p>
+                <div class="doctor-socials">
+                  <a href="#" class="social-link" aria-label="LinkedIn Profile"><i class="fa-brands fa-linkedin"></i></a>
+                  <a href="#" class="social-link" aria-label="ResearchGate Profile"><i class="fa-solid fa-graduation-cap"></i></a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Doctor Card 4 -->
+            <div class="doctor-card">
+              <div class="doctor-img-container">
+                <svg viewBox="0 0 100 100" style="background-color: #e2e8f0; width: 100%; height: 100%;">
+                  <circle cx="50" cy="38" r="18" fill="#475569" />
+                  <path d="M50 60 C30 60, 20 74, 20 85 L80 85 C80 74, 70 60, 50 60 Z" fill="#475569" />
+                  <path d="M38 52 C38 65, 62 65, 62 52" stroke="#0d9488" stroke-width="4" fill="none" />
+                  <circle cx="50" cy="65" r="5" fill="#0d9488" />
+                </svg>
+              </div>
+              <div class="doctor-info">
+                <h4>Dr. Amit Gupta</h4>
+                <p class="specialty">Endocrinology Lead</p>
+                <p>Deep expertise managing metabolic diseases, thyroid disorders, and lifestyle-related type-2 diabetes care.</p>
+                <div class="doctor-socials">
+                  <a href="#" class="social-link" aria-label="LinkedIn Profile"><i class="fa-brands fa-linkedin"></i></a>
+                  <a href="#" class="social-link" aria-label="ResearchGate Profile"><i class="fa-solid fa-graduation-cap"></i></a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer Section -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <h3>Yours<span>Clinic</span></h3>
+        <p>A high-quality medical clinic committed to simple, professional healthcare. Ensuring safety, care, and accessibility.</p>
+        <p style="margin-top: 18px; font-size: 0.85rem; color: #64748b;">© 2026 Yours Clinic. All rights reserved.</p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <ul class="footer-links">
+          <li><a href="#home">Home</a></li>
+          <li><a href="#diseases">Disease Guide</a></li>
+          <li><a href="#treatment">Treatment Now</a></li>
+          <li><a href="#book">Book Appointment</a></li>
+          <li><a href="#about">About Us</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Specialties</h4>
+        <ul class="footer-links">
+          <li><a href="#diseases">General Health</a></li>
+          <li><a href="#diseases">Cardiovascular Wellness</a></li>
+          <li><a href="#diseases">Dermatology Care</a></li>
+          <li><a href="#diseases">Diabetes Management</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Contact & Urgent</h4>
+        <p style="margin-bottom: 12px;"><i class="fa-solid fa-phone" style="color: var(--color-primary); margin-right: 8px;"></i> +1 (800) 555-0199</p>
+        <p style="margin-bottom: 12px;"><i class="fa-solid fa-envelope" style="color: var(--color-primary); margin-right: 8px;"></i> care@yoursclinic.com</p>
+        <p><i class="fa-solid fa-map-location-dot" style="color: var(--color-primary); margin-right: 8px;"></i> 122 Medical Heights Blvd, NY</p>
+      </div>
+    </div>
+    
+    <div class="container">
+      <div class="footer-bottom">
+        <p>Accredited Health Service Provider | HIPAA Compliant Data Infrastructure</p>
+        <p class="footer-disclaimer">
+          Disclaimer: This website is for informational and scheduling purposes only. In the event of severe or acute physical pain, difficulty breathing, or symptoms of high severity, please proceed immediately to an emergency room or contact your local emergency response line (e.g. 911). Do not rely solely on the self-assessment symptom checklist.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
