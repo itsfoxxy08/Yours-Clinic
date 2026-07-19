@@ -1018,12 +1018,14 @@ function setupAdminPortal() {
 // ----------------------------------------------------
 function setupDarkModeTheme() {
   const toggleBtn = document.getElementById('dark-mode-toggle');
+  console.log("DarkMode setup initiated. Button found:", !!toggleBtn);
   if (!toggleBtn) return;
 
   const toggleIcon = toggleBtn.querySelector('i');
   
   // Load saved theme preference
   const currentTheme = localStorage.getItem('yoursClinicTheme');
+  console.log("Saved theme preference:", currentTheme);
   if (currentTheme === 'dark') {
     document.body.classList.add('dark-theme');
     if (toggleIcon) {
@@ -1037,8 +1039,10 @@ function setupDarkModeTheme() {
   }
 
   // Toggle theme click listener
-  toggleBtn.addEventListener('click', () => {
+  toggleBtn.addEventListener('click', (e) => {
+    console.log("Dark mode button clicked! Body class before:", document.body.className);
     document.body.classList.toggle('dark-theme');
+    console.log("Body class after toggle:", document.body.className);
     
     if (document.body.classList.contains('dark-theme')) {
       localStorage.setItem('yoursClinicTheme', 'dark');
