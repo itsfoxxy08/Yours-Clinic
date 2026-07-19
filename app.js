@@ -750,11 +750,14 @@ function setupAdminPortal() {
 
   // Logout Handler
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
+    logoutBtn.addEventListener('click', (e) => {
+      if (e) e.preventDefault();
       sessionStorage.removeItem('isAdminLoggedIn');
+      sessionStorage.clear();
+      localStorage.removeItem('isAdminLoggedIn');
       closeDashboard();
-      // Reload page to clear states and display clean public view
-      window.location.reload();
+      // Force clean redirect to homepage (strips any hash or path values)
+      window.location.href = window.location.origin + window.location.pathname;
     });
   }
 
