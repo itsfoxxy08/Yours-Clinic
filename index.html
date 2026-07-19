@@ -9,6 +9,9 @@
   <meta name="description" content="Welcome to Yours Clinic. We provide clean, simple, and professional medical consulting, health diagnostics, treatment plans, and appointment scheduling.">
   
   <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="images/logo.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="styles.css">
@@ -51,56 +54,54 @@
     <section id="home" class="hero">
       <div class="container hero-grid">
         <div class="hero-content scroll-reveal">
-          <span class="badge">Modern & Trusted Care</span>
-          <h1>Healthcare, <span>simplified.</span><br>Care you can trust.</h1>
-          <p>Yours Clinic offers personalized, professional medical consultations and treatment plans tailored to your life. Experience healthcare designed with simplicity and compassion.</p>
+          <span class="badge-pill"><span class="pill-dot"></span> Built by Clinical Homeopathic Experts</span>
+          <h1>Your health journey, <em>in balance.</em></h1>
+          
+          <p class="hero-para">You have probably thought about holistic healing and natural wellness. The chronic concerns, the symptoms you can't quite resolve, the state of vibrant health you are looking to reclaim.</p>
+          
+          <p class="hero-para">Yours Clinic offers a personalized, expert path to complete recovery. Guided by professional homeopathic principles. Built by practicing clinical experts.</p>
           
           <div class="hero-buttons">
-            <a href="#book" class="btn btn-primary">Book Appointment</a>
-            <a href="#treatment" class="btn btn-secondary">Check Symptoms Now</a>
-          </div>
-
-          <div class="hero-stats">
-            <div class="stat-item">
-              <span class="stat-number">24/7</span>
-              <span class="stat-label">Support Available</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number">99%</span>
-              <span class="stat-label">Patient Satisfaction</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-number">15+</span>
-              <span class="stat-label">Specialist Doctors</span>
-            </div>
+            <a href="#book" class="btn btn-primary-pill">Book Appointment <i class="fa-solid fa-arrow-right-long" style="margin-left: 8px;"></i></a>
+            <a href="#treatment" class="btn btn-secondary-pill">See What's Inside</a>
           </div>
         </div>
 
-        <div class="hero-image-container scroll-reveal" style="transition-delay: 0.2s;">
-          <div class="hero-img-wrapper">
-            <!-- Using generated medical visual image -->
-            <img src="hero_clinic.png" alt="Yours Clinic Minimal Care illustration" onerror="this.src='https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=600&q=80'">
-          </div>
-          
-          <!-- Floating Status Badge 1 -->
-          <div class="floating-card floating-card-1">
-            <div class="floating-card-icon">
-              <i class="fa-solid fa-user-doctor"></i>
+        <div class="hero-card-container scroll-reveal" style="transition-delay: 0.2s;">
+          <div class="hero-digital-card">
+            <span class="digital-card-tag">THE TRIAGE PANEL</span>
+            <h3 class="digital-card-title">Three steps. One recovery.</h3>
+            
+            <div class="digital-card-list">
+              <a href="#treatment" class="digital-card-item">
+                <span class="part-num">I</span>
+                <div class="part-info">
+                  <span class="part-label">PART ONE</span>
+                  <h4>Triage Symptoms</h4>
+                </div>
+                <i class="fa-solid fa-arrow-right-long"></i>
+              </a>
+              <a href="#book" class="digital-card-item">
+                <span class="part-num">II</span>
+                <div class="part-info">
+                  <span class="part-label">PART TWO</span>
+                  <h4>Consult with Experts</h4>
+                </div>
+                <i class="fa-solid fa-arrow-right-long"></i>
+              </a>
+              <a href="#treatment" class="digital-card-item">
+                <span class="part-num">III</span>
+                <div class="part-info">
+                  <span class="part-label">PART THREE</span>
+                  <h4>Holistic Treatment</h4>
+                </div>
+                <i class="fa-solid fa-arrow-right-long"></i>
+              </a>
             </div>
-            <div class="floating-card-info">
-              <h4>Consult Online</h4>
-              <p>Top medical professionals</p>
-            </div>
-          </div>
-
-          <!-- Floating Status Badge 2 -->
-          <div class="floating-card floating-card-2">
-            <div class="floating-card-icon" style="background-color: #fef2f2; color: #ef4444;">
-              <i class="fa-solid fa-circle-check"></i>
-            </div>
-            <div class="floating-card-info">
-              <h4>Certified Clinic</h4>
-              <p>ISO accredited standards</p>
+            
+            <div class="digital-card-footer">
+              <span class="device-list">Telehealth • In-Clinic • Secure Data</span>
+              <span class="pricing-badge">Consultation • ₹499</span>
             </div>
           </div>
         </div>
@@ -181,10 +182,62 @@
     <section id="treatment" class="treatment-section section-padding">
       <div class="container">
         <div class="section-header text-center scroll-reveal">
-          <span class="badge">Immediate Assistance</span>
-          <h2>Treatment Now</h2>
-          <p>Not sure what care you need? Complete our simple, anonymous 3-step symptom evaluation to receive immediate guidance and next steps.</p>
+          <span class="badge-pill"><span class="pill-dot"></span> The Treatment Process</span>
+          <h2 class="serif-title">Three steps. One recovery.</h2>
+          <p class="para-subtitle">How we guide you from initial symptom triage to complete homeopathic recovery.</p>
         </div>
+
+        <!-- Three-Column Process Grid (Screenshot 2 style) -->
+        <div class="process-grid scroll-reveal">
+          
+          <!-- Column 1: Triage -->
+          <div class="process-col">
+            <span class="process-roman">I</span>
+            <span class="process-part">PART ONE • FOUNDATION</span>
+            <h3>Triage & Diagnose</h3>
+            <p>Before consulting, gauge your immediate health status. Our quick, automated checker suggests treatment urgency and maps indicator patterns to classic homeopathic profiles.</p>
+            <ul class="process-list">
+              <li><i class="fa-solid fa-check"></i> A quick check of common homeopathic indications</li>
+              <li><i class="fa-solid fa-check"></i> Immediate urgency guides for acute concerns</li>
+              <li><i class="fa-solid fa-check"></i> Helps clarify key details before your consult</li>
+              <li><i class="fa-solid fa-check"></i> Direct alignment with clinical treatment paths</li>
+            </ul>
+            <a href="#triage-tool-anchor" class="process-link-btn">Start Triage Below <i class="fa-solid fa-arrow-down-long" style="margin-left: 6px;"></i></a>
+          </div>
+
+          <!-- Column 2: Consultation -->
+          <div class="process-col">
+            <span class="process-roman">II</span>
+            <span class="process-part">PART TWO • REFLECTION</span>
+            <h3>Consult with Experts</h3>
+            <p>Partner with accredited homeopathic doctors online or in-facility. We conduct a complete, holistic audit of physical, mental, and constitutional health factors.</p>
+            <ul class="process-list">
+              <li><i class="fa-solid fa-check"></i> Structured digital clinic health records</li>
+              <li><i class="fa-solid fa-check"></i> Direct telehealth video calls or in-clinic visits</li>
+              <li><i class="fa-solid fa-check"></i> Comprehensive constitutional history review</li>
+              <li><i class="fa-solid fa-check"></i> Patient-focused scheduling and reminders</li>
+            </ul>
+            <a href="#book" class="process-link-btn">Book Consultation <i class="fa-solid fa-arrow-right-long" style="margin-left: 6px;"></i></a>
+          </div>
+
+          <!-- Column 3: Treatment -->
+          <div class="process-col">
+            <span class="process-roman">III</span>
+            <span class="process-part">PART THREE • DAILY PRACTICE</span>
+            <h3>Holistic Treatment</h3>
+            <p>Receive your tailored remedy schedule delivered directly. Follow clear, natural dosings that target core vulnerabilities and promote long-term systemic healing.</p>
+            <ul class="process-list">
+              <li><i class="fa-solid fa-check"></i> Custom natural remedy plan & tracking logs</li>
+              <li><i class="fa-solid fa-check"></i> Clean dose guidelines, timings, and schedules</li>
+              <li><i class="fa-solid fa-check"></i> Continuous monitoring of symptom recovery</li>
+              <li><i class="fa-solid fa-check"></i> Seamless remedy renewals and checkups</li>
+            </ul>
+            <a href="#about" class="process-link-btn">Learn Our Story <i class="fa-solid fa-arrow-right-long" style="margin-left: 6px;"></i></a>
+          </div>
+
+        </div>
+
+        <div id="triage-tool-anchor" style="padding-top: 60px;"></div>
 
         <div class="triage-container scroll-reveal">
           <!-- Progress Bar -->
