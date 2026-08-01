@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu, Moon, Sun, X } from "lucide-react";
-import logoImage from "@/assets/yours-logo-lockup.png";;
+import logoImage from "@/assets/yours-logo-trim.png";;
 
 const links: { label: string; to: "/" | "/diseases"; hash?: string }[] = [
   { label: "Home", to: "/" },
