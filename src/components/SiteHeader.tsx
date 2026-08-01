@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu, Moon, Sun, X } from "lucide-react";
-import logoAsset from "@/assets/logo-compact.png.asset.json";
+import logoImage from "@/assets/yours-logo-lockup.png";;
 
 const links: { label: string; to: "/" | "/diseases"; hash?: string }[] = [
   { label: "Home", to: "/" },
@@ -58,7 +58,7 @@ export function SiteHeader() {
           onClick={() => setOpen(false)}
         >
           <img
-            src={logoAsset.url}
+            src={logoImage}
             alt="Yours Clinic"
             width={626}
             height={395}
