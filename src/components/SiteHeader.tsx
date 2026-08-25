@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Menu, Moon, Sun, X } from "lucide-react";
 import logoAsset from "@/assets/yours-logo-trim.png";
+import { SocialLinks } from "@/components/SocialLinks";
 
 const links: { label: string; to: "/" | "/diseases"; hash?: string }[] = [
   { label: "Home", to: "/" },
@@ -50,6 +51,14 @@ export function SiteHeader() {
       <a href="#main" className="skip-link">
         Skip to main content
       </a>
+      <div className="hidden border-b border-border/60 bg-card/70 backdrop-blur-sm md:block">
+        <div className="mx-auto flex h-9 max-w-6xl items-center justify-between px-5">
+          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            Follow Dr. Sumit Jha
+          </p>
+          <SocialLinks size="sm" />
+        </div>
+      </div>
       <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between gap-4 px-5">
         <Link
           to="/"
@@ -141,6 +150,7 @@ export function SiteHeader() {
             </li>
           ))}
         </ul>
+        <SocialLinks size="sm" className="mt-4 px-3" />
       </nav>
     </header>
   );

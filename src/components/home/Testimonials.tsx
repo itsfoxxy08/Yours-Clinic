@@ -8,26 +8,34 @@ import p3 from "@/assets/patients/p3.jpg";
 const stories = [
   {
     photo: p1,
-    name: "Vikram Kumar",
-    meta: "Piles • Google review",
+    name: "Manish Singh",
+    meta: "Chronic illness • JustDial review",
     quote:
-      "I was struggling with piles for over 8 years. I even had surgery once, but the problem came back. The pain and bleeding were unbearable. Then I consulted Dr. Sumit Jha at Yours Clinic — after taking the medicines, in just 15 days my condition was 90% better.",
+      "Yours Clinic is best. I have used the medicine from Dr. Sumit sir for many issues — he is miraculous. I have seen several patients in my locality and family who got their treatment done by sir for fatal diseases and they are enjoying their life. Thanks to the whole Yours Clinic team for support, diet advice and care.",
   },
   {
     photo: p2,
-    name: "Manish Choudhary",
-    meta: "General homeopathic care • Google review",
+    name: "Azad Ali Khan",
+    meta: "Excellent treatment • JustDial review",
     quote:
-      "Dr. Sumit is a great doctor. He has terrific, informative and sensitive knowledge. He's very understanding and listens to your concerns. I highly recommend him to anyone looking for a homeopathic specialist.",
+      "I had a great experience at Yours Clinic! The doctors and physiotherapists are very kind and helpful. They listened to my problems and gave me excellent treatment. I felt better after just a few visits. The staff is friendly and the place is clean. I highly recommend Yours Clinic for anyone needing good care!",
   },
   {
     photo: p3,
-    name: "Nishant Niraj",
-    meta: "Long-term patient • Google review",
+    name: "Manish Choudhary",
+    meta: "Speedy recovery • JustDial review",
     quote:
-      "Yours Clinic is the best centre for any type of homoeopathic related disease. Dr. Sumit Jha only uses branded medicines from Dr. Willmar Schwabe, which are beneficial and very effective.",
+      "Excellent doctor with great humanity — I highly recommend him to everyone. I have not yet met any other doctor like him, who takes so much personal care of the patients.",
+  },
+  {
+    photo: p1,
+    name: "OM",
+    meta: "Personalised care • JustDial review",
+    quote:
+      "Yours Clinic is truly a gem for anyone seeking medical assistance. The doctors are not only highly skilled but also incredibly compassionate. My recovery was remarkably speedy, thanks to their personalised treatment plans and attentive care.",
   },
 ];
+
 
 
 export function Testimonials() {

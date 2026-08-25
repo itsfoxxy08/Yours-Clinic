@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 
 
 function NotFoundComponent() {
@@ -122,11 +123,12 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <SiteHeader />
-      <main id="main" tabIndex={-1} className="pt-[72px]">
+      <main id="main" tabIndex={-1} className="pt-[72px] md:pt-[108px]">
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
       </main>
       <SiteFooter />
+      <WhatsAppFloat />
     </QueryClientProvider>
   );
 }

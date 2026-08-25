@@ -7,8 +7,11 @@ import { FeaturedDiseases } from "@/components/home/FeaturedDiseases";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { About } from "@/components/home/About";
 import { Testimonials } from "@/components/home/Testimonials";
+import { YouTubeShowcase } from "@/components/home/YouTubeShowcase";
 import { Booking } from "@/components/home/Booking";
 import { JoinTeam } from "@/components/home/JoinTeam";
+import { youtubeVideosQuery } from "@/lib/youtube.query";
+import { socialProfileUrls } from "@/lib/social";
 
 const title = "Yours Clinic — Homeopathic Care, Triage & Appointments";
 const description =
@@ -45,6 +48,7 @@ export const Route = createFileRoute("/")({
           description,
           medicalSpecialty: "Homeopathic",
           url: "/",
+          sameAs: socialProfileUrls,
           employee: clinicians.map((name) => ({
             "@type": "Physician",
             name,
@@ -58,6 +62,7 @@ export const Route = createFileRoute("/")({
           { name: "Diseases", url: "/diseases" },
           { name: "Treatment Now", url: "/#treatment" },
           { name: "Our Clinicians", url: "/#clinicians" },
+          { name: "Videos", url: "/#videos" },
           { name: "Book Appointment", url: "/#book" },
           { name: "About Us", url: "/#about" },
         ].map((l) => ({
@@ -69,6 +74,7 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(youtubeVideosQuery),
   component: Index,
 });
 
@@ -83,6 +89,7 @@ function Index() {
       <FeaturedDiseases />
       <About />
       <Testimonials />
+      <YouTubeShowcase />
       <Booking />
       <JoinTeam />
     </>

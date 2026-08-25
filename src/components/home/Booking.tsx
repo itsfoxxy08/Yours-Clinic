@@ -2,6 +2,8 @@ import { useState, type FormEvent } from "react";
 import { CalendarCheck, CheckCircle2 } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { diseases } from "@/data/diseases";
+import { externalLinkProps, whatsappLink } from "@/lib/social";
+import { WhatsAppIcon } from "@/components/SocialLinks";
 
 const slots = ["09:30", "11:00", "12:30", "15:00", "16:30", "18:00"];
 
@@ -163,12 +165,23 @@ export function Booking() {
 
                 {error && <p className="text-sm text-destructive">{error}</p>}
 
-                <button
-                  type="submit"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 sm:w-auto"
-                >
-                  <CalendarCheck className="h-4 w-4" /> Confirm appointment
-                </button>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <button
+                    type="submit"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 sm:w-auto"
+                  >
+                    <CalendarCheck className="h-4 w-4" /> Confirm appointment
+                  </button>
+                  <a
+                    href={whatsappLink(
+                      "Hello Dr. Sumit Jha, I would like to enquire about booking a consultation.",
+                    )}
+                    {...externalLinkProps}
+                    className="press focus-gold inline-flex w-full items-center justify-center gap-2 rounded-full border border-[#128c4a]/40 px-7 py-4 text-sm font-semibold text-[#128c4a] transition-colors hover:bg-[#128c4a]/10 sm:w-auto"
+                  >
+                    <WhatsAppIcon className="h-4 w-4" /> Chat on WhatsApp
+                  </a>
+                </div>
               </form>
             )}
           </div>

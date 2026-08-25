@@ -1,57 +1,22 @@
 import { Reveal } from "@/components/Reveal";
 import { Microscope, BriefcaseMedical, ShieldCheck } from "lucide-react";
 import consultation from "@/assets/clinic/consultation.jpg";
-import doc1 from "@/assets/team/doctor-1.jpg";
-import doc2 from "@/assets/team/doctor-2.jpg";
-import doc3 from "@/assets/team/doctor-3.jpg";
-import doc4 from "@/assets/team/doctor-4.jpg";
-import doc5 from "@/assets/team/doctor-5.jpg";
-import doc6 from "@/assets/team/doctor-6.jpg";
+import sumitJha from "@/assets/team/sumit-jha.png.asset.json";
+import bandanaKumari from "@/assets/team/bandana-kumari.png.asset.json";
+import mnJha from "@/assets/team/mn-jha.png.asset.json";
+import ansuSingh from "@/assets/team/ansu-singh.png.asset.json";
+import meghaAnand from "@/assets/team/megha-anand.webp.asset.json";
+import shwetaSangini from "@/assets/team/shweta-sangini.png.asset.json";
 
 const specialists = [
-  {
-    photo: doc2,
-    name: "Dr. Sumit Jha",
-    reg: "BHMS, MD (Hom.) • Founder & Chief Physician",
-    specialty: "Constitutional & Chronic Care",
-    bio: "Leads Yours Clinic. Known for piles, fistula and long-standing gastric cases that had run out of options.",
-  },
-  {
-    photo: doc1,
-    name: "Dr. Bandana Kumari",
-    reg: "BHMS • Senior Consultant",
-    specialty: "Women's Health & PCOS",
-    bio: "Handles the women's health panel — PCOD, irregular cycles, fibroids and menopausal care.",
-  },
-  {
-    photo: doc4,
-    name: "Dr. M. N. Jha",
-    reg: "BHMS • Senior Consultant",
-    specialty: "Joint, Spine & Geriatric Care",
-    bio: "Decades of classical practice in arthritis, cervical spondylosis, sciatica and elderly care.",
-  },
-  {
-    photo: doc3,
-    name: "Dr. Ansu Singh",
-    reg: "BHMS • Consultant",
-    specialty: "Skin & Hair Disorders",
-    bio: "Psoriasis, eczema, vitiligo and hair fall — long-arc treatment plans with photographic tracking.",
-  },
-  {
-    photo: doc5,
-    name: "Dr. Megha Anand",
-    reg: "BHMS • Consultant",
-    specialty: "Paediatrics & Acute Care",
-    bio: "Runs the acute desk: recurring colds, tonsillitis, allergic rhinitis and childhood immunity.",
-  },
-  {
-    photo: doc6,
-    name: "Dr. Shweta Sangini",
-    reg: "BHMS, PG Dip. Nutrition",
-    specialty: "Nutrition & Lifestyle",
-    bio: "Builds the diet, sleep and stress plan that sits alongside every remedy schedule.",
-  },
+  { photo: sumitJha.url, name: "Dr. Sumit Jha", reg: "Founder, CEO" },
+  { photo: bandanaKumari.url, name: "Dr. Bandana Kumari", reg: "BHMS (HOM)" },
+  { photo: mnJha.url, name: "Dr. M.N. Jha", reg: "BHMS (HOM)" },
+  { photo: ansuSingh.url, name: "Dr. Anshu Singh", reg: "BHMS (HOM)" },
+  { photo: meghaAnand.url, name: "Dr. Megha Anand", reg: "BHMS (HOM)" },
+  { photo: shwetaSangini.url, name: "Dr. Shweta Sangini", reg: "BHMS (HOM)" },
 ];
+
 
 
 export function About() {
@@ -138,8 +103,7 @@ export function About() {
             </h3>
             <span className="gold-rule mx-auto mt-6 block max-w-[7rem]" />
             <p className="mx-auto mt-6 max-w-xl text-sm leading-loose text-muted-foreground">
-              Council-registered, named and reachable — the same six doctors who
-              see patients at Yours Clinic every week. No anonymous panel.
+              The six doctors who see patients at Yours Clinic every week.
             </p>
           </div>
 
@@ -151,23 +115,17 @@ export function About() {
                   <div className="aspect-[4/5] w-full overflow-hidden bg-primary-light">
                     <img
                       src={d.photo}
-                      alt={`${d.name}, ${d.specialty} at Yours Clinic`}
+                      alt={`${d.name} at Yours Clinic`}
                       loading="lazy" decoding="async"
                       width={768}
                       height={960}
                       className="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.04]"
                     />
                   </div>
-                  <div className="p-7">
+                  <div className="p-7 text-center">
                     <h4 className="text-xl text-foreground">{d.name}</h4>
-                    <p className="mt-1.5 text-[0.62rem] font-extrabold uppercase tracking-[0.18em] text-gold">
-                      {d.specialty}
-                    </p>
-                    <span className="gold-rule mt-4 block max-w-[3rem]" />
-                    <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                      {d.bio}
-                    </p>
-                    <p className="mt-5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-sage">
+                    <span className="gold-rule mx-auto mt-4 block max-w-[3rem]" />
+                    <p className="mt-4 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-sage">
                       {d.reg}
                     </p>
                   </div>
@@ -175,6 +133,7 @@ export function About() {
               </Reveal>
             ))}
           </div>
+
         </Reveal>
       </div>
     </section>

@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { diseases } from "@/data/diseases";
 import logoAsset from "@/assets/yours-logo-lockup.png";
+import { SocialLinks } from "@/components/SocialLinks";
 
 export function SiteFooter() {
   return (
@@ -77,6 +78,14 @@ export function SiteFooter() {
             <li>care@yoursclinic.com</li>
             <li>Consultation · ₹499</li>
           </ul>
+
+          <h4 className="mt-8 text-sm font-semibold uppercase tracking-[0.14em] text-foreground">
+            Follow &amp; Connect
+          </h4>
+          <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+            Follow Dr. Sumit Jha on social media for daily health guidance.
+          </p>
+          <SocialLinks className="mt-4" />
         </div>
       </div>
 
