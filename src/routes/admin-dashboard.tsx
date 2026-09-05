@@ -22,6 +22,10 @@ import {
   Sparkles,
   ArrowLeft,
   Filter,
+  Truck,
+  Package,
+  Clock,
+  Pill,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -34,6 +38,11 @@ import {
   formatDate12Hour,
   type PatientRecord,
 } from "@/lib/patient-service";
+import {
+  getMedicineOrders,
+  updateOrderStatus,
+  type MedicineOrder,
+} from "@/lib/order-service";
 import { AdminLoginModal } from "@/components/AdminLoginModal";
 import { FollowUpSheetModal } from "@/components/FollowUpSheetModal";
 import { isSupabaseConfigured } from "@/lib/supabase";
@@ -44,6 +53,9 @@ export const Route = createFileRoute("/admin-dashboard")({
 
 function AdminDashboardPage() {
   const navigate = useNavigate();
+
+  // Active Admin View Tab ("patients" | "orders")
+  const [adminTab, setAdminTab] = useState<"patients" | "orders">("patients");
 
   // Auth session check
   const [session, setSession] = useState<any>(null);
@@ -56,6 +68,14 @@ function AdminDashboardPage() {
   const [fromDatabase, setFromDatabase] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Medicine Orders State
+  const [orders, setOrders] = useState<MedicineOrder[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
+  const [orderSearchQuery, setOrderSearchQuery] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
+  const [editingOrder, setEditingOrder] = useState<MedicineOrder | null>(null);
+  const [updatingOrder, setUpdatingOrder] = useState(false);
 
   // Date Filter State
   const [datePreset, setDatePreset] = useState<"all" | "today" | "yesterday" | "week" | "month" | "custom">("all");
@@ -97,7 +117,7 @@ function AdminDashboardPage() {
     checkSession();
   }, []);
 
-  // Fetch patient records when session is verified
+  // Fetch patient records and medicine orders when session is verified
   const loadRecords = async () => {
     setLoadingRecords(true);
     const res = await getPatientRecords();
@@ -106,11 +126,41 @@ function AdminDashboardPage() {
     setLoadingRecords(false);
   };
 
+  const loadOrders = async () => {
+    setLoadingOrders(true);
+    const res = await getMedicineOrders();
+    setOrders(res.data);
+    setLoadingOrders(false);
+  };
+
   useEffect(() => {
     if (session) {
       loadRecords();
+      loadOrders();
     }
   }, [session]);
+
+  const handleUpdateOrderSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingOrder) return;
+
+    setUpdatingOrder(true);
+    const res = await updateOrderStatus(editingOrder.order_id, {
+      status: editingOrder.status,
+      courier_name: editingOrder.courier_name || "",
+      tracking_number: editingOrder.tracking_number || "",
+      estimated_delivery: editingOrder.estimated_delivery || "",
+    });
+    setUpdatingOrder(false);
+
+    if (res.success) {
+      toast.success(`Order ${editingOrder.order_id} updated successfully!`);
+      setEditingOrder(null);
+      loadOrders();
+    } else {
+      toast.error("Failed to update order details.");
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("yc_employee_session");
@@ -467,18 +517,289 @@ function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Patient Records Section Header & Controls */}
-        <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-md space-y-6">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-border/60">
-            <div>
-              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                <FileText className="h-5 w-5 text-gold" />
-                <span>Patient Records Directory</span>
-              </h2>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Manage, add, edit patient details and download formatted Excel/Google Sheets files.
-              </p>
+        {/* Main Dashboard Navigation Tabs */}
+        <div className="flex border-b border-border/80 bg-card/40 rounded-2xl p-1.5 gap-2">
+          <button
+            onClick={() => setAdminTab("patients")}
+            className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold transition-all ${
+              adminTab === "patients"
+                ? "bg-gold text-primary-foreground shadow-md font-extrabold"
+                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+            }`}
+          >
+            <Users className="h-4 w-4" />
+            <span>Manage Patient Records ({records.length})</span>
+          </button>
+
+          <button
+            onClick={() => setAdminTab("orders")}
+            className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold transition-all ${
+              adminTab === "orders"
+                ? "bg-gold text-primary-foreground shadow-md font-extrabold"
+                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+            }`}
+          >
+            <Truck className="h-4 w-4" />
+            <span>Track & Manage Medicine Orders ({orders.length})</span>
+          </button>
+        </div>
+
+        {adminTab === "orders" ? (
+          /* TRACK & MANAGE MEDICINE ORDERS SECTION */
+          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-md space-y-6 glide-in">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-border/60">
+              <div>
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <Truck className="h-5 w-5 text-gold" />
+                  <span>Medicine Prescription & Courier Orders</span>
+                </h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Track live patient orders, update fulfillment status (Processing, Dispatched, Delivered), and assign courier tracking IDs.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={loadOrders}
+                  className="press focus-gold flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-xs font-bold text-foreground hover:border-gold/40 transition-all"
+                >
+                  <RefreshCw className={`h-4 w-4 text-gold ${loadingOrders ? "animate-spin" : ""}`} />
+                  <span>Refresh Orders</span>
+                </button>
+              </div>
             </div>
+
+            {/* Orders Search & Status Filters */}
+            <div className="space-y-3">
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <div className="relative flex-1 w-full">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={orderSearchQuery}
+                    onChange={(e) => setOrderSearchQuery(e.target.value)}
+                    placeholder="Search by Order ID (e.g. YC-ORD-8921), Patient Name, Phone, Courier Code..."
+                    className="w-full rounded-2xl border border-border bg-background/70 pl-10 pr-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-gold focus:outline-none"
+                  />
+                  {orderSearchQuery && (
+                    <button
+                      onClick={() => setOrderSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                  <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0 ml-1" />
+                  {["all", "pending", "processing", "dispatched", "out for delivery", "delivered", "cancelled"].map((st) => (
+                    <button
+                      key={st}
+                      onClick={() => setOrderStatusFilter(st)}
+                      className={`capitalize shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
+                        orderStatusFilter === st
+                          ? "bg-gold/20 text-gold border border-gold/40 shadow-xs"
+                          : "text-muted-foreground hover:text-foreground bg-background/50 border border-border/50"
+                      }`}
+                    >
+                      {st}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Orders Data Table / Mobile Cards */}
+            {loadingOrders ? (
+              <div className="py-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-2">
+                <RefreshCw className="h-6 w-6 animate-spin text-gold" />
+                <span>Loading medicine orders...</span>
+              </div>
+            ) : (
+              (() => {
+                const filteredOrders = orders.filter((o) => {
+                  const matchesSearch =
+                    o.order_id.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
+                    o.patient_name.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
+                    o.phone.includes(orderSearchQuery) ||
+                    (o.courier_name && o.courier_name.toLowerCase().includes(orderSearchQuery.toLowerCase())) ||
+                    (o.tracking_number && o.tracking_number.toLowerCase().includes(orderSearchQuery.toLowerCase()));
+
+                  const matchesStatus =
+                    orderStatusFilter === "all" || o.status.toLowerCase() === orderStatusFilter.toLowerCase();
+
+                  return matchesSearch && matchesStatus;
+                });
+
+                if (filteredOrders.length === 0) {
+                  return (
+                    <div className="py-12 text-center rounded-2xl border border-dashed border-border p-8">
+                      <Package className="mx-auto h-10 w-10 text-muted-foreground/50 mb-3" />
+                      <h4 className="text-sm font-bold text-foreground">No Medicine Orders Found</h4>
+                      <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
+                        No patient order matched your active search or status filter.
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <>
+                    {/* Desktop Orders Table */}
+                    <div className="hidden lg:block overflow-x-auto rounded-2xl border border-border/70">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-muted/60 text-muted-foreground uppercase tracking-wider font-semibold text-[0.68rem] border-b border-border/80">
+                          <tr>
+                            <th className="py-3.5 px-4">Order ID</th>
+                            <th className="py-3.5 px-4">Patient Details</th>
+                            <th className="py-3.5 px-4">Prescribed Medicine</th>
+                            <th className="py-3.5 px-4">Delivery Address</th>
+                            <th className="py-3.5 px-4">Status</th>
+                            <th className="py-3.5 px-4">Courier / Tracking</th>
+                            <th className="py-3.5 px-4">Date Placed (12h)</th>
+                            <th className="py-3.5 px-4 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/60 bg-card">
+                          {filteredOrders.map((order) => (
+                            <tr key={order.order_id} className="hover:bg-muted/30 transition-colors">
+                              <td className="py-4 px-4 font-mono font-black text-gold">
+                                {order.order_id}
+                              </td>
+                              <td className="py-4 px-4">
+                                <span className="font-bold block text-foreground">{order.patient_name}</span>
+                                <span className="text-muted-foreground text-[0.7rem]">{order.phone}</span>
+                              </td>
+                              <td className="py-4 px-4 font-medium text-sage max-w-[200px] truncate" title={order.medicines}>
+                                {order.medicines}
+                              </td>
+                              <td className="py-4 px-4 text-muted-foreground max-w-[180px] truncate" title={order.address}>
+                                {order.address}
+                              </td>
+                              <td className="py-4 px-4">
+                                <span
+                                  className={`inline-block rounded-full px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider ${
+                                    order.status === "Pending"
+                                      ? "bg-amber-500/15 text-amber-500 border border-amber-500/30"
+                                      : order.status === "Processing"
+                                      ? "bg-blue-500/15 text-blue-500 border border-blue-500/30"
+                                      : order.status === "Dispatched"
+                                      ? "bg-purple-500/15 text-purple-500 border border-purple-500/30"
+                                      : order.status === "Out for Delivery"
+                                      ? "bg-sky-500/15 text-sky-500 border border-sky-500/30"
+                                      : order.status === "Delivered"
+                                      ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30"
+                                      : "bg-rose-500/15 text-rose-500 border border-rose-500/30"
+                                  }`}
+                                >
+                                  {order.status}
+                                </span>
+                              </td>
+                              <td className="py-4 px-4 font-mono text-[0.7rem]">
+                                {order.courier_name ? (
+                                  <div>
+                                    <span className="font-bold text-foreground block">{order.courier_name}</span>
+                                    <span className="text-gold">{order.tracking_number || "No tracking code"}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground/60 italic">Not Dispatched</span>
+                                )}
+                              </td>
+                              <td className="py-4 px-4 text-muted-foreground text-[0.7rem] whitespace-nowrap">
+                                {formatDate12Hour(order.created_at)}
+                              </td>
+                              <td className="py-4 px-4 text-right">
+                                <button
+                                  onClick={() => setEditingOrder(order)}
+                                  className="press rounded-xl border border-gold/40 bg-gold/10 px-3 py-1.5 text-xs font-bold text-gold hover:bg-gold/25 transition-all"
+                                >
+                                  Update Order
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Responsive Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:hidden gap-4">
+                      {filteredOrders.map((order) => (
+                        <div
+                          key={order.order_id}
+                          className="rounded-2xl border border-border/80 bg-background/80 p-5 space-y-3 shadow-xs"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <span className="font-mono font-black text-gold text-sm block">
+                                {order.order_id}
+                              </span>
+                              <h4 className="font-bold text-base text-foreground mt-0.5">
+                                {order.patient_name}
+                              </h4>
+                            </div>
+                            <span
+                              className={`rounded-full px-2.5 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider border ${
+                                order.status === "Pending"
+                                  ? "bg-amber-500/15 text-amber-500 border-amber-500/30"
+                                  : order.status === "Processing"
+                                  ? "bg-blue-500/15 text-blue-500 border border-blue-500/30"
+                                  : order.status === "Dispatched"
+                                  ? "bg-purple-500/15 text-purple-500 border border-purple-500/30"
+                                  : order.status === "Out for Delivery"
+                                  ? "bg-sky-500/15 text-sky-500 border border-sky-500/30"
+                                  : order.status === "Delivered"
+                                  ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/30"
+                                  : "bg-rose-500/15 text-rose-500 border border-rose-500/30"
+                              }`}
+                            >
+                              {order.status}
+                            </span>
+                          </div>
+
+                          <div className="text-xs space-y-1.5 pt-2 border-t border-border/50 text-muted-foreground">
+                            <div><span className="font-semibold text-foreground">Phone:</span> {order.phone}</div>
+                            <div><span className="font-semibold text-foreground">Address:</span> {order.address}</div>
+                            <div><span className="font-semibold text-foreground">Remedies:</span> {order.medicines}</div>
+                            <div>
+                              <span className="font-semibold text-foreground">Courier:</span>{" "}
+                              {order.courier_name || "Unassigned"} ({order.tracking_number || "No tracking code"})
+                            </div>
+                          </div>
+
+                          <div className="pt-2 flex justify-between items-center border-t border-border/50">
+                            <span className="text-[0.7rem] text-muted-foreground">
+                              {formatDate12Hour(order.created_at)}
+                            </span>
+                            <button
+                              onClick={() => setEditingOrder(order)}
+                              className="press rounded-xl bg-gold/15 border border-gold/40 px-4 py-1.5 text-xs font-bold text-gold"
+                            >
+                              Update Status
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                );
+              })()
+            )}
+          </div>
+        ) : (
+          /* PATIENT RECORDS SECTION */
+          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-md space-y-6">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-border/60">
+              <div>
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-gold" />
+                  <span>Patient Records Directory</span>
+                </h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Manage, add, edit patient details and download formatted Excel/Google Sheets files.
+                </p>
+              </div>
 
             {/* Actions: Add Patient & Export Buttons */}
             <div className="flex flex-wrap items-center gap-2.5">

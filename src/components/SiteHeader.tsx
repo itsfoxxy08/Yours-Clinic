@@ -4,6 +4,8 @@ import { Menu, Moon, Sun, X, ShieldCheck, Lock } from "lucide-react";
 import logoAsset from "@/assets/yours-logo-trim.png";
 import { SocialLinks } from "@/components/SocialLinks";
 import { AdminLoginModal } from "@/components/AdminLoginModal";
+import { OrderMedicinesModal } from "@/components/home/OrderMedicinesModal";
+import { Pill, Truck } from "lucide-react";
 
 const links: { label: string; to: "/" | "/diseases"; hash?: string }[] = [
   { label: "Home", to: "/" },
@@ -20,6 +22,10 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [dark, setDark] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
+
+  // Public Order & Track Medicines Modal State
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
+  const [orderModalTab, setOrderModalTab] = useState<"order" | "track">("order");
 
   useEffect(() => {
     const stored = window.localStorage.getItem("yc-theme");
@@ -60,6 +66,30 @@ export function SiteHeader() {
               Follow Dr. Sumit Jha
             </p>
             <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setOrderModalTab("order");
+                  setOrderModalOpen(true);
+                }}
+                className="focus-gold flex items-center gap-1.5 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400 hover:text-foreground transition-colors"
+              >
+                <Pill className="h-3.5 w-3.5" />
+                <span>Order Medicines</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setOrderModalTab("track");
+                  setOrderModalOpen(true);
+                }}
+                className="focus-gold flex items-center gap-1.5 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-blue-600 dark:text-blue-400 hover:text-foreground transition-colors"
+              >
+                <Truck className="h-3.5 w-3.5" />
+                <span>Track Order</span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => {
@@ -107,6 +137,18 @@ export function SiteHeader() {
                 {l.label}
               </Link>
             ))}
+
+            <button
+              type="button"
+              onClick={() => {
+                setOrderModalTab("order");
+                setOrderModalOpen(true);
+              }}
+              className="link-gold focus-gold text-[0.7rem] font-extrabold uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-400 hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              <Pill className="h-3.5 w-3.5" />
+              <span>Order Medicines</span>
+            </button>
           </nav>
 
           <div className="flex items-center gap-2">
@@ -122,6 +164,18 @@ export function SiteHeader() {
               ) : (
                 <Moon className="h-4 w-4" aria-hidden="true" />
               )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setOrderModalTab("order");
+                setOrderModalOpen(true);
+              }}
+              className="press focus-gold hidden rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 sm:inline-flex items-center gap-1.5 shadow-xs"
+            >
+              <Pill className="h-3.5 w-3.5" />
+              <span>Order Medicines</span>
             </button>
 
             <button
@@ -189,6 +243,34 @@ export function SiteHeader() {
                 type="button"
                 onClick={() => {
                   setOpen(false);
+                  setOrderModalTab("order");
+                  setOrderModalOpen(true);
+                }}
+                className="press focus-gold flex w-full items-center gap-2 rounded-xl px-3 py-3 text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:bg-secondary"
+              >
+                <Pill className="h-4 w-4" />
+                <span>Order Medicines</span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  setOrderModalTab("track");
+                  setOrderModalOpen(true);
+                }}
+                className="press focus-gold flex w-full items-center gap-2 rounded-xl px-3 py-3 text-sm font-bold text-blue-600 dark:text-blue-400 hover:bg-secondary"
+              >
+                <Truck className="h-4 w-4" />
+                <span>Track Order Status</span>
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
                   if (typeof window !== "undefined" && localStorage.getItem("yc_employee_session")) {
                     window.location.href = "/admin-dashboard";
                   } else {
@@ -209,6 +291,12 @@ export function SiteHeader() {
       <AdminLoginModal
         isOpen={adminModalOpen}
         onClose={() => setAdminModalOpen(false)}
+      />
+
+      <OrderMedicinesModal
+        isOpen={orderModalOpen}
+        onClose={() => setOrderModalOpen(false)}
+        initialTab={orderModalTab}
       />
     </>
   );
