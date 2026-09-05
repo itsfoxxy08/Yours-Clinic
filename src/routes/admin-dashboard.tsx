@@ -1146,8 +1146,107 @@ function AdminDashboardPage() {
             </>
           )}
         </div>
+        )}
       </div>
 
+      {/* Order Update Modal */}
+      {editingOrder && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in"
+          onClick={() => setEditingOrder(null)}
+        >
+          <div
+            className="relative w-full max-w-lg rounded-3xl bg-card border border-gold/30 p-6 shadow-2xl space-y-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <Truck className="h-5 w-5 text-gold" />
+                <span>Update Order {editingOrder.order_id}</span>
+              </h3>
+              <button onClick={() => setEditingOrder(null)} className="text-muted-foreground hover:text-foreground">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateOrderSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Order Status *
+                </label>
+                <select
+                  value={editingOrder.status}
+                  onChange={(e) => setEditingOrder({ ...editingOrder, status: e.target.value as MedicineOrder["status"] })}
+                  className="w-full rounded-xl border border-border bg-background/60 px-3.5 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none"
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Processing">Processing</option>
+                  <option value="Dispatched">Dispatched</option>
+                  <option value="Out for Delivery">Out for Delivery</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                    Courier Service Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editingOrder.courier_name || ""}
+                    onChange={(e) => setEditingOrder({ ...editingOrder, courier_name: e.target.value })}
+                    placeholder="e.g. BlueDart, Delhivery, Speed Post"
+                    className="w-full rounded-xl border border-border bg-background/60 px-3.5 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                    Tracking Number / AWB
+                  </label>
+                  <input
+                    type="text"
+                    value={editingOrder.tracking_number || ""}
+                    onChange={(e) => setEditingOrder({ ...editingOrder, tracking_number: e.target.value })}
+                    placeholder="e.g. BD902817429IN"
+                    className="w-full rounded-xl border border-border bg-background/60 px-3.5 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Estimated Delivery Date
+                </label>
+                <input
+                  type="date"
+                  value={editingOrder.estimated_delivery || ""}
+                  onChange={(e) => setEditingOrder({ ...editingOrder, estimated_delivery: e.target.value })}
+                  className="w-full rounded-xl border border-border bg-background/60 px-3.5 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingOrder(null)}
+                  className="flex-1 rounded-xl border border-border bg-background py-3 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={updatingOrder}
+                  className="flex-1 rounded-xl bg-primary py-3 text-xs font-bold text-primary-foreground shadow-md hover:opacity-95 disabled:opacity-50"
+                >
+                  {updatingOrder ? "Updating..." : "Save Order Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {/* Add / Edit Patient Modal */}
       {(isAddModalOpen || editingRecord) && (
         <div

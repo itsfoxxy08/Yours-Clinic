@@ -62,9 +62,15 @@ export function SiteHeader() {
         </a>
         <div className="hidden border-b border-border/60 bg-card/70 backdrop-blur-sm md:block">
           <div className="mx-auto flex h-9 max-w-6xl items-center justify-between px-5">
-            <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              Follow Dr. Sumit Jha
-            </p>
+            {/* Left: label + social icons grouped together */}
+            <div className="flex items-center gap-3">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Follow Dr. Sumit Jha
+              </p>
+              <SocialLinks size="sm" />
+            </div>
+
+            {/* Right: action buttons */}
             <div className="flex items-center gap-4">
               <button
                 type="button"
@@ -104,7 +110,6 @@ export function SiteHeader() {
                 <ShieldCheck className="h-3.5 w-3.5 text-gold" />
                 <span>Employee Login</span>
               </button>
-              <SocialLinks size="sm" />
             </div>
           </div>
         </div>
