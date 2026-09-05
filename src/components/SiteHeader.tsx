@@ -8,7 +8,6 @@ import { AdminLoginModal } from "@/components/AdminLoginModal";
 const links: { label: string; to: "/" | "/diseases"; hash?: string }[] = [
   { label: "Home", to: "/" },
   { label: "Diseases", to: "/diseases" },
-  { label: "Treatment Now", to: "/", hash: "treatment" },
   { label: "Our Clinicians", to: "/", hash: "clinicians" },
   { label: "Awards", to: "/", hash: "awards" },
   { label: "Book Appointment", to: "/", hash: "book" },

@@ -1,20 +1,20 @@
 import { Reveal } from "@/components/Reveal";
 import { Microscope, BriefcaseMedical, ShieldCheck } from "lucide-react";
 import consultation from "@/assets/clinic/consultation.jpg";
-import sumitJha from "@/assets/team/sumit-jha.png.asset.json";
-import bandanaKumari from "@/assets/team/bandana-kumari.png.asset.json";
-import mnJha from "@/assets/team/mn-jha.png.asset.json";
-import ansuSingh from "@/assets/team/ansu-singh.png.asset.json";
-import meghaAnand from "@/assets/team/megha-anand.webp.asset.json";
-import shwetaSangini from "@/assets/team/shweta-sangini.png.asset.json";
+import sumitJha from "@/assets/team/sumit-jha.jpg";
+import bandanaKumari from "@/assets/team/bandana-kumari.jpg";
+import mnJha from "@/assets/team/mn-jha.jpg";
+import anshuSingh from "@/assets/team/anshu-singh.jpg";
+import meghaAnand from "@/assets/team/megha-anand.jpg";
+import shwetaSangini from "@/assets/team/shweta-sangini.jpg";
 
 const specialists = [
-  { photo: sumitJha.url, name: "Dr. Sumit Jha", reg: "Founder, CEO" },
-  { photo: bandanaKumari.url, name: "Dr. Bandana Kumari", reg: "BHMS (HOM)" },
-  { photo: mnJha.url, name: "Dr. M.N. Jha", reg: "BHMS (HOM)" },
-  { photo: ansuSingh.url, name: "Dr. Anshu Singh", reg: "BHMS (HOM)" },
-  { photo: meghaAnand.url, name: "Dr. Megha Anand", reg: "BHMS (HOM)" },
-  { photo: shwetaSangini.url, name: "Dr. Shweta Sangini", reg: "BHMS (HOM)" },
+  { photo: sumitJha, name: "Dr. Sumit Jha", reg: "Founder, CEO" },
+  { photo: bandanaKumari, name: "Dr. Bandana Kumari", reg: "BHMS (HOM)" },
+  { photo: mnJha, name: "Dr. M.N. Jha", reg: "BHMS (HOM)" },
+  { photo: anshuSingh, name: "Dr. Anshu Singh", reg: "BHMS (HOM)" },
+  { photo: meghaAnand, name: "Dr. Megha Anand", reg: "BHMS (HOM)" },
+  { photo: shwetaSangini, name: "Dr. Shweta Sangini", reg: "BHMS (HOM)" },
 ];
 
 

@@ -1,10 +1,7 @@
 import { abs } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
 import { Hero } from "@/components/home/Hero";
-import { TrustStrip } from "@/components/home/TrustStrip";
-import { TreatmentProcess } from "@/components/home/TreatmentProcess";
 import { FeaturedDiseases } from "@/components/home/FeaturedDiseases";
-import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { About } from "@/components/home/About";
 import { Awards } from "@/components/home/Awards";
 import { Testimonials } from "@/components/home/Testimonials";
@@ -61,7 +58,6 @@ export const Route = createFileRoute("/")({
         type: "application/ld+json",
         children: JSON.stringify([
           { name: "Diseases", url: "/diseases" },
-          { name: "Treatment Now", url: "/#treatment" },
           { name: "Our Clinicians", url: "/#clinicians" },
           { name: "Awards", url: "/#awards" },
           { name: "Videos", url: "/#videos" },
@@ -85,9 +81,6 @@ function Index() {
   return (
     <>
       <Hero />
-      <TrustStrip />
-      <TreatmentProcess />
-      <CategoryGrid />
       <FeaturedDiseases />
       <About />
       <Awards />
