@@ -6,6 +6,7 @@ import { TreatmentProcess } from "@/components/home/TreatmentProcess";
 import { FeaturedDiseases } from "@/components/home/FeaturedDiseases";
 import { CategoryGrid } from "@/components/home/CategoryGrid";
 import { About } from "@/components/home/About";
+import { Awards } from "@/components/home/Awards";
 import { Testimonials } from "@/components/home/Testimonials";
 import { YouTubeShowcase } from "@/components/home/YouTubeShowcase";
 import { Booking } from "@/components/home/Booking";
@@ -62,6 +63,7 @@ export const Route = createFileRoute("/")({
           { name: "Diseases", url: "/diseases" },
           { name: "Treatment Now", url: "/#treatment" },
           { name: "Our Clinicians", url: "/#clinicians" },
+          { name: "Awards", url: "/#awards" },
           { name: "Videos", url: "/#videos" },
           { name: "Book Appointment", url: "/#book" },
           { name: "About Us", url: "/#about" },
@@ -88,6 +90,7 @@ function Index() {
       <CategoryGrid />
       <FeaturedDiseases />
       <About />
+      <Awards />
       <Testimonials />
       <YouTubeShowcase />
       <Booking />
