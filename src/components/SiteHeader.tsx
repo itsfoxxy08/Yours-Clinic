@@ -62,11 +62,17 @@ export function SiteHeader() {
             <div className="flex items-center gap-4">
               <button
                 type="button"
-                onClick={() => setAdminModalOpen(true)}
+                onClick={() => {
+                  if (typeof window !== "undefined" && localStorage.getItem("yc_employee_session")) {
+                    window.location.href = "/admin-dashboard";
+                  } else {
+                    setAdminModalOpen(true);
+                  }
+                }}
                 className="focus-gold flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-gold hover:text-foreground transition-colors"
               >
                 <ShieldCheck className="h-3.5 w-3.5 text-gold" />
-                <span>Admin Login</span>
+                <span>Employee Login</span>
               </button>
               <SocialLinks size="sm" />
             </div>
@@ -120,11 +126,17 @@ export function SiteHeader() {
 
             <button
               type="button"
-              onClick={() => setAdminModalOpen(true)}
-              className="press focus-gold hidden rounded-full border border-gold/40 px-4 py-2 text-xs font-bold uppercase tracking-wider text-foreground hover:bg-gold/15 hover:border-gold md:inline-flex items-center gap-1.5"
+              onClick={() => {
+                if (typeof window !== "undefined" && localStorage.getItem("yc_employee_session")) {
+                  window.location.href = "/admin-dashboard";
+                } else {
+                  setAdminModalOpen(true);
+                }
+              }}
+              className="press focus-gold hidden rounded-full border border-gold/40 px-4 py-2 text-xs font-bold uppercase tracking-wider text-foreground hover:bg-gold/15 hover:border-gold md:inline-flex items-center gap-1.5 shadow-sm hover:shadow"
             >
               <Lock className="h-3.5 w-3.5 text-gold" />
-              <span>Admin Login</span>
+              <span>Employee Login</span>
             </button>
 
             <Link
@@ -177,12 +189,16 @@ export function SiteHeader() {
                 type="button"
                 onClick={() => {
                   setOpen(false);
-                  setAdminModalOpen(true);
+                  if (typeof window !== "undefined" && localStorage.getItem("yc_employee_session")) {
+                    window.location.href = "/admin-dashboard";
+                  } else {
+                    setAdminModalOpen(true);
+                  }
                 }}
                 className="press focus-gold flex w-full items-center gap-2 rounded-xl px-3 py-3 text-sm font-bold text-gold hover:bg-secondary"
               >
                 <ShieldCheck className="h-4 w-4" />
-                <span>Admin Login</span>
+                <span>Employee Login</span>
               </button>
             </li>
           </ul>

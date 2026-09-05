@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminDashboardRouteImport } from './routes/admin-dashboard'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as DiseasesIndexRouteImport } from './routes/diseases.index'
 import { Route as DiseasesSlugRouteImport } from './routes/diseases.$slug'
@@ -18,6 +19,11 @@ import { Route as DiseasesCategoryCategoryRouteImport } from './routes/diseases.
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/admin-dashboard',
+  path: '/admin-dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -44,6 +50,7 @@ const DiseasesCategoryCategoryRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin-dashboard': typeof AdminDashboardRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/diseases/$slug': typeof DiseasesSlugRoute
   '/diseases/': typeof DiseasesIndexRoute
@@ -51,6 +58,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin-dashboard': typeof AdminDashboardRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/diseases/$slug': typeof DiseasesSlugRoute
   '/diseases': typeof DiseasesIndexRoute
@@ -59,6 +67,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin-dashboard': typeof AdminDashboardRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/diseases/$slug': typeof DiseasesSlugRoute
   '/diseases/': typeof DiseasesIndexRoute
@@ -68,6 +77,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin-dashboard'
     | '/sitemap.xml'
     | '/diseases/$slug'
     | '/diseases/'
@@ -75,6 +85,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin-dashboard'
     | '/sitemap.xml'
     | '/diseases/$slug'
     | '/diseases'
@@ -82,6 +93,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin-dashboard'
     | '/sitemap.xml'
     | '/diseases/$slug'
     | '/diseases/'
@@ -90,6 +102,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   DiseasesSlugRoute: typeof DiseasesSlugRoute
   DiseasesIndexRoute: typeof DiseasesIndexRoute
@@ -103,6 +116,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-dashboard': {
+      id: '/admin-dashboard'
+      path: '/admin-dashboard'
+      fullPath: '/admin-dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -138,6 +158,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   DiseasesSlugRoute: DiseasesSlugRoute,
   DiseasesIndexRoute: DiseasesIndexRoute,

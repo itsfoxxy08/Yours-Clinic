@@ -288,8 +288,8 @@ export function Awards() {
             {/* Main image container */}
             <div className="relative flex-1 bg-black flex items-center justify-center overflow-hidden min-h-[300px] max-h-[70vh]">
               <img
-                src={awardImages[lightboxIndex].src}
-                alt={awardImages[lightboxIndex].title}
+                src={awardImages[lightboxIndex]?.src || ""}
+                alt={awardImages[lightboxIndex]?.title || "Award"}
                 className="max-h-[70vh] w-auto max-w-full object-contain p-2 transition-all duration-300"
               />
             </div>
@@ -300,7 +300,7 @@ export function Awards() {
                 <div className="flex items-center gap-2">
                   <Trophy className="h-4 w-4 text-amber-400" />
                   <h3 className="text-base font-bold text-white">
-                    {awardImages[lightboxIndex].title}
+                    {awardImages[lightboxIndex]?.title || "Award"}
                   </h3>
                 </div>
                 <p className="text-xs text-zinc-400 mt-0.5">

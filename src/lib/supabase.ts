@@ -1,8 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
 // Read Supabase credentials from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
+const supabaseUrl = (import.meta.env["VITE_SUPABASE_URL"] as string) || "";
+const supabaseAnonKey = (import.meta.env["VITE_SUPABASE_ANON_KEY"] as string) || "";
 
 // Create singleton Supabase client
 export const supabase = createClient(
@@ -26,10 +26,10 @@ export interface AdminAuthResult {
   message: string;
   user?: {
     id: string;
-    email?: string;
-    phone?: string;
-    username?: string;
-    role?: string;
+    email?: string | undefined;
+    phone?: string | undefined;
+    username?: string | undefined;
+    role?: string | undefined;
   };
 }
 
@@ -158,7 +158,7 @@ export async function authenticateAdmin(
           user: {
             id: data.user.id,
             email: data.user.email,
-            role: (data.user.user_metadata?.role as string) || "admin",
+            role: (data.user.user_metadata?.["role"] as string) || "admin",
           },
         };
       }
@@ -205,7 +205,7 @@ export async function authenticateAdmin(
           user: {
             id: data.user.id,
             phone: data.user.phone,
-            role: (data.user.user_metadata?.role as string) || "admin",
+            role: (data.user.user_metadata?.["role"] as string) || "admin",
           },
         };
       }
