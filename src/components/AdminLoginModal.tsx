@@ -114,7 +114,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
       } else {
         setResult({
           success: false,
-          message: authRes.message || "Invalid credentials. Admin email: choudharyvikas2008@gmail.com",
+          message: authRes.message || "Invalid email or password. Please check your credentials.",
         });
       }
       return;
@@ -331,19 +331,14 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder={
                     method === "email"
-                      ? "choudharyvikas2008@gmail.com"
+                      ? "employee@yoursclinic.com"
                       : method === "phone"
-                      ? "+91 97119 19263"
-                      : "admin"
+                      ? "+91 98765 43210"
+                      : "employee_id"
                   }
                   className="w-full rounded-xl border border-border bg-background/60 pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
                 />
               </div>
-              {method === "email" && (
-                <p className="mt-1 text-[0.68rem] text-gold font-medium">
-                  Admin Email: choudharyvikas2008@gmail.com
-                </p>
-              )}
             </div>
 
             <div>
@@ -357,7 +352,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password (e.g. Yours_Clinic@2018)"
+                  placeholder="Enter password"
                   className="w-full rounded-xl border border-border bg-background/60 pl-10 pr-10 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
                 />
                 <button

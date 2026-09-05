@@ -34,6 +34,7 @@ import {
   type PatientRecord,
 } from "@/lib/patient-service";
 import { AdminLoginModal } from "@/components/AdminLoginModal";
+import { FollowUpSheetModal } from "@/components/FollowUpSheetModal";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 export const Route = createFileRoute("/admin-dashboard")({
@@ -55,8 +56,9 @@ function AdminDashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Add / Edit Modal state
+  // Add / Edit / Sheet Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isSheetModalOpen, setIsSheetModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<PatientRecord | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -427,6 +429,14 @@ function AdminDashboardPage() {
               </button>
 
               <button
+                onClick={() => setIsSheetModalOpen(true)}
+                className="press focus-gold flex items-center gap-2 rounded-xl border border-gold/50 bg-gold/15 px-4 py-2.5 text-xs font-bold text-gold hover:bg-gold/25 shadow-sm transition-all"
+              >
+                <FileText className="h-4 w-4 text-gold" />
+                <span>Download Sheet Format</span>
+              </button>
+
+              <button
                 onClick={handleExportExcel}
                 className="press focus-gold flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-2.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-all"
               >
@@ -506,6 +516,7 @@ function AdminDashboardPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-muted/60 text-muted-foreground uppercase tracking-wider font-semibold text-[0.68rem] border-b border-border/80">
                     <tr>
+                      <th className="py-3.5 px-4 w-12 text-center">S.No</th>
                       <th className="py-3.5 px-4">Patient Name</th>
                       <th className="py-3.5 px-4">Mobile Number</th>
                       <th className="py-3.5 px-4">Email Address</th>
@@ -516,11 +527,14 @@ function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60 bg-card">
-                    {filteredRecords.map((patient) => (
+                    {filteredRecords.map((patient, index) => (
                       <tr
                         key={patient.id}
                         className="hover:bg-muted/30 transition-colors group"
                       >
+                        <td className="py-4 px-4 font-bold text-center text-muted-foreground">
+                          {index + 1}
+                        </td>
                         <td className="py-4 px-4 font-bold text-foreground">
                           {patient.name}
                         </td>
@@ -806,6 +820,13 @@ function AdminDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Official Patient Follow-Up Sheet Format Modal */}
+      <FollowUpSheetModal
+        isOpen={isSheetModalOpen}
+        onClose={() => setIsSheetModalOpen(false)}
+        records={records}
+      />
     </div>
   );
 }
