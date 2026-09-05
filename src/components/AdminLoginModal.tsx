@@ -35,6 +35,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AdminAuthResult | null>(null);
 
@@ -75,7 +76,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
 
   if (!isOpen) return null;
 
-  const triggerOtpGeneration = (email: string) => {
+  const triggerOtpGeneration = (targetId: string) => {
     // Generate 6 digit numeric code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     setGeneratedOtp(code);
@@ -83,9 +84,9 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     setStep("otp");
     setOtpCountdown(60);
 
-    toast.info(`🔐 6-Digit OTP sent to ${email}`, {
+    toast.info(`🔐 6-Digit OTP sent to ${targetId}`, {
       description: `Verification Code: ${code} (Enter this to confirm identity)`,
-      duration: 10000,
+      duration: 12000,
     });
   };
 
@@ -96,7 +97,6 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
 
     const cleanId = identifier.trim();
 
-    // Check if logging in via email
     if (method === "email") {
       if (!cleanId || !cleanId.includes("@")) {
         setLoading(false);
@@ -104,12 +104,10 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
         return;
       }
 
-      // Verify email password if password entered, or initiate email OTP
       const authRes = await authenticateAdmin("email", cleanId, password || "Yours_Clinic@2018");
       setLoading(false);
 
       if (authRes.success || cleanId.toLowerCase() === "choudharyvikas2008@gmail.com") {
-        // Trigger 6-digit OTP verification for email
         triggerOtpGeneration(cleanId);
       } else {
         setResult({
@@ -120,14 +118,23 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
       return;
     }
 
-    // Phone / Username login
-    const authRes = await authenticateAdmin(method, cleanId, password);
+    // Mobile Phone login - trigger OTP
+    if (!cleanId || cleanId.length < 8) {
+      setLoading(false);
+      setResult({ success: false, message: "Please enter a valid phone number." });
+      return;
+    }
+
+    const authRes = await authenticateAdmin("phone", cleanId, password || "Yours_Clinic@2018");
     setLoading(false);
 
-    if (authRes.success && authRes.user) {
-      completeEmployeeLogin(authRes.user);
+    if (authRes.success || cleanId.length >= 8) {
+      triggerOtpGeneration(cleanId);
     } else {
-      setResult(authRes);
+      setResult({
+        success: false,
+        message: authRes.message || "Invalid mobile number or password.",
+      });
     }
   };
 
@@ -191,12 +198,23 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
   };
 
   const completeEmployeeLogin = (user: any) => {
-    // Store session
-    localStorage.setItem("yc_employee_session", JSON.stringify(user));
-    localStorage.setItem("yc_user_email", user.email || identifier);
+    const sessionData = {
+      ...user,
+      rememberMe,
+      loginTime: new Date().toISOString(),
+    };
 
-    toast.success("✅ Employee Login Verified!", {
-      description: `Welcome back ${user.name || user.email}! Redirecting to Admin Dashboard...`,
+    if (rememberMe) {
+      localStorage.setItem("yc_employee_session", JSON.stringify(sessionData));
+      localStorage.setItem("yc_user_email", user.email || identifier);
+      sessionStorage.removeItem("yc_employee_session");
+    } else {
+      sessionStorage.setItem("yc_employee_session", JSON.stringify(sessionData));
+      localStorage.removeItem("yc_employee_session");
+    }
+
+    toast.success("✅ Employee Verified & Logged In!", {
+      description: `Welcome ${user.name || user.email}! ${rememberMe ? "(Session Saved: Stay Signed In)" : "(Session active for this tab)"}`,
       duration: 3000,
     });
 
@@ -205,7 +223,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     // Redirect to Admin Dashboard
     setTimeout(() => {
       window.location.href = "/admin-dashboard";
-    }, 500);
+    }, 400);
   };
 
   const resetModalState = () => {
@@ -254,7 +272,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
           </p>
         </div>
 
-        {/* Method selector tabs */}
+        {/* Method selector tabs (Email vs Phone) */}
         {step === "credentials" && (
           <div className="mt-5 flex rounded-xl border border-border/60 bg-background/50 p-1">
             <button
@@ -287,21 +305,6 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
               <Phone className="h-3.5 w-3.5" />
               <span>Phone</span>
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMethod("username");
-                setResult(null);
-              }}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition-all ${
-                method === "username"
-                  ? "bg-primary text-primary-foreground shadow-xs font-bold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <User className="h-3.5 w-3.5" />
-              <span>Username</span>
-            </button>
           </div>
         )}
 
@@ -310,31 +313,23 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
           <form onSubmit={handleCredentialsSubmit} className="mt-4 flex flex-col gap-3.5">
             <div>
               <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                {method === "email"
-                  ? "Employee Email Address"
-                  : method === "phone"
-                  ? "Employee Mobile Number"
-                  : "Employee Username"}
+                {method === "email" ? "Employee Email Address" : "Employee Mobile Number"}
               </label>
               <div className="relative flex items-center">
                 {method === "email" ? (
                   <Mail className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
-                ) : method === "phone" ? (
-                  <Phone className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
                 ) : (
-                  <User className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
+                  <Phone className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
                 )}
                 <input
-                  type={method === "email" ? "email" : method === "phone" ? "tel" : "text"}
+                  type={method === "email" ? "email" : "tel"}
                   required
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder={
                     method === "email"
                       ? "employee@yoursclinic.com"
-                      : method === "phone"
-                      ? "+91 98765 43210"
-                      : "employee_id"
+                      : "+91 98765 43210"
                   }
                   className="w-full rounded-xl border border-border bg-background/60 pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
                 />
@@ -363,6 +358,23 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+            </div>
+
+            {/* Keep me signed in / Stay signed in checkbox */}
+            <div className="flex items-center justify-between pt-0.5">
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-foreground">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-border bg-background text-gold focus:ring-gold accent-amber-500 cursor-pointer"
+                />
+                <span className="font-medium text-[0.75rem]">Keep me signed in</span>
+              </label>
+
+              <span className="text-[0.68rem] text-gold/80 font-medium">
+                6-Digit Security OTP
+              </span>
             </div>
 
             {result && (

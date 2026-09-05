@@ -19,7 +19,7 @@ export function isSupabaseConfigured(): boolean {
   );
 }
 
-export type AdminLoginMethod = "email" | "phone" | "username";
+export type AdminLoginMethod = "email" | "phone";
 
 export interface AdminAuthResult {
   success: boolean;
@@ -28,7 +28,6 @@ export interface AdminAuthResult {
     id: string;
     email?: string | undefined;
     phone?: string | undefined;
-    username?: string | undefined;
     role?: string | undefined;
   };
 }
@@ -106,7 +105,6 @@ export async function registerAdminInSupabase(
       message: `Admin credentials for "${username}" successfully saved into Supabase database!`,
       user: {
         id: String(data?.[0]?.id || username),
-        username: username.trim(),
         email: email?.trim(),
         phone: phone?.trim(),
         role,
@@ -178,7 +176,6 @@ export async function authenticateAdmin(
             user: {
               id: String(dbAdmin.id),
               email: dbAdmin.email,
-              username: dbAdmin.username,
               role: dbAdmin.role || "admin",
             },
           };
@@ -225,7 +222,6 @@ export async function authenticateAdmin(
             user: {
               id: String(dbAdmin.id),
               phone: dbAdmin.phone,
-              username: dbAdmin.username,
               role: dbAdmin.role || "admin",
             },
           };
@@ -235,52 +231,6 @@ export async function authenticateAdmin(
       return {
         success: false,
         message: error?.message || "Invalid phone number or password.",
-      };
-    }
-
-    if (method === "username") {
-      // Query Supabase Database 'admin_users' or 'profiles' table for matching username
-      const { data: dbAdmin, error: dbError } = await supabase
-        .from("admin_users")
-        .select("*")
-        .eq("username", cleanId)
-        .single();
-
-      if (!dbError && dbAdmin) {
-        if (dbAdmin.password === password || dbAdmin.password_hash === password) {
-          return {
-            success: true,
-            message: `Welcome back, ${dbAdmin.username || "Admin"}!`,
-            user: {
-              id: String(dbAdmin.id),
-              username: dbAdmin.username,
-              email: dbAdmin.email,
-              role: dbAdmin.role || "admin",
-            },
-          };
-        }
-        return { success: false, message: "Incorrect password for this username." };
-      }
-
-      // Attempt matching username against email or phone if admin_users query didn't find direct match
-      if (cleanId.includes("@")) {
-        const { data: authData, error: authErr } = await supabase.auth.signInWithPassword({
-          email: cleanId,
-          password: password,
-        });
-
-        if (!authErr && authData.user) {
-          return {
-            success: true,
-            message: "Admin authenticated successfully!",
-            user: { id: authData.user.id, email: authData.user.email, role: "admin" },
-          };
-        }
-      }
-
-      return {
-        success: false,
-        message: dbError?.message || "Admin username not found in database.",
       };
     }
 

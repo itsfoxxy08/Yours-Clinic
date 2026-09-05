@@ -98,13 +98,16 @@ function AdminDashboardPage() {
     status: "Routine" as PatientRecord["status"],
   });
 
-  // Verify employee session on mount
+  // Verify employee session on mount (checks localStorage for persistent sessions and sessionStorage for single-session logins)
   useEffect(() => {
     const checkSession = () => {
-      const stored = localStorage.getItem("yc_employee_session");
-      if (stored) {
+      const storedLocal = localStorage.getItem("yc_employee_session");
+      const storedSession = sessionStorage.getItem("yc_employee_session");
+      const rawSession = storedLocal || storedSession;
+
+      if (rawSession) {
         try {
-          const parsed = JSON.parse(stored);
+          const parsed = JSON.parse(rawSession);
           setSession(parsed);
         } catch (e) {
           setSession(null);
