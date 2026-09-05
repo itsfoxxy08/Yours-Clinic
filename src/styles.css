@@ -111,6 +111,9 @@
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 110px;
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
   }
 
   body {
@@ -124,6 +127,11 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     transition: background-color 0.4s var(--ease-clinic), color 0.4s var(--ease-clinic);
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+    margin: 0;
+    padding: 0;
   }
 
   h1,
@@ -336,6 +344,7 @@
 @utility sanctuary {
   position: relative;
   isolation: isolate;
+  overflow: hidden;
   &::before,
   &::after {
     content: "";
@@ -346,7 +355,7 @@
     filter: blur(90px);
   }
   &::before {
-    inset: -12% 40% 45% -18%;
+    inset: -12% 40% 45% 0%;
     background: radial-gradient(
       circle,
       color-mix(in oklab, var(--sage) 26%, transparent),
@@ -355,7 +364,7 @@
     animation: drift-slow 22s var(--ease-clinic) infinite;
   }
   &::after {
-    inset: 30% -20% -20% 45%;
+    inset: 30% 0% -20% 45%;
     background: radial-gradient(
       circle,
       color-mix(in oklab, var(--gold) 24%, transparent),

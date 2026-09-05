@@ -31,6 +31,7 @@ import {
   deletePatientRecord,
   exportPatientRecordsToExcel,
   exportPatientRecordsToGoogleSheets,
+  formatDate12Hour,
   type PatientRecord,
 } from "@/lib/patient-service";
 import { AdminLoginModal } from "@/components/AdminLoginModal";
@@ -55,6 +56,11 @@ function AdminDashboardPage() {
   const [fromDatabase, setFromDatabase] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Date Filter State
+  const [datePreset, setDatePreset] = useState<"all" | "today" | "yesterday" | "week" | "month" | "custom">("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   // Add / Edit / Sheet Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -187,23 +193,61 @@ function AdminDashboardPage() {
     });
   };
 
-  // Export handlers
-  const handleExportExcel = () => {
-    if (records.length === 0) {
-      toast.error("No patient records available to export");
-      return;
-    }
-    exportPatientRecordsToExcel(records);
-    toast.success("📊 Excel spreadsheet exported successfully!");
-  };
+  // Date Filter logic
+  const matchesDateFilter = (createdIso: string) => {
+    if (datePreset === "all" && !startDate && !endDate) return true;
 
-  const handleExportGoogleSheets = async () => {
-    if (records.length === 0) {
-      toast.error("No patient records available to export");
-      return;
+    const rDate = new Date(createdIso);
+    if (isNaN(rDate.getTime())) return true;
+
+    const now = new Date();
+
+    if (datePreset === "today") {
+      return (
+        rDate.getDate() === now.getDate() &&
+        rDate.getMonth() === now.getMonth() &&
+        rDate.getFullYear() === now.getFullYear()
+      );
     }
-    const res = await exportPatientRecordsToGoogleSheets(records);
-    toast.success(res.message);
+
+    if (datePreset === "yesterday") {
+      const yest = new Date(now);
+      yest.setDate(yest.getDate() - 1);
+      return (
+        rDate.getDate() === yest.getDate() &&
+        rDate.getMonth() === yest.getMonth() &&
+        rDate.getFullYear() === yest.getFullYear()
+      );
+    }
+
+    if (datePreset === "week") {
+      const weekAgo = new Date(now);
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return rDate >= weekAgo;
+    }
+
+    if (datePreset === "month") {
+      return (
+        rDate.getMonth() === now.getMonth() &&
+        rDate.getFullYear() === now.getFullYear()
+      );
+    }
+
+    if (datePreset === "custom" || startDate || endDate) {
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        if (rDate < start) return false;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        if (rDate > end) return false;
+      }
+      return true;
+    }
+
+    return true;
   };
 
   // Filtered records
@@ -218,8 +262,29 @@ function AdminDashboardPage() {
     const matchesStatus =
       statusFilter === "all" || r.status.toLowerCase() === statusFilter.toLowerCase();
 
-    return matchesSearch && matchesStatus;
+    const matchesDate = matchesDateFilter(r.created_at);
+
+    return matchesSearch && matchesStatus && matchesDate;
   });
+
+  // Export handlers (export current filtered records)
+  const handleExportExcel = () => {
+    if (filteredRecords.length === 0) {
+      toast.error("No matching patient records available to export");
+      return;
+    }
+    exportPatientRecordsToExcel(filteredRecords);
+    toast.success(`📊 Exported ${filteredRecords.length} patient record(s) to Excel!`);
+  };
+
+  const handleExportGoogleSheets = async () => {
+    if (filteredRecords.length === 0) {
+      toast.error("No matching patient records available to export");
+      return;
+    }
+    const res = await exportPatientRecordsToGoogleSheets(filteredRecords);
+    toast.success(res.message);
+  };
 
   if (loadingSession) {
     return (
@@ -454,42 +519,118 @@ function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Search Bar & Filter Tabs */}
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            <div className="relative flex-1 w-full">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search patient by name, mobile number, email, address, or reason..."
-                className="w-full rounded-2xl border border-border bg-background/70 pl-10 pr-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
+          {/* Search Bar & Filter Controls */}
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="relative flex-1 w-full">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search patient by name, mobile number, email, address, or reason..."
+                  className="w-full rounded-2xl border border-border bg-background/70 pl-10 pr-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0 ml-1" />
+                {["all", "routine", "follow-up", "urgent", "consultation"].map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setStatusFilter(st)}
+                    className={`capitalize shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
+                      statusFilter === st
+                        ? "bg-gold/20 text-gold border border-gold/40 shadow-xs"
+                        : "text-muted-foreground hover:text-foreground bg-background/50 border border-border/50"
+                    }`}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-              <Filter className="h-3.5 w-3.5 text-muted-foreground shrink-0 ml-1" />
-              {["all", "routine", "follow-up", "urgent", "consultation"].map((st) => (
-                <button
-                  key={st}
-                  onClick={() => setStatusFilter(st)}
-                  className={`capitalize shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
-                    statusFilter === st
-                      ? "bg-gold/20 text-gold border border-gold/40 shadow-xs"
-                      : "text-muted-foreground hover:text-foreground bg-background/50 border border-border/50"
-                  }`}
-                >
-                  {st}
-                </button>
-              ))}
+            {/* Date Filtering Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-muted/40 border border-border/60">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-foreground mr-1">
+                  <Calendar className="h-4 w-4 text-gold" />
+                  <span>Registration Date:</span>
+                </div>
+                {[
+                  { id: "all", label: "All Time" },
+                  { id: "today", label: "Today" },
+                  { id: "yesterday", label: "Yesterday" },
+                  { id: "week", label: "This Week" },
+                  { id: "month", label: "This Month" },
+                  { id: "custom", label: "Custom Period" },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setDatePreset(item.id as any);
+                      if (item.id !== "custom") {
+                        setStartDate("");
+                        setEndDate("");
+                      }
+                    }}
+                    className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all ${
+                      datePreset === item.id
+                        ? "bg-primary text-primary-foreground shadow-xs font-bold"
+                        : "bg-background/60 text-muted-foreground hover:text-foreground border border-border/40"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+
+              {(datePreset === "custom" || startDate || endDate) && (
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      setDatePreset("custom");
+                    }}
+                    className="rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground focus:border-gold focus:outline-none"
+                    placeholder="From Date"
+                  />
+                  <span className="text-xs text-muted-foreground font-bold">to</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => {
+                      setEndDate(e.target.value);
+                      setDatePreset("custom");
+                    }}
+                    className="rounded-xl border border-border bg-background px-3 py-1.5 text-xs text-foreground focus:border-gold focus:outline-none"
+                    placeholder="To Date"
+                  />
+                  {(startDate || endDate) && (
+                    <button
+                      onClick={() => {
+                        setStartDate("");
+                        setEndDate("");
+                        setDatePreset("all");
+                      }}
+                      className="rounded-xl bg-destructive/15 text-destructive px-2.5 py-1.5 text-xs font-bold hover:bg-destructive/25"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -504,8 +645,8 @@ function AdminDashboardPage() {
               <Users className="mx-auto h-10 w-10 text-muted-foreground/50 mb-3" />
               <h4 className="text-sm font-bold text-foreground">No Patient Records Found</h4>
               <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
-                {searchQuery
-                  ? "No patient matched your search criteria. Try clearing the search query."
+                {searchQuery || datePreset !== "all" || startDate || endDate
+                  ? "No patient matched your active search or date filter criteria. Try adjusting your filters."
                   : "Click 'Add Patient Record' above to add your first patient details."}
               </p>
             </div>
@@ -523,6 +664,7 @@ function AdminDashboardPage() {
                       <th className="py-3.5 px-4">Address</th>
                       <th className="py-3.5 px-4">Reason for Visit</th>
                       <th className="py-3.5 px-4">Status</th>
+                      <th className="py-3.5 px-4">Date Registered (12h)</th>
                       <th className="py-3.5 px-4 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -575,6 +717,12 @@ function AdminDashboardPage() {
                           >
                             {patient.status || "Routine"}
                           </span>
+                        </td>
+                        <td className="py-4 px-4 text-muted-foreground whitespace-nowrap text-xs">
+                          <div className="flex items-center gap-1.5 font-medium">
+                            <Calendar className="h-3 w-3 text-gold/80 shrink-0" />
+                            <span>{formatDate12Hour(patient.created_at)}</span>
+                          </div>
                         </td>
                         <td className="py-4 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
@@ -659,6 +807,10 @@ function AdminDashboardPage() {
                           <span>{patient.address}</span>
                         </div>
                       )}
+                      <div className="flex items-center gap-2 pt-1 border-t border-border/40 text-foreground/80 font-medium">
+                        <Calendar className="h-3.5 w-3.5 text-gold shrink-0" />
+                        <span>Registered: {formatDate12Hour(patient.created_at)}</span>
+                      </div>
                     </div>
 
                     <div className="bg-muted/40 rounded-xl p-3 text-xs text-foreground font-medium">

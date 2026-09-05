@@ -58,6 +58,27 @@ const INITIAL_PATIENT_RECORDS: PatientRecord[] = [
 ];
 
 /**
+ * Format ISO date string into 12-hour format with AM/PM (e.g., "05 Sep 2026, 04:27 PM").
+ */
+export function formatDate12Hour(dateIsoStr: string): string {
+  if (!dateIsoStr) return "N/A";
+  try {
+    const date = new Date(dateIsoStr);
+    if (isNaN(date.getTime())) return dateIsoStr;
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch (e) {
+    return dateIsoStr;
+  }
+}
+
+/**
  * Fetch patient records from Supabase `patient_records` table (with local fallback).
  */
 export async function getPatientRecords(): Promise<{
@@ -233,6 +254,7 @@ function escapeHtml(str: string): string {
  * - NO pat-ID (replaced with clean sequential S.No starting from 1)
  * - Headers rendered in BOLD with dark background and contrast text
  * - Generous column width & padding for proper indentation and readability
+ * - 12-hour format with AM/PM for dates
  */
 export function exportPatientRecordsToExcel(records: PatientRecord[]) {
   const tableRows = records
@@ -246,7 +268,7 @@ export function exportPatientRecordsToExcel(records: PatientRecord[]) {
       <td style="padding: 10px 16px; border: 1px solid #CBD5E1; mso-number-format: '\\@';">${escapeHtml(r.address || "N/A")}</td>
       <td style="padding: 10px 16px; border: 1px solid #CBD5E1; mso-number-format: '\\@';">${escapeHtml(r.reason)}</td>
       <td style="padding: 10px 16px; border: 1px solid #CBD5E1; font-weight: 600; mso-number-format: '\\@';">${escapeHtml(r.status || "Routine")}</td>
-      <td style="padding: 10px 16px; border: 1px solid #CBD5E1; mso-number-format: '\\@';">${new Date(r.created_at).toLocaleString("en-IN")}</td>
+      <td style="padding: 10px 16px; border: 1px solid #CBD5E1; mso-number-format: '\\@';">${formatDate12Hour(r.created_at)}</td>
     </tr>`
     )
     .join("");
@@ -301,7 +323,7 @@ export function exportPatientRecordsToExcel(records: PatientRecord[]) {
           <th style="width: 300px; font-weight: bold; background-color: #1E293B; color: #FFFFFF;">Address</th>
           <th style="width: 360px; font-weight: bold; background-color: #1E293B; color: #FFFFFF;">Reason for Visit</th>
           <th style="width: 150px; font-weight: bold; background-color: #1E293B; color: #FFFFFF;">Status</th>
-          <th style="width: 220px; font-weight: bold; background-color: #1E293B; color: #FFFFFF;">Date Registered</th>
+          <th style="width: 240px; font-weight: bold; background-color: #1E293B; color: #FFFFFF;">Date Registered</th>
         </tr>
       </thead>
       <tbody>
@@ -327,11 +349,12 @@ export function exportPatientRecordsToExcel(records: PatientRecord[]) {
 }
 
 /**
- * Export Patient Records for Google Sheets & Copy TSV / HTML to clipboard for 1-click paste.
+ * Export Patient Records for Google Sheets & DIRECTLY REDIRECT to google sheets (https://sheets.new).
  * Features:
  * - NO pat-ID (starts with S.No 1, 2, 3...)
  * - Headers are formatted in BOLD
- * - Spacing and tab indentation prepared for clean Google Sheets formatting
+ * - Dates in 12-hour format with AM/PM
+ * - Automatically opens https://sheets.new in a new tab so admin can press Ctrl+V directly into Google Sheets!
  */
 export async function exportPatientRecordsToGoogleSheets(
   records: PatientRecord[]
@@ -355,12 +378,11 @@ export async function exportPatientRecordsToGoogleSheets(
     r.address || "N/A",
     r.reason,
     r.status || "Routine",
-    new Date(r.created_at).toLocaleString("en-IN"),
+    formatDate12Hour(r.created_at),
   ]);
 
   const tsvContent = [headers.join("\t"), ...tsvRows.map((row) => row.join("\t"))].join("\n");
 
-  // Create HTML table format for rich text clipboard copying (preserves bold headers in Google Sheets!)
   const htmlTable = `
     <table>
       <thead>
@@ -406,13 +428,15 @@ export async function exportPatientRecordsToGoogleSheets(
     }
   }
 
-  // Also trigger styled file download for direct import into Google Sheets / Excel
-  exportPatientRecordsToExcel(records);
+  // Direct redirect to Google Sheets (sheets.new)
+  if (typeof window !== "undefined") {
+    window.open("https://sheets.new", "_blank");
+  }
 
   return {
     success: true,
     message: clipboardSuccess
-      ? "Patient records downloaded & copied! Headers are BOLD and columns spaced. Paste directly into Google Sheets (Ctrl+V)."
-      : "Patient records downloaded for Google Sheets import!",
+      ? "Opening Google Sheets! Press Ctrl+V (or Cmd+V) in the new tab to paste your formatted patient records."
+      : "Opening Google Sheets tab...",
   };
 }
