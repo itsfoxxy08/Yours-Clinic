@@ -1,12 +1,10 @@
 import { useMemo, useState } from "react";
 import { abs } from "@/lib/seo";
 import { createFileRoute } from "@tanstack/react-router";
-import { Search } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { DiseaseCard } from "@/components/DiseaseCard";
 import {
   additionalConditions,
-  categories,
   diseases,
   type DiseaseCategory,
 } from "@/data/diseases";
@@ -86,60 +84,7 @@ function DiseasesIndex() {
             Healthcare Guide
           </span>
           <h1 className="mt-4 text-4xl text-foreground md:text-5xl">General Diseases</h1>
-          <p className="mt-5 text-base leading-relaxed text-muted-foreground">
-            An illustrated library of the conditions we treat most often — with core
-            symptoms, care advice, and prevention guidance for each.
-          </p>
         </Reveal>
-
-        <div className="sticky top-[76px] z-40 -mx-5 mt-10 border-y border-border/40 bg-background/70 px-5 py-4 backdrop-blur-xl">
-          <div className="mx-auto flex max-w-xl items-center gap-3 rounded-full border border-border/50 bg-card/60 px-5 py-3 shadow-[var(--shadow-soft)] backdrop-blur-xl">
-            <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search conditions or symptoms…"
-              aria-label="Search conditions"
-              className="w-full bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-            />
-            {query && (
-              <button
-                onClick={() => setQuery("")}
-                aria-label="Clear search"
-                className="press text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-
-          <div
-            className="mt-4 flex snap-x gap-2.5 overflow-x-auto pb-1 sm:flex-wrap sm:justify-center sm:overflow-visible"
-            role="tablist"
-            aria-label="Filter conditions by category"
-          >
-            {categories.map((c) => (
-              <button
-                key={c.value}
-                role="tab"
-                aria-selected={category === c.value}
-                onClick={() => setCategory(c.value)}
-                className={`press focus-gold shrink-0 snap-start rounded-full border px-4 py-2 text-sm font-medium ${
-                  category === c.value
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border/60 bg-card/50 text-muted-foreground backdrop-blur hover:border-sage/50"
-                }`}
-              >
-                {c.label}
-              </button>
-            ))}
-          </div>
-
-          <p className="mt-3 text-center text-xs text-muted-foreground">
-            {filtered.length} {filtered.length === 1 ? "condition" : "conditions"} shown
-          </p>
-        </div>
-
 
         {filtered.length === 0 ? (
           <p className="mt-16 text-center text-sm text-muted-foreground">

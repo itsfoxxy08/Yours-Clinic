@@ -1,12 +1,12 @@
 import { Reveal } from "@/components/Reveal";
 import { Microscope, BriefcaseMedical, ShieldCheck } from "lucide-react";
 import consultation from "@/assets/clinic/consultation.jpg";
-import sumitJha from "@/assets/team/sumit-jha.jpg";
-import bandanaKumari from "@/assets/team/bandana-kumari.jpg";
-import mnJha from "@/assets/team/mn-jha.jpg";
-import anshuSingh from "@/assets/team/anshu-singh.jpg";
-import meghaAnand from "@/assets/team/megha-anand.jpg";
-import shwetaSangini from "@/assets/team/shweta-sangini.jpg";
+import sumitJha from "@/assets/team/sumit-jha.webp";
+import bandanaKumari from "@/assets/team/bandana-kumari.webp";
+import mnJha from "@/assets/team/mn-jha.webp";
+import anshuSingh from "@/assets/team/anshu-singh.webp";
+import meghaAnand from "@/assets/team/megha-anand.webp";
+import shwetaSangini from "@/assets/team/shweta-sangini.webp";
 
 const specialists = [
   { photo: sumitJha, name: "Dr. Sumit Jha", reg: "Founder, CEO" },
