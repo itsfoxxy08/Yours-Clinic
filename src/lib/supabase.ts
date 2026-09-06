@@ -1,14 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Read Supabase credentials from environment variables
-const supabaseUrl = (import.meta.env["VITE_SUPABASE_URL"] as string) || "";
-const supabaseAnonKey = (import.meta.env["VITE_SUPABASE_ANON_KEY"] as string) || "";
+// Read Supabase credentials from environment variables with fallback defaults
+const supabaseUrl =
+  (import.meta.env["VITE_SUPABASE_URL"] as string) ||
+  "https://mfstodnfiwmduozgagay.supabase.co";
+
+const supabaseAnonKey =
+  (import.meta.env["VITE_SUPABASE_ANON_KEY"] as string) ||
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mc3RvZG5maXdtZHVvemdhZ2F5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1NzQ3MDksImV4cCI6MjEwNDE1MDcwOX0.eewW6vKozsF4BP8NZHqR_TXuF-hf9nJ_Rzzgiy88CW0";
 
 // Create singleton Supabase client
-export const supabase = createClient(
-  supabaseUrl || "https://placeholder.supabase.co",
-  supabaseAnonKey || "placeholder-anon-key"
-);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export function isSupabaseConfigured(): boolean {
   return Boolean(
