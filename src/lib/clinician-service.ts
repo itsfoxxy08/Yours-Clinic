@@ -71,7 +71,7 @@ export function saveCliniciansLocal(list: Clinician[]): void {
 }
 
 /**
- * Upload base64 image to Supabase Storage Bucket ('clinician-photos')
+ * Upload base64 image to Supabase Storage Bucket ('doctor-profile-images' / 'clinician-photos')
  * Returns public CDN URL if bucket exists, or base64 string as fallback.
  */
 export async function uploadImageToSupabaseStorage(id: string, base64Image: string): Promise<string> {
@@ -87,7 +87,7 @@ export async function uploadImageToSupabaseStorage(id: string, base64Image: stri
     const mimeType = match[1];
     const base64Data = match[2];
     const extension = mimeType.split("/")[1] || "webp";
-    const fileName = `${id}.${extension}`;
+    const fileName = `${id}_${Date.now()}.${extension}`;
 
     // Convert base64 string to Blob
     const byteCharacters = atob(base64Data);
@@ -98,24 +98,25 @@ export async function uploadImageToSupabaseStorage(id: string, base64Image: stri
     const byteArray = new Uint8Array(byteNumbers);
     const blob = new Blob([byteArray], { type: mimeType });
 
-    // Upload to Supabase Storage bucket 'clinician-photos'
-    const { data, error } = await supabase.storage
-      .from("clinician-photos")
-      .upload(fileName, blob, {
-        contentType: mimeType,
-        upsert: true,
-      });
+    // Try 'doctor-profile-images' bucket first, fallback to 'clinician-photos'
+    const bucketNames = ["doctor-profile-images", "clinician-photos"];
+    for (const bucket of bucketNames) {
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(fileName, blob, {
+          contentType: mimeType,
+          upsert: true,
+        });
 
-    if (!error && data) {
-      const { data: publicUrlData } = supabase.storage
-        .from("clinician-photos")
-        .getPublicUrl(fileName);
+      if (!error && data) {
+        const { data: publicUrlData } = supabase.storage
+          .from(bucket)
+          .getPublicUrl(fileName);
 
-      if (publicUrlData?.publicUrl) {
-        return publicUrlData.publicUrl;
+        if (publicUrlData?.publicUrl) {
+          return publicUrlData.publicUrl;
+        }
       }
-    } else if (error) {
-      console.info("Supabase storage bucket note (storing image in DB column):", error.message);
     }
   } catch (err) {
     console.warn("Storage upload fallback to database string:", err);
@@ -161,6 +162,31 @@ export async function fetchCliniciansFromSupabase(): Promise<Clinician[]> {
   }
 
   return getClinicians();
+}
+
+/**
+ * Realtime subscription for clinicians database table across all connected browsers & devices
+ */
+export function subscribeToCliniciansRealtime(
+  onUpdate: (clinicians: Clinician[]) => void
+): () => void {
+  if (!isSupabaseConfigured()) return () => {};
+
+  const channel = supabase
+    .channel("clinicians-realtime-changes")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "clinicians" },
+      async () => {
+        const fresh = await fetchCliniciansFromSupabase();
+        onUpdate(fresh);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }
 
 /**

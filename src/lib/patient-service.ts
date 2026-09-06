@@ -410,15 +410,128 @@ export async function exportPatientRecordsToGoogleSheets(
 }
 
 /**
+ * Realtime subscription for patient records database table across all connected browsers & devices
+ */
+export function subscribeToPatientRecordsRealtime(
+  onUpdate: (records: PatientRecord[]) => void
+): () => void {
+  if (!isSupabaseConfigured()) return () => {};
+
+  const channel = supabase
+    .channel("patient-records-realtime-changes")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "patient_records" },
+      async () => {
+        const res = await getPatientRecords();
+        onUpdate(res.data);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: res.data }));
+        }
+      }
+    )
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "patient_reports" },
+      async () => {
+        const res = await getPatientRecords();
+        onUpdate(res.data);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: res.data }));
+        }
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+/**
+ * Upload prescription/report image to Supabase Storage bucket ('prescriptions' or 'patient-reports')
+ */
+export async function uploadPrescriptionToSupabaseStorage(
+  patientId: string,
+  fileDataUrl: string,
+  fileName: string
+): Promise<{ url: string; path: string }> {
+  if (!isSupabaseConfigured() || !fileDataUrl.startsWith("data:")) {
+    return { url: fileDataUrl, path: "" };
+  }
+
+  try {
+    const match = fileDataUrl.match(/^data:(.+);base64,(.+)$/);
+    if (!match || !match[1] || !match[2]) return { url: fileDataUrl, path: "" };
+
+    const mimeType = match[1];
+    const base64Data = match[2];
+    const extMatch = fileName.match(/\.([a-zA-Z0-9]+)$/);
+    const extension = extMatch ? extMatch[1] : mimeType.split("/")[1] || "jpg";
+    const objectPath = `${patientId}/${Date.now()}_${Math.random().toString(36).substring(2, 6)}.${extension}`;
+
+    // Convert base64 to Blob
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: mimeType });
+
+    const buckets = ["prescriptions", "patient-reports"];
+    for (const bucket of buckets) {
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(objectPath, blob, {
+          contentType: mimeType,
+          upsert: true,
+        });
+
+      if (!error && data) {
+        const { data: publicUrlData } = supabase.storage
+          .from(bucket)
+          .getPublicUrl(objectPath);
+
+        if (publicUrlData?.publicUrl) {
+          return { url: publicUrlData.publicUrl, path: objectPath };
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Prescription storage upload exception:", err);
+  }
+
+  return { url: fileDataUrl, path: "" };
+}
+
+/**
  * Attach a new prescription/diagnosis report to a patient record.
  */
 export async function attachPatientReport(
   patientId: string,
   report: Omit<PatientReport, "id" | "uploadedAt">
 ): Promise<{ success: boolean; message: string; report?: PatientReport }> {
+  const reportId = "rep-" + Date.now().toString(36) + Math.random().toString(36).substring(2, 5);
+
+  let finalFileUrl = report.fileUrl;
+  let filePath = "";
+
+  // If base64 file data provided, upload to Supabase Storage
+  if (report.fileUrl && report.fileUrl.startsWith("data:")) {
+    const uploadRes = await uploadPrescriptionToSupabaseStorage(
+      patientId,
+      report.fileUrl,
+      report.fileName || "prescription.jpg"
+    );
+    finalFileUrl = uploadRes.url;
+    filePath = uploadRes.path;
+  }
+
   const newReport: PatientReport = {
     ...report,
-    id: "rep-" + Date.now().toString(36) + Math.random().toString(36).substring(2, 5),
+    id: reportId,
+    fileUrl: finalFileUrl,
     uploadedAt: new Date().toISOString(),
   };
 
@@ -434,9 +547,25 @@ export async function attachPatientReport(
   const updatedReports = [newReport, ...existingReports];
   targetRecord.reports = updatedReports;
 
-  // Update Supabase if configured
+  // Update Supabase Database if configured
   if (isSupabaseConfigured()) {
     try {
+      // 1. Insert into patient_reports metadata table
+      await supabase.from("patient_reports").insert([
+        {
+          id: reportId,
+          patient_id: patientId,
+          title: newReport.title,
+          type: newReport.type,
+          file_url: newReport.fileUrl,
+          file_path: filePath,
+          file_name: newReport.fileName,
+          uploaded_by: newReport.uploadedBy || "Doctor / Admin",
+          created_at: newReport.uploadedAt,
+        },
+      ]);
+
+      // 2. Update patient_records JSON column
       await supabase
         .from("patient_records")
         .update({ reports: updatedReports })
@@ -448,10 +577,51 @@ export async function attachPatientReport(
 
   // Save to local cache
   localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: records }));
+  }
 
   return {
     success: true,
-    message: "📄 Prescription / Report attached successfully!",
+    message: "📄 Prescription / Report uploaded to Supabase & attached successfully!",
     report: newReport,
   };
+}
+
+/**
+ * Delete a prescription/report attachment
+ */
+export async function deletePatientReport(
+  patientId: string,
+  reportId: string
+): Promise<{ success: boolean; message: string }> {
+  const recordsRes = await getPatientRecords();
+  const records = recordsRes.data;
+  const targetRecord = records.find((r) => r.id === patientId);
+
+  if (!targetRecord) {
+    return { success: false, message: "Patient record not found." };
+  }
+
+  const filteredReports = (targetRecord.reports || []).filter((rep) => rep.id !== reportId);
+  targetRecord.reports = filteredReports;
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from("patient_reports").delete().eq("id", reportId);
+      await supabase
+        .from("patient_records")
+        .update({ reports: filteredReports })
+        .eq("id", patientId);
+    } catch (err) {
+      console.warn("Supabase delete report notice:", err);
+    }
+  }
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: records }));
+  }
+
+  return { success: true, message: "Report deleted successfully." };
 }

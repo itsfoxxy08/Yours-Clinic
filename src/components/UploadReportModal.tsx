@@ -45,6 +45,19 @@ export function UploadReportModal({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    const MAX_SIZE_MB = 10;
+
+    if (file.type && !ALLOWED_TYPES.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png|webp|pdf)$/i)) {
+      toast.error("Invalid file format. Please upload JPG, PNG, WEBP, or PDF.");
+      return;
+    }
+
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      toast.error(`File size exceeds ${MAX_SIZE_MB}MB limit.`);
+      return;
+    }
+
     setFileName(file.name);
     if (!title) {
       setTitle(file.name.replace(/\.[^/.]+$/, ""));

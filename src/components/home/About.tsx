@@ -5,6 +5,7 @@ import consultation from "@/assets/clinic/consultation.jpg";
 import {
   getClinicians,
   fetchCliniciansFromSupabase,
+  subscribeToCliniciansRealtime,
   type Clinician,
 } from "@/lib/clinician-service";
 
@@ -13,14 +14,21 @@ export function About() {
   const [specialists, setSpecialists] = useState<Clinician[]>(getClinicians);
 
   useEffect(() => {
-    // 1. Fetch from Supabase cloud database if available & sync
+    // 1. Initial fetch from Supabase cloud database
     fetchCliniciansFromSupabase().then((data) => {
       if (data && data.length > 0) {
         setSpecialists(data);
       }
     });
 
-    // 2. Listen for same-window live updates from Admin Dashboard
+    // 2. Subscribe to Supabase Realtime live postgres changes across all devices
+    const unsubscribeRealtime = subscribeToCliniciansRealtime((updated) => {
+      if (updated && updated.length > 0) {
+        setSpecialists(updated);
+      }
+    });
+
+    // 3. Listen for same-window live updates & storage events
     const handleCustomUpdate = (e: CustomEvent<Clinician[]>) => {
       if (Array.isArray(e.detail) && e.detail.length > 0) {
         setSpecialists(e.detail);
@@ -29,7 +37,6 @@ export function About() {
       }
     };
 
-    // 3. Listen for cross-tab storage events
     const handleStorageUpdate = (e: StorageEvent) => {
       if (e.key === "yc_clinicians_data_v1") {
         setSpecialists(getClinicians());
@@ -40,6 +47,7 @@ export function About() {
     window.addEventListener("storage", handleStorageUpdate);
 
     return () => {
+      unsubscribeRealtime();
       window.removeEventListener("yc-clinicians-updated", handleCustomUpdate as EventListener);
       window.removeEventListener("storage", handleStorageUpdate);
     };

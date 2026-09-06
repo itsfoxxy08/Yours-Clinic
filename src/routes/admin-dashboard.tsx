@@ -42,17 +42,20 @@ import {
   deletePatientRecord,
   exportPatientRecordsToExcel,
   exportPatientRecordsToGoogleSheets,
+  subscribeToPatientRecordsRealtime,
   formatDate12Hour,
   type PatientRecord,
 } from "@/lib/patient-service";
 import {
   getMedicineOrders,
   updateOrderStatus,
+  subscribeToMedicineOrdersRealtime,
   type MedicineOrder,
 } from "@/lib/order-service";
 import {
   getClinicians,
   fetchCliniciansFromSupabase,
+  subscribeToCliniciansRealtime,
   addClinician,
   updateClinician,
   deleteClinician,
@@ -288,13 +291,25 @@ function AdminDashboardPage() {
     if (session) {
       loadRecords();
       loadOrders();
+      loadCliniciansList();
+
+      // Subscribe to live postgres changes from Supabase across all sessions and devices
+      const unSubPatients = subscribeToPatientRecordsRealtime((fresh) => setRecords(fresh));
+      const unSubOrders = subscribeToMedicineOrdersRealtime((fresh) => setOrders(fresh));
+      const unSubClinicians = subscribeToCliniciansRealtime((fresh) => setClinicians(fresh));
 
       const handlePatientUpdate = () => loadRecords();
+      const handleOrdersUpdate = () => loadOrders();
       window.addEventListener("yc-patients-updated", handlePatientUpdate);
+      window.addEventListener("yc-orders-updated", handleOrdersUpdate);
       window.addEventListener("storage", handlePatientUpdate);
 
       return () => {
+        unSubPatients();
+        unSubOrders();
+        unSubClinicians();
         window.removeEventListener("yc-patients-updated", handlePatientUpdate);
+        window.removeEventListener("yc-orders-updated", handleOrdersUpdate);
         window.removeEventListener("storage", handlePatientUpdate);
       };
     }

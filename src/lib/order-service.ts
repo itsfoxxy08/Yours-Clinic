@@ -45,7 +45,7 @@ export async function getMedicineOrders(): Promise<{
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         return { data: data as MedicineOrder[], fromDatabase: true };
       }
@@ -63,6 +63,34 @@ export async function getMedicineOrders(): Promise<{
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_ORDERS));
   return { data: INITIAL_ORDERS, fromDatabase: false };
+}
+
+/**
+ * Realtime subscription for medicine orders database table
+ */
+export function subscribeToMedicineOrdersRealtime(
+  onUpdate: (orders: MedicineOrder[]) => void
+): () => void {
+  if (!isSupabaseConfigured()) return () => {};
+
+  const channel = supabase
+    .channel("medicine-orders-realtime-changes")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "medicine_orders" },
+      async () => {
+        const res = await getMedicineOrders();
+        onUpdate(res.data);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("yc-orders-updated", { detail: res.data }));
+        }
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }
 
 /**
