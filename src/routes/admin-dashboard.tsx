@@ -288,6 +288,15 @@ function AdminDashboardPage() {
     if (session) {
       loadRecords();
       loadOrders();
+
+      const handlePatientUpdate = () => loadRecords();
+      window.addEventListener("yc-patients-updated", handlePatientUpdate);
+      window.addEventListener("storage", handlePatientUpdate);
+
+      return () => {
+        window.removeEventListener("yc-patients-updated", handlePatientUpdate);
+        window.removeEventListener("storage", handlePatientUpdate);
+      };
     }
   }, [session]);
 

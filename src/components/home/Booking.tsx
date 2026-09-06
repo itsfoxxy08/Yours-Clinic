@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
-import { CalendarCheck, CheckCircle2 } from "lucide-react";
+import { CalendarCheck, CheckCircle2, Loader2 } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { diseases } from "@/data/diseases";
 import { externalLinkProps, whatsappLink } from "@/lib/social";
 import { WhatsAppIcon } from "@/components/SocialLinks";
+import { addPatientRecord } from "@/lib/patient-service";
 
 const slots = ["09:30", "11:00", "12:30", "15:00", "16:30", "18:00"];
 
@@ -11,14 +12,17 @@ export function Booking() {
   const [mode, setMode] = useState<"clinic" | "online">("clinic");
   const [slot, setSlot] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const name = String(data.get("name") ?? "").trim();
     const phone = String(data.get("phone") ?? "").trim();
     const date = String(data.get("date") ?? "");
+    const concern = String(data.get("concern") ?? "");
+    const notes = String(data.get("notes") ?? "").trim();
 
     if (name.length < 2) return setError("Please enter your full name.");
     if (!/^[0-9+\s-]{8,15}$/.test(phone)) return setError("Enter a valid phone number.");
@@ -26,7 +30,24 @@ export function Booking() {
     if (!slot) return setError("Choose a time slot.");
 
     setError(null);
-    setSubmitted(true);
+    setSubmitting(true);
+
+    try {
+      await addPatientRecord({
+        name,
+        phone,
+        email: "",
+        address: `${mode === "clinic" ? "In-Clinic Visit" : "Teleconsultation"} (${date} @ ${slot})`,
+        reason: `[${mode.toUpperCase()}] ${concern ? concern : "Consultation"}${notes ? ` — ${notes}` : ""}`,
+        status: "Consultation",
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Failed to save patient appointment:", err);
+      setError("Failed to save appointment. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const inputClass =

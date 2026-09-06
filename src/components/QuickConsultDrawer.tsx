@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { CalendarCheck, CheckCircle2, X } from "lucide-react";
+import { addPatientRecord } from "@/lib/patient-service";
 
 const slots = ["09:30", "11:00", "12:30", "15:00", "16:30", "18:00"];
 
@@ -16,6 +17,7 @@ export function QuickConsultDrawer({
   const [slot, setSlot] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -29,7 +31,7 @@ export function QuickConsultDrawer({
   const inputClass =
     "w-full rounded-2xl border border-border bg-background/70 px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-sage";
 
-  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
     const name = String(data.get("name") ?? "").trim();
@@ -39,8 +41,26 @@ export function QuickConsultDrawer({
     if (!/^[0-9+\s-]{8,15}$/.test(phone)) return setError("Enter a valid phone number.");
     if (!date) return setError("Choose a preferred date.");
     if (!slot) return setError("Choose a time slot.");
+
     setError(null);
-    setSubmitted(true);
+    setSubmitting(true);
+
+    try {
+      await addPatientRecord({
+        name,
+        phone,
+        email: "",
+        address: `${mode === "clinic" ? "In-Clinic" : "Online Video Call"} (${date} @ ${slot})`,
+        reason: `[QUICK CONSULT] ${condition}`,
+        status: "Consultation",
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error("Failed to save quick consult patient record:", err);
+      setError("Failed to submit request. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

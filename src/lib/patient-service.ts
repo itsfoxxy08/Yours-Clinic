@@ -63,7 +63,7 @@ export async function getPatientRecords(): Promise<{
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         return { data: data as PatientRecord[], fromDatabase: true };
       }
@@ -76,7 +76,7 @@ export async function getPatientRecords(): Promise<{
     }
   }
 
-  // Fallback to localStorage or Initial Mock Data
+  // Fallback to localStorage
   const cached = localStorage.getItem(STORAGE_KEY);
   if (cached) {
     try {
@@ -113,10 +113,10 @@ export async function addPatientRecord(
           {
             name: newRecord.name,
             phone: newRecord.phone,
-            email: newRecord.email,
-            address: newRecord.address,
-            reason: newRecord.reason,
-            status: newRecord.status,
+            email: newRecord.email || "",
+            address: newRecord.address || "",
+            reason: newRecord.reason || "",
+            status: newRecord.status || "Consultation",
             created_at: newRecord.created_at,
           },
         ])
@@ -133,16 +133,28 @@ export async function addPatientRecord(
     }
   }
 
-  const current = (await getPatientRecords()).data;
-  const updated = [newRecord, ...current];
+  // Update local cache
+  const cached = localStorage.getItem(STORAGE_KEY);
+  let current: PatientRecord[] = [];
+  if (cached) {
+    try {
+      current = JSON.parse(cached);
+    } catch (e) {}
+  }
+  const updated = [newRecord, ...current.filter((p) => p.id !== newRecord.id)];
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+
+  // Trigger live cross-tab & window event
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: updated }));
+  }
 
   return {
     success: true,
     record: newRecord,
     message: savedToDb
-      ? "Patient record added & saved to Supabase!"
-      : "Patient record added locally.",
+      ? "Patient record saved to Supabase database!"
+      : "Patient record saved.",
   };
 }
 
