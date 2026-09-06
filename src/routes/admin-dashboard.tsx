@@ -1608,16 +1608,31 @@ function AdminDashboardPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                    Mobile Number *
+                    Mobile Number * (10 Digits)
                   </label>
-                  <input
-                    type="tel"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+91 98765 43210"
-                    className="w-full rounded-xl border border-border bg-background/60 px-3.5 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
-                  />
+                  <div className="relative flex items-center">
+                    <span className="absolute left-3.5 text-sm font-medium text-muted-foreground select-none">
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      maxLength={10}
+                      value={formData.phone}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/\D/g, "");
+                        const cleaned = raw.length > 10 && raw.startsWith("91") ? raw.slice(2, 12) : raw.slice(0, 10);
+                        setFormData({ ...formData, phone: cleaned });
+                      }}
+                      placeholder="9876543210"
+                      className="w-full rounded-xl border border-border bg-background/60 pl-12 pr-3.5 py-2.5 text-sm font-mono text-foreground focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold tracking-wider"
+                    />
+                  </div>
+                  {formData.phone.length > 0 && formData.phone.length < 10 && (
+                    <p className="mt-1 text-[0.7rem] text-amber-500 font-semibold">
+                      {10 - formData.phone.length} more digit(s) required (10 digits total)
+                    </p>
+                  )}
                 </div>
 
                 <div>

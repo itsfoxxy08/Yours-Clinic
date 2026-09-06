@@ -343,17 +343,25 @@ export function OrderMedicinesModal({
 
                     <div>
                       <label className="block text-xs font-semibold text-foreground mb-1">
-                        Mobile Number *
+                        Mobile Number * (10 Digits)
                       </label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <div className="relative flex items-center">
+                        <Phone className="absolute left-3 h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="absolute left-8 text-xs font-medium text-muted-foreground select-none">
+                          +91
+                        </span>
                         <input
                           type="tel"
                           required
+                          maxLength={10}
                           value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          placeholder="+91 98765 43210"
-                          className="w-full rounded-xl border border-border bg-background pl-9 pr-3 py-2 text-xs text-foreground focus:border-gold focus:outline-none"
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/\D/g, "");
+                            const cleaned = raw.length > 10 && raw.startsWith("91") ? raw.slice(2, 12) : raw.slice(0, 10);
+                            setPhone(cleaned);
+                          }}
+                          placeholder="9876543210"
+                          className="w-full rounded-xl border border-border bg-background pl-16 pr-3 py-2 text-xs font-mono text-foreground focus:border-gold focus:outline-none tracking-wider"
                         />
                       </div>
                     </div>
