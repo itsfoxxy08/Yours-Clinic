@@ -2,27 +2,46 @@ import { useState, useEffect } from "react";
 import { Reveal } from "@/components/Reveal";
 import { Microscope, BriefcaseMedical, ShieldCheck } from "lucide-react";
 import consultation from "@/assets/clinic/consultation.jpg";
-import { getClinicians, type Clinician } from "@/lib/clinician-service";
+import {
+  getClinicians,
+  fetchCliniciansFromSupabase,
+  type Clinician,
+} from "@/lib/clinician-service";
 
 export function About() {
-  const [specialists, setSpecialists] = useState<Clinician[]>([]);
+  // Synchronously initialize state with existing clinicians from local storage/defaults
+  const [specialists, setSpecialists] = useState<Clinician[]>(getClinicians);
 
   useEffect(() => {
-    // Initial load
-    setSpecialists(getClinicians());
+    // 1. Fetch from Supabase cloud database if available & sync
+    fetchCliniciansFromSupabase().then((data) => {
+      if (data && data.length > 0) {
+        setSpecialists(data);
+      }
+    });
 
-    // Listen for live update events from Admin Dashboard
-    const handleUpdate = (e: CustomEvent<Clinician[]>) => {
-      if (Array.isArray(e.detail)) {
+    // 2. Listen for same-window live updates from Admin Dashboard
+    const handleCustomUpdate = (e: CustomEvent<Clinician[]>) => {
+      if (Array.isArray(e.detail) && e.detail.length > 0) {
         setSpecialists(e.detail);
       } else {
         setSpecialists(getClinicians());
       }
     };
 
-    window.addEventListener("yc-clinicians-updated", handleUpdate as EventListener);
+    // 3. Listen for cross-tab storage events
+    const handleStorageUpdate = (e: StorageEvent) => {
+      if (e.key === "yc_clinicians_data_v1") {
+        setSpecialists(getClinicians());
+      }
+    };
+
+    window.addEventListener("yc-clinicians-updated", handleCustomUpdate as EventListener);
+    window.addEventListener("storage", handleStorageUpdate);
+
     return () => {
-      window.removeEventListener("yc-clinicians-updated", handleUpdate as EventListener);
+      window.removeEventListener("yc-clinicians-updated", handleCustomUpdate as EventListener);
+      window.removeEventListener("storage", handleStorageUpdate);
     };
   }, []);
 

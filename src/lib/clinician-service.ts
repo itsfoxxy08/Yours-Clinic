@@ -2,7 +2,8 @@
  * clinician-service.ts
  *
  * Manages team clinicians/doctors display with local persistence,
- * image resizing to exact 4:5 portrait aspect ratio, and live updates.
+ * Supabase database cloud sync, image resizing to exact 4:5 portrait ratio,
+ * and multi-tab live updates across all devices.
  */
 
 import sumitJha from "@/assets/team/sumit-jha.webp";
@@ -10,12 +11,13 @@ import bandanaKumari from "@/assets/team/bandana-kumari.webp";
 import mnJha from "@/assets/team/mn-jha.webp";
 import anshuSingh from "@/assets/team/anshu-singh.webp";
 import shwetaSangini from "@/assets/team/shweta-sangini.webp";
+import { supabase, isSupabaseConfigured } from "./supabase";
 
 export interface Clinician {
   id: string;
   name: string;
   reg: string; // Qualification or Title (e.g., "BHMS (HOM)", "Founder, CEO")
-  photo: string; // Base64 data URL or imported asset path
+  photo: string; // Base64 data URL or asset path
   created_at?: string;
 }
 
@@ -31,45 +33,106 @@ export const DEFAULT_CLINICIANS: Clinician[] = [
 ];
 
 /**
- * Retrieve current active clinicians list
+ * Synchronous retrieval from LocalStorage / Defaults
  */
 export function getClinicians(): Clinician[] {
   if (typeof window === "undefined") return DEFAULT_CLINICIANS;
 
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_CLINICIANS));
-      return DEFAULT_CLINICIANS;
-    }
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
     }
   } catch (e) {
-    console.error("Failed to parse stored clinicians:", e);
+    console.error("Failed to parse local clinicians:", e);
   }
 
+  // Seed default if empty
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_CLINICIANS));
+  } catch {}
   return DEFAULT_CLINICIANS;
 }
 
 /**
- * Save updated clinicians list & dispatch custom event for live UI update
+ * Save updated clinicians list locally & trigger cross-tab & custom events
  */
-export function saveClinicians(list: Clinician[]): void {
+export function saveCliniciansLocal(list: Clinician[]): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
     window.dispatchEvent(new CustomEvent("yc-clinicians-updated", { detail: list }));
   } catch (e) {
-    console.error("Failed to save clinicians:", e);
+    console.error("Failed to save clinicians locally:", e);
   }
 }
 
 /**
- * Add a new clinician
+ * Fetch clinicians from Supabase Cloud Database (if configured),
+ * merging into local storage and broadcasting updates.
  */
-export function addClinician(data: { name: string; reg: string; photo: string }): Clinician {
+export async function fetchCliniciansFromSupabase(): Promise<Clinician[]> {
+  if (!isSupabaseConfigured()) {
+    return getClinicians();
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("clinicians")
+      .select("*")
+      .order("created_at", { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      const formatted: Clinician[] = data.map((item: any) => ({
+        id: String(item.id),
+        name: item.name,
+        reg: item.reg,
+        photo: item.photo,
+        created_at: item.created_at,
+      }));
+
+      saveCliniciansLocal(formatted);
+      return formatted;
+    } else if (!error && data && data.length === 0) {
+      // If table is empty, seed defaults into Supabase
+      await seedSupabaseClinicians(DEFAULT_CLINICIANS);
+      saveCliniciansLocal(DEFAULT_CLINICIANS);
+      return DEFAULT_CLINICIANS;
+    }
+  } catch (err) {
+    console.warn("Supabase clinicians fetch fallback to local:", err);
+  }
+
+  return getClinicians();
+}
+
+/**
+ * Seed default clinicians into Supabase database table
+ */
+async function seedSupabaseClinicians(list: Clinician[]) {
+  if (!isSupabaseConfigured()) return;
+  try {
+    await supabase.from("clinicians").upsert(
+      list.map((c) => ({
+        id: c.id,
+        name: c.name,
+        reg: c.reg,
+        photo: c.photo,
+        created_at: new Date().toISOString(),
+      }))
+    );
+  } catch (err) {
+    console.warn("Could not seed default clinicians to Supabase:", err);
+  }
+}
+
+/**
+ * Add a new clinician (saves locally & syncs to Supabase)
+ */
+export async function addClinician(data: { name: string; reg: string; photo: string }): Promise<Clinician> {
   const current = getClinicians();
   const newClinician: Clinician = {
     id: `c-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -80,14 +143,31 @@ export function addClinician(data: { name: string; reg: string; photo: string })
   };
 
   const updated = [...current, newClinician];
-  saveClinicians(updated);
+  saveCliniciansLocal(updated);
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from("clinicians").insert([
+        {
+          id: newClinician.id,
+          name: newClinician.name,
+          reg: newClinician.reg,
+          photo: newClinician.photo,
+          created_at: newClinician.created_at,
+        },
+      ]);
+    } catch (err) {
+      console.warn("Supabase clinician insert note:", err);
+    }
+  }
+
   return newClinician;
 }
 
 /**
  * Update an existing clinician
  */
-export function updateClinician(id: string, data: Partial<Omit<Clinician, "id">>): boolean {
+export async function updateClinician(id: string, data: Partial<Omit<Clinician, "id">>): Promise<boolean> {
   const current = getClinicians();
   const idx = current.findIndex((c) => c.id === id);
   if (idx === -1) return false;
@@ -95,46 +175,82 @@ export function updateClinician(id: string, data: Partial<Omit<Clinician, "id">>
   const existing = current[idx];
   if (!existing) return false;
 
-  current[idx] = {
+  const updatedItem: Clinician = {
     ...existing,
     name: data.name !== undefined ? data.name.trim() : existing.name,
     reg: data.reg !== undefined ? data.reg.trim() : existing.reg,
     photo: data.photo !== undefined ? data.photo : existing.photo,
   };
 
-  saveClinicians(current);
+  current[idx] = updatedItem;
+  saveCliniciansLocal(current);
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase
+        .from("clinicians")
+        .update({
+          name: updatedItem.name,
+          reg: updatedItem.reg,
+          photo: updatedItem.photo,
+        })
+        .eq("id", id);
+    } catch (err) {
+      console.warn("Supabase clinician update note:", err);
+    }
+  }
+
   return true;
 }
 
 /**
  * Delete a clinician by ID
  */
-export function deleteClinician(id: string): boolean {
+export async function deleteClinician(id: string): Promise<boolean> {
   const current = getClinicians();
   const filtered = current.filter((c) => c.id !== id);
   if (filtered.length === current.length) return false;
 
-  saveClinicians(filtered);
+  saveCliniciansLocal(filtered);
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from("clinicians").delete().eq("id", id);
+    } catch (err) {
+      console.warn("Supabase clinician delete note:", err);
+    }
+  }
+
   return true;
 }
 
 /**
  * Reset clinicians back to default panel
  */
-export function resetCliniciansToDefault(): Clinician[] {
-  saveClinicians(DEFAULT_CLINICIANS);
+export async function resetCliniciansToDefault(): Promise<Clinician[]> {
+  saveCliniciansLocal(DEFAULT_CLINICIANS);
+
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.from("clinicians").delete().neq("id", "0");
+      await seedSupabaseClinicians(DEFAULT_CLINICIANS);
+    } catch (err) {
+      console.warn("Supabase clinician reset note:", err);
+    }
+  }
+
   return DEFAULT_CLINICIANS;
 }
 
 /**
- * Helper: Resize & crop any uploaded image file to exact 4:5 aspect ratio (e.g. 600x750)
- * matching current clinician cards seamlessly with object-fit: cover behavior.
+ * Helper: Resize & crop any uploaded image file to exact 4:5 aspect ratio (e.g. 500x625)
+ * matching current clinician cards seamlessly with high compression object-fit cover.
  */
 export function resizeAndCropImage(
   file: File,
-  targetWidth = 600,
-  targetHeight = 750,
-  quality = 0.85
+  targetWidth = 500,
+  targetHeight = 625,
+  quality = 0.80
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -153,7 +269,6 @@ export function resizeAndCropImage(
           return reject(new Error("Failed to get 2d canvas context"));
         }
 
-        // Calculate aspect ratios for cover fit (focused towards top/face)
         const srcAspect = img.width / img.height;
         const targetAspect = targetWidth / targetHeight;
 
@@ -163,31 +278,23 @@ export function resizeAndCropImage(
         let offsetY = 0;
 
         if (srcAspect > targetAspect) {
-          // Source image is wider than target aspect ratio -> scale by height
           renderHeight = targetHeight;
           renderWidth = img.width * (targetHeight / img.height);
-          offsetX = (targetWidth - renderWidth) / 2; // Center horizontally
+          offsetX = (targetWidth - renderWidth) / 2;
           offsetY = 0;
         } else {
-          // Source image is taller than target aspect ratio -> scale by width
           renderWidth = targetWidth;
           renderHeight = img.height * (targetWidth / img.width);
           offsetX = 0;
-          offsetY = 0; // Align towards top for portrait face photos
+          offsetY = 0;
         }
 
-        // High quality rendering
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
-
-        // Fill background with soft neutral color in case of PNG transparency
         ctx.fillStyle = "#f1f5f9";
         ctx.fillRect(0, 0, targetWidth, targetHeight);
-
-        // Draw cropped and scaled image onto canvas
         ctx.drawImage(img, offsetX, offsetY, renderWidth, renderHeight);
 
-        // Export as WebP (or JPEG fallback)
         try {
           const dataUrl = canvas.toDataURL("image/webp", quality);
           resolve(dataUrl);

@@ -52,6 +52,7 @@ import {
 } from "@/lib/order-service";
 import {
   getClinicians,
+  fetchCliniciansFromSupabase,
   addClinician,
   updateClinician,
   deleteClinician,
@@ -97,24 +98,37 @@ function AdminDashboardPage() {
   const [updatingOrder, setUpdatingOrder] = useState(false);
 
   // Clinicians / Workers Management State
-  const [clinicians, setClinicians] = useState<Clinician[]>([]);
+  const [clinicians, setClinicians] = useState<Clinician[]>(getClinicians);
   const [isClinicianModalOpen, setIsClinicianModalOpen] = useState(false);
   const [editingClinician, setEditingClinician] = useState<Clinician | null>(null);
   const [clinicianForm, setClinicianForm] = useState({ name: "", reg: "", photo: "" });
   const [imageProcessing, setImageProcessing] = useState(false);
 
   useEffect(() => {
-    setClinicians(getClinicians());
-    const handleUpdate = (e: CustomEvent<Clinician[]>) => {
-      if (Array.isArray(e.detail)) {
+    fetchCliniciansFromSupabase().then((data) => {
+      if (data && data.length > 0) setClinicians(data);
+    });
+
+    const handleCustomUpdate = (e: CustomEvent<Clinician[]>) => {
+      if (Array.isArray(e.detail) && e.detail.length > 0) {
         setClinicians(e.detail);
       } else {
         setClinicians(getClinicians());
       }
     };
-    window.addEventListener("yc-clinicians-updated", handleUpdate as EventListener);
+
+    const handleStorageUpdate = (e: StorageEvent) => {
+      if (e.key === "yc_clinicians_data_v1") {
+        setClinicians(getClinicians());
+      }
+    };
+
+    window.addEventListener("yc-clinicians-updated", handleCustomUpdate as EventListener);
+    window.addEventListener("storage", handleStorageUpdate);
+
     return () => {
-      window.removeEventListener("yc-clinicians-updated", handleUpdate as EventListener);
+      window.removeEventListener("yc-clinicians-updated", handleCustomUpdate as EventListener);
+      window.removeEventListener("storage", handleStorageUpdate);
     };
   }, []);
 
@@ -136,8 +150,8 @@ function AdminDashboardPage() {
 
     setImageProcessing(true);
     try {
-      // Auto resize & crop to exact 4:5 aspect ratio (600x750) matching clinicians display
-      const resizedWebpUrl = await resizeAndCropImage(file, 600, 750, 0.85);
+      // Auto resize & crop to exact 4:5 aspect ratio (500x625) matching clinicians display
+      const resizedWebpUrl = await resizeAndCropImage(file, 500, 625, 0.80);
       setClinicianForm((prev) => ({ ...prev, photo: resizedWebpUrl }));
       toast.success("📷 Image uploaded & cropped to 4:5 portrait ratio!");
     } catch (err) {
@@ -148,7 +162,7 @@ function AdminDashboardPage() {
     }
   };
 
-  const handleClinicianSubmit = (e: React.FormEvent) => {
+  const handleClinicianSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clinicianForm.name.trim()) {
       toast.error("Please enter the clinician's full name.");
@@ -166,7 +180,7 @@ function AdminDashboardPage() {
     }
 
     if (editingClinician) {
-      const ok = updateClinician(editingClinician.id, clinicianForm);
+      const ok = await updateClinician(editingClinician.id, clinicianForm);
       if (ok) {
         toast.success(`Updated details for ${clinicianForm.name}`);
         setIsClinicianModalOpen(false);
@@ -174,24 +188,24 @@ function AdminDashboardPage() {
         toast.error("Failed to update clinician details.");
       }
     } else {
-      addClinician(clinicianForm);
+      await addClinician(clinicianForm);
       toast.success(`Added new clinician ${clinicianForm.name} to homepage display!`);
       setIsClinicianModalOpen(false);
     }
   };
 
-  const handleDeleteClinician = (id: string, name: string) => {
+  const handleDeleteClinician = async (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to remove ${name} from the homepage clinicians panel?`)) {
-      const ok = deleteClinician(id);
+      const ok = await deleteClinician(id);
       if (ok) {
         toast.success(`Removed ${name} from clinicians list.`);
       }
     }
   };
 
-  const handleResetClinicians = () => {
+  const handleResetClinicians = async () => {
     if (window.confirm("Restore default clinicians panel?")) {
-      resetCliniciansToDefault();
+      await resetCliniciansToDefault();
       toast.success("Clinicians panel reset to default doctors.");
     }
   };
