@@ -287,6 +287,11 @@ function AdminDashboardPage() {
     setLoadingOrders(false);
   };
 
+  const loadCliniciansList = async () => {
+    const data = await fetchCliniciansFromSupabase();
+    if (data && data.length > 0) setClinicians(data);
+  };
+
   useEffect(() => {
     if (session) {
       loadRecords();
