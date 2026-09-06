@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Mail,
+  Lock,
+  Eye,
+  EyeOff,
   X,
   ShieldCheck,
   CheckCircle2,
@@ -11,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { sendEmailOTP, verifyEmailOTP } from "@/lib/seed-admin";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 interface AdminLoginModalProps {
   isOpen: boolean;
@@ -19,12 +23,14 @@ interface AdminLoginModalProps {
 
 export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // 6-digit OTP state
-  const [step, setStep] = useState<"email" | "otp">("email");
+  const [step, setStep] = useState<"credentials" | "otp">("credentials");
   const [otpDigits, setOtpDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpCountdown, setOtpCountdown] = useState(0);
@@ -53,15 +59,21 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
 
   const REGISTERED_ADMIN_EMAIL = "choudharyvikas2008@gmail.com";
 
-  // STEP 1: Request 6-Digit Email OTP via Supabase Auth
-  const handleEmailSubmit = async (e: React.FormEvent) => {
+  // STEP 1: Verify Email & Password, then Send 6-Digit Email OTP
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setResult(null);
 
     const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
 
     if (!cleanEmail) {
       setResult({ success: false, message: "Please enter your email address." });
+      return;
+    }
+
+    if (!cleanPassword) {
+      setResult({ success: false, message: "Please enter your admin password." });
       return;
     }
 
@@ -74,6 +86,34 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     }
 
     setLoading(true);
+
+    // Verify Password against default admin password or Supabase Auth
+    let isPasswordValid = cleanPassword === "Yours_Clinic@2018";
+
+    if (!isPasswordValid && isSupabaseConfigured()) {
+      try {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password: cleanPassword,
+        });
+        if (!error) {
+          isPasswordValid = true;
+        }
+      } catch (err) {
+        console.warn("Supabase password check notice:", err);
+      }
+    }
+
+    if (!isPasswordValid) {
+      setLoading(false);
+      setResult({
+        success: false,
+        message: "Incorrect password. Please enter the valid admin password.",
+      });
+      return;
+    }
+
+    // Password valid -> Send 6-Digit OTP Code
     const res = await sendEmailOTP(cleanEmail);
     setLoading(false);
 
@@ -82,7 +122,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
       setOtpDigits(["", "", "", "", "", ""]);
       setOtpCountdown(60);
       toast.info("🔐 Verification code sent!", {
-        description: `OTP sent to ${cleanEmail}. Please check your email inbox and spam folder.`,
+        description: `OTP sent to ${cleanEmail}. Please check your email inbox.`,
         duration: 8000,
       });
     } else {
@@ -212,7 +252,8 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
   };
 
   const resetModalState = () => {
-    setStep("email");
+    setStep("credentials");
+    setPassword("");
     setOtpDigits(["", "", "", "", "", ""]);
     setResult(null);
   };
@@ -248,19 +289,16 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
             id="employee-login-title"
             className="text-xl font-bold mt-4 text-foreground tracking-tight"
           >
-            Yours-Clinic Admin Login
+            Admin Login
           </h3>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Supabase Email OTP Authentication
-          </p>
         </div>
 
-        {/* STEP 1: Email Form */}
-        {step === "email" && (
-          <form onSubmit={handleEmailSubmit} className="mt-5 flex flex-col gap-4">
+        {/* STEP 1: Email & Password Form */}
+        {step === "credentials" && (
+          <form onSubmit={handleCredentialsSubmit} className="mt-5 flex flex-col gap-4">
             <div>
               <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
-                Registered Admin Email Address
+                EMAIL ADDRESS
               </label>
               <div className="relative flex items-center">
                 <Mail className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
@@ -269,9 +307,33 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="choudharyvikas2008@gmail.com"
+                  placeholder="enter your email"
                   className="w-full rounded-xl border border-border bg-background/60 pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
                 />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                PASSWORD
+              </label>
+              <div className="relative flex items-center">
+                <Lock className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your admin password"
+                  className="w-full rounded-xl border border-border bg-background/60 pl-10 pr-10 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 
@@ -307,7 +369,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
               {loading ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Sending Verification Code...
+                  Verifying Credentials & Sending OTP...
                 </span>
               ) : (
                 <>
@@ -375,7 +437,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
                 onClick={resetModalState}
                 className="text-xs hover:text-foreground transition-colors underline"
               >
-                Change Email
+                Change Email / Password
               </button>
               <button
                 type="button"
