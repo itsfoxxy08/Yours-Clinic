@@ -98,7 +98,7 @@ function AdminDashboardPage() {
     status: "Routine" as PatientRecord["status"],
   });
 
-  // Verify employee session on mount (checks localStorage for persistent sessions and sessionStorage for single-session logins)
+  // Verify admin session on mount (strictly checks for choudharyvikas2008@gmail.com)
   useEffect(() => {
     const checkSession = () => {
       const storedLocal = localStorage.getItem("yc_employee_session");
@@ -108,7 +108,11 @@ function AdminDashboardPage() {
       if (rawSession) {
         try {
           const parsed = JSON.parse(rawSession);
-          setSession(parsed);
+          if (parsed?.email?.trim().toLowerCase() === "choudharyvikas2008@gmail.com") {
+            setSession(parsed);
+          } else {
+            setSession(null);
+          }
         } catch (e) {
           setSession(null);
         }

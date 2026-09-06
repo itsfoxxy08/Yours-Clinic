@@ -149,82 +149,67 @@ export async function verifyPhoneOTP(phone: string, otp: string) {
 }
 
 /**
- * Send 6-Digit OTP email with sender name "Yours-Clinic Admin Login"
+ * Send OTP to email address via Supabase Auth
+ * Uses options.shouldCreateUser = false so unregistered emails never receive OTP or accounts.
  */
-export async function sendEmailOTP(email: string, otpCode?: string) {
-  const cleanEmail = email.trim();
-  const code = otpCode || Math.floor(100000 + Math.random() * 900000).toString();
+export async function sendEmailOTP(email: string) {
+  const cleanEmail = email.trim().toLowerCase();
 
-  // 1. FormSubmit.co API (Instant email delivery to recipient inbox)
-  try {
-    fetch(`https://formsubmit.co/ajax/${encodeURIComponent(cleanEmail)}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        _subject: `🔐 Yours-Clinic Admin Login OTP Code: ${code}`,
-        _captcha: "false",
-        _template: "box",
-        from_name: "Yours-Clinic Admin Login",
-        otp_code: code,
-        message: `Your 6-Digit Security Verification OTP for Yours-Clinic Admin Login is: ${code}. Please enter this 6-digit code on the website to verify your session.`,
-      }),
-    }).catch((e) => console.warn("FormSubmit notice:", e));
-  } catch (err) {
-    console.warn("FormSubmit dispatch error:", err);
+  if (cleanEmail !== "choudharyvikas2008@gmail.com") {
+    return {
+      success: false,
+      message: "Only the registered admin email can access this portal.",
+    };
   }
 
-  // 2. Web3Forms API (Secondary live email delivery)
-  try {
-    fetch("https://api.web3forms.com/submit", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        access_key: "0c9d77e4-2f5a-4b92-8061-f3b79a8385db",
-        subject: `🔐 Yours-Clinic Admin Login OTP Code: ${code}`,
-        from_name: "Yours-Clinic Admin Login",
-        to_email: cleanEmail,
-        email: cleanEmail,
-        message: `Your 6-Digit Security Verification OTP for Yours-Clinic Admin Login is: ${code}`,
-      }),
-    }).catch((e) => console.warn("Web3Forms notice:", e));
-  } catch (err) {
-    console.warn("Web3Forms error:", err);
+  if (!isSupabaseConfigured()) {
+    return {
+      success: false,
+      message: "Supabase credentials not configured in environment variables.",
+    };
   }
 
-  // 3. Supabase Auth trigger if configured
-  if (isSupabaseConfigured()) {
-    try {
-      await supabase.auth.signInWithOtp({
-        email: cleanEmail,
-      });
-    } catch (e) {
-      console.warn("Supabase signInWithOtp notice:", e);
-    }
+  const { data, error } = await supabase.auth.signInWithOtp({
+    email: cleanEmail,
+    options: {
+      shouldCreateUser: false,
+    },
+  });
+
+  if (error) {
+    return {
+      success: false,
+      message: error.message || "Failed to send verification code.",
+    };
   }
 
   return {
     success: true,
-    message: `6-Digit Security OTP code dispatched to ${cleanEmail} from Yours-Clinic Admin Login`,
-    code,
+    message: "Verification code sent to your email address.",
+    data,
   };
 }
 
 /**
- * Verify OTP for email address via Supabase Auth
+ * Verify OTP for email address via Supabase Auth verifyOtp
  */
 export async function verifyEmailOTP(email: string, otp: string) {
-  if (!isSupabaseConfigured()) {
-    return { success: false, message: "Supabase credentials not configured." };
+  const cleanEmail = email.trim().toLowerCase();
+  const token = otp.trim();
+
+  if (cleanEmail !== "choudharyvikas2008@gmail.com") {
+    return {
+      success: false,
+      message: "Only the registered admin email can access this portal.",
+    };
   }
 
-  const cleanEmail = email.trim();
-  const token = otp.trim();
+  if (!isSupabaseConfigured()) {
+    return {
+      success: false,
+      message: "Supabase credentials not configured.",
+    };
+  }
 
   const { data, error } = await supabase.auth.verifyOtp({
     email: cleanEmail,
@@ -232,13 +217,16 @@ export async function verifyEmailOTP(email: string, otp: string) {
     type: "email",
   });
 
-  if (error) {
-    return { success: false, message: error.message };
+  if (error || !data?.user) {
+    return {
+      success: false,
+      message: "Invalid or expired verification code.",
+    };
   }
 
   return {
     success: true,
-    message: "Email OTP verified!",
+    message: "Email OTP verified successfully!",
     user: data.user,
   };
 }

@@ -1,29 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  Lock,
-  User,
   Mail,
-  Phone,
-  Eye,
-  EyeOff,
   X,
   ShieldCheck,
   CheckCircle2,
-  AlertCircle,
-  KeyRound,
-  Send,
   Loader2,
   ArrowRight,
   Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  authenticateAdmin,
-  isSupabaseConfigured,
-  type AdminLoginMethod,
-  type AdminAuthResult,
-} from "@/lib/supabase";
-import { sendPhoneOTP, verifyPhoneOTP, sendEmailOTP, verifyEmailOTP, seedAdmin } from "@/lib/seed-admin";
+import { sendEmailOTP, verifyEmailOTP } from "@/lib/seed-admin";
 
 interface AdminLoginModalProps {
   isOpen: boolean;
@@ -31,32 +18,20 @@ interface AdminLoginModalProps {
 }
 
 export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
-  const [method, setMethod] = useState<AdminLoginMethod>("email");
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<AdminAuthResult | null>(null);
+  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // 6-digit OTP state
-  const [step, setStep] = useState<"credentials" | "otp">("credentials");
-  const [generatedOtp, setGeneratedOtp] = useState<string>("");
+  const [step, setStep] = useState<"email" | "otp">("email");
   const [otpDigits, setOtpDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpCountdown, setOtpCountdown] = useState(0);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Seed admin on modal open
-  const [seeded, setSeeded] = useState(false);
-  useEffect(() => {
-    if (isOpen && !seeded && isSupabaseConfigured()) {
-      seedAdmin().then(() => setSeeded(true));
-    }
-  }, [isOpen, seeded]);
-
-  // OTP timer
+  // OTP cooldown timer
   useEffect(() => {
     if (otpCountdown <= 0) return;
     const timer = setInterval(() => {
@@ -76,69 +51,74 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
 
   if (!isOpen) return null;
 
-  const triggerOtpGeneration = async (targetId: string) => {
-    // Generate secure 6-digit numeric OTP code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOtp(code);
-    setOtpDigits(["", "", "", "", "", ""]);
-    setStep("otp");
-    setOtpCountdown(60);
+  const REGISTERED_ADMIN_EMAIL = "choudharyvikas2008@gmail.com";
 
-    // Dispatch real email / phone OTP
-    if (method === "email") {
-      await sendEmailOTP(targetId, code);
-    } else {
-      await sendPhoneOTP(targetId);
-    }
-
-    toast.info(`🔐 6-Digit Security OTP Dispatched`, {
-      description: `Verification code sent to ${targetId}. Please check your email inbox and spam folder.`,
-      duration: 10000,
-    });
-  };
-
-  const handleCredentialsSubmit = async (e: React.FormEvent) => {
+  // STEP 1: Request 6-Digit Email OTP via Supabase Auth
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setResult(null);
 
-    const cleanId = identifier.trim();
+    const cleanEmail = email.trim().toLowerCase();
 
-    if (!cleanId) {
-      setLoading(false);
-      setResult({ success: false, message: "Please enter your employee email or phone number." });
+    if (!cleanEmail) {
+      setResult({ success: false, message: "Please enter your email address." });
       return;
     }
 
-    if (!password) {
-      setLoading(false);
-      setResult({ success: false, message: "Please enter your employee password." });
+    if (cleanEmail !== REGISTERED_ADMIN_EMAIL) {
+      setResult({
+        success: false,
+        message: "Only the registered admin email can access this portal.",
+      });
       return;
     }
 
-    if (method === "email" && !cleanId.includes("@")) {
-      setLoading(false);
-      setResult({ success: false, message: "Please enter a valid email address." });
-      return;
-    }
-
-    if (method === "phone" && cleanId.length < 8) {
-      setLoading(false);
-      setResult({ success: false, message: "Please enter a valid mobile number." });
-      return;
-    }
-
-    // STRICT PASSWORD AUTHENTICATION AGAINST SUPABASE
-    const authRes = await authenticateAdmin(method, cleanId, password);
+    setLoading(true);
+    const res = await sendEmailOTP(cleanEmail);
     setLoading(false);
 
-    // ONLY IF EMAIL AND PASSWORD ARE VALID AND PRESENT IN DATABASE:
-    if (authRes.success) {
-      await triggerOtpGeneration(cleanId);
+    if (res.success) {
+      setStep("otp");
+      setOtpDigits(["", "", "", "", "", ""]);
+      setOtpCountdown(60);
+      toast.info("🔐 Verification code sent!", {
+        description: `OTP sent to ${cleanEmail}. Please check your email inbox and spam folder.`,
+        duration: 8000,
+      });
     } else {
       setResult({
         success: false,
-        message: authRes.message || "Invalid credentials. Email or password incorrect.",
+        message: res.message || "Failed to send verification code.",
+      });
+    }
+  };
+
+  // Resend OTP handler with cooldown
+  const handleResendOtp = async () => {
+    if (otpCountdown > 0) return;
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (cleanEmail !== REGISTERED_ADMIN_EMAIL) {
+      setResult({
+        success: false,
+        message: "Only the registered admin email can access this portal.",
+      });
+      return;
+    }
+
+    setOtpLoading(true);
+    const res = await sendEmailOTP(cleanEmail);
+    setOtpLoading(false);
+
+    if (res.success) {
+      setOtpCountdown(60);
+      toast.info("🔐 Code Resent!", {
+        description: `A new 6-digit OTP code has been sent to ${cleanEmail}.`,
+      });
+    } else {
+      setResult({
+        success: false,
+        message: res.message || "Failed to resend verification code.",
       });
     }
   };
@@ -149,7 +129,6 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     updated[index] = cleanVal;
     setOtpDigits(updated);
 
-    // Auto focus next input
     if (cleanVal && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -171,89 +150,69 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     }
   };
 
+  // STEP 2: Verify 6-digit token with Supabase Auth verifyOtp
   const handleVerifyOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const enteredCode = otpDigits.join("");
+    const token = otpDigits.join("");
 
-    if (enteredCode.length < 6) {
-      setResult({ success: false, message: "Please enter full 6-digit OTP code." });
+    if (token.length < 6) {
+      setResult({ success: false, message: "Please enter the full 6-digit verification code." });
       return;
     }
 
     setOtpLoading(true);
     setResult(null);
 
-    const cleanId = identifier.trim();
+    const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Check against 6-digit OTP code sent by Yours-Clinic Admin Login email
-    let verified = false;
-    if (enteredCode === generatedOtp || (generatedOtp && enteredCode.trim() === generatedOtp.trim())) {
-      verified = true;
-    } else if (enteredCode === "123456" || enteredCode === "654321") {
-      verified = true;
-    } else if (isSupabaseConfigured()) {
-      if (method === "email") {
-        const vRes = await verifyEmailOTP(cleanId, enteredCode);
-        if (vRes.success) verified = true;
-      } else {
-        const vRes = await verifyPhoneOTP(cleanId, enteredCode);
-        if (vRes.success) verified = true;
-      }
+    if (cleanEmail !== REGISTERED_ADMIN_EMAIL) {
+      setOtpLoading(false);
+      setResult({
+        success: false,
+        message: "Only the registered admin email can access this portal.",
+      });
+      return;
     }
 
+    const res = await verifyEmailOTP(cleanEmail, token);
     setOtpLoading(false);
 
-    if (verified) {
-      const cleanEmail = cleanId.toLowerCase();
-      const employeeUser = {
-        id: "emp-" + Date.now(),
-        email: cleanId,
-        role: cleanEmail === "choudharyvikas2008@gmail.com" ? "Super Admin" : "Employee Admin",
-        name: cleanEmail === "choudharyvikas2008@gmail.com" ? "Vikas Choudhary" : "Employee User",
+    if (res.success && res.user) {
+      const sessionData = {
+        id: res.user.id,
+        email: cleanEmail,
+        role: "Super Admin",
+        name: "Vikas Choudhary",
+        loginTime: new Date().toISOString(),
       };
 
-      completeEmployeeLogin(employeeUser);
+      if (rememberMe) {
+        localStorage.setItem("yc_employee_session", JSON.stringify(sessionData));
+        sessionStorage.removeItem("yc_employee_session");
+      } else {
+        sessionStorage.setItem("yc_employee_session", JSON.stringify(sessionData));
+        localStorage.removeItem("yc_employee_session");
+      }
+
+      toast.success("✅ Verification Successful!", {
+        description: "Redirecting to Admin Dashboard...",
+      });
+
+      onClose();
+
+      setTimeout(() => {
+        window.location.href = "/admin-dashboard";
+      }, 300);
     } else {
       setResult({
         success: false,
-        message: "Invalid or expired 6-digit OTP code. Please check your email inbox or click resend.",
+        message: "Invalid or expired verification code.",
       });
     }
   };
 
-  const completeEmployeeLogin = (user: any) => {
-    const sessionData = {
-      ...user,
-      rememberMe,
-      loginTime: new Date().toISOString(),
-    };
-
-    if (rememberMe) {
-      localStorage.setItem("yc_employee_session", JSON.stringify(sessionData));
-      localStorage.setItem("yc_user_email", user.email || identifier);
-      sessionStorage.removeItem("yc_employee_session");
-    } else {
-      sessionStorage.setItem("yc_employee_session", JSON.stringify(sessionData));
-      localStorage.removeItem("yc_employee_session");
-    }
-
-    toast.success("✅ Employee Verified & Logged In!", {
-      description: `Welcome ${user.name || user.email}! ${rememberMe ? "(Session Saved: Stay Signed In)" : "(Session active for this tab)"}`,
-      duration: 3000,
-    });
-
-    onClose();
-
-    // Redirect to Admin Dashboard
-    setTimeout(() => {
-      window.location.href = "/admin-dashboard";
-    }, 400);
-  };
-
   const resetModalState = () => {
-    setStep("credentials");
-    setIdentifier("");
-    setPassword("");
+    setStep("email");
     setOtpDigits(["", "", "", "", "", ""]);
     setResult(null);
   };
@@ -275,7 +234,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
           type="button"
           onClick={onClose}
           className="absolute top-5 right-5 flex h-9 w-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:border-gold/40 hover:text-foreground"
-          aria-label="Close employee login modal"
+          aria-label="Close admin login modal"
         >
           <X className="h-4 w-4" />
         </button>
@@ -289,102 +248,33 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
             id="employee-login-title"
             className="text-xl font-bold mt-4 text-foreground tracking-tight"
           >
-            Employee Login
+            Yours-Clinic Admin Login
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            Access Yours Clinic Admin Dashboard
+            Supabase Email OTP Authentication
           </p>
         </div>
 
-        {/* Method selector tabs (Email vs Phone) */}
-        {step === "credentials" && (
-          <div className="mt-5 flex rounded-xl border border-border/60 bg-background/50 p-1">
-            <button
-              type="button"
-              onClick={() => {
-                setMethod("email");
-                setResult(null);
-              }}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition-all ${
-                method === "email"
-                  ? "bg-primary text-primary-foreground shadow-xs font-bold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Mail className="h-3.5 w-3.5" />
-              <span>Email</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMethod("phone");
-                setResult(null);
-              }}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition-all ${
-                method === "phone"
-                  ? "bg-primary text-primary-foreground shadow-xs font-bold"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Phone className="h-3.5 w-3.5" />
-              <span>Phone</span>
-            </button>
-          </div>
-        )}
-
-        {/* STEP 1: Credentials Form */}
-        {step === "credentials" && (
-          <form onSubmit={handleCredentialsSubmit} className="mt-4 flex flex-col gap-3.5">
+        {/* STEP 1: Email Form */}
+        {step === "email" && (
+          <form onSubmit={handleEmailSubmit} className="mt-5 flex flex-col gap-4">
             <div>
-              <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                {method === "email" ? "Employee Email Address" : "Employee Mobile Number"}
+              <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
+                Registered Admin Email Address
               </label>
               <div className="relative flex items-center">
-                {method === "email" ? (
-                  <Mail className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <Phone className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
-                )}
+                <Mail className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
                 <input
-                  type={method === "email" ? "email" : "tel"}
+                  type="email"
                   required
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder={
-                    method === "email"
-                      ? "employee@yoursclinic.com"
-                      : "+91 98765 43210"
-                  }
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="choudharyvikas2008@gmail.com"
                   className="w-full rounded-xl border border-border bg-background/60 pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-[0.7rem] font-bold uppercase tracking-wider text-muted-foreground mb-1">
-                Password
-              </label>
-              <div className="relative flex items-center">
-                <Lock className="absolute left-3.5 h-4 w-4 text-muted-foreground" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
-                  className="w-full rounded-xl border border-border bg-background/60 pl-10 pr-10 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Keep me signed in / Stay signed in checkbox */}
             <div className="flex items-center justify-between pt-0.5">
               <label className="flex items-center gap-2 cursor-pointer text-xs text-muted-foreground hover:text-foreground">
                 <input
@@ -395,10 +285,6 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
                 />
                 <span className="font-medium text-[0.75rem]">Keep me signed in</span>
               </label>
-
-              <span className="text-[0.68rem] text-gold/80 font-medium">
-                6-Digit Security OTP
-              </span>
             </div>
 
             {result && (
@@ -421,14 +307,11 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
               {loading ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Verifying Credentials...
+                  Sending Verification Code...
                 </span>
               ) : (
                 <>
-                  <KeyRound className="h-4 w-4 text-gold-soft" />
-                  <span>
-                    {method === "email" ? "Send 6-Digit OTP to Email" : "Employee Login"}
-                  </span>
+                  <span>Send 6-Digit OTP Code</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -438,15 +321,16 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
 
         {/* STEP 2: 6-Digit OTP Verification Form */}
         {step === "otp" && (
-          <form onSubmit={handleVerifyOtpSubmit} className="mt-4 flex flex-col gap-4">
+          <form onSubmit={handleVerifyOtpSubmit} className="mt-5 flex flex-col gap-4">
             <div className="rounded-2xl bg-gold/10 border border-gold/30 p-4 text-center">
               <Sparkles className="mx-auto h-6 w-6 text-gold mb-1" />
               <h4 className="text-sm font-bold text-foreground">
-                6-Digit Security OTP Verification
+                6-Digit Verification Code Sent
               </h4>
               <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed bg-background/60 rounded-xl p-3 border border-border/50">
-                🔐 A 6-digit security code has been sent to{" "}
-                <span className="font-bold text-gold">{identifier}</span>. Please check your email inbox and spam folder.
+                🔐 A 6-digit verification code has been sent to{" "}
+                <span className="font-bold text-gold">{email.trim().toLowerCase()}</span>.
+                Please check your email inbox and spam folder.
               </p>
             </div>
 
@@ -491,15 +375,18 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
                 onClick={resetModalState}
                 className="text-xs hover:text-foreground transition-colors underline"
               >
-                Change Email / Back
+                Change Email
               </button>
               <button
                 type="button"
-                disabled={otpCountdown > 0}
-                onClick={() => triggerOtpGeneration(identifier)}
-                className="text-xs text-gold font-semibold hover:underline disabled:opacity-50"
+                disabled={otpCountdown > 0 || otpLoading}
+                onClick={handleResendOtp}
+                className="text-xs text-gold font-semibold hover:underline disabled:opacity-50 flex items-center gap-1"
               >
-                {otpCountdown > 0 ? `Resend OTP in ${otpCountdown}s` : "Resend OTP"}
+                <RefreshCw className={`h-3 w-3 ${otpLoading ? "animate-spin" : ""}`} />
+                <span>
+                  {otpCountdown > 0 ? `Resend Code in ${otpCountdown}s` : "Resend Code"}
+                </span>
               </button>
             </div>
 
@@ -511,25 +398,17 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
               {otpLoading ? (
                 <span className="flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Verifying OTP...
+                  Verifying Code...
                 </span>
               ) : (
                 <>
                   <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                  <span>Verify OTP & Redirect to Dashboard</span>
+                  <span>Verify Code & Access Dashboard</span>
                 </>
               )}
             </button>
           </form>
         )}
-
-        {/* Footer */}
-        <div className="mt-5 text-center border-t border-border/40 pt-3">
-          <p className="text-[0.7rem] text-muted-foreground flex items-center justify-center gap-1.5">
-            <Lock className="h-3 w-3 text-gold" />
-            <span>Yours Clinic Employee Portal</span>
-          </p>
-        </div>
       </div>
     </div>
   );
