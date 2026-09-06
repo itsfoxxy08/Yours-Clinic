@@ -314,7 +314,7 @@ function AdminDashboardPage() {
 
   useEffect(() => {
     if (session) {
-      loadRecords();
+      loadRecords(true);
       loadOrders();
       loadCliniciansList();
 

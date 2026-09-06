@@ -121,47 +121,30 @@ export async function getPatientRecords(forceRefresh: boolean = false): Promise<
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (!error && data) {
-        if (data.length > 0) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-          return { data: data as PatientRecord[], fromDatabase: true };
-        } else if (!forceRefresh) {
-          // If table in Supabase is empty (0 records) on initial load, seed defaults into Supabase DB
-          await seedDefaultPatientsInSupabase();
-          const { data: seeded } = await supabase
-            .from("patient_records")
-            .select("*")
-            .order("created_at", { ascending: false });
-          const finalData = seeded && seeded.length > 0 ? (seeded as PatientRecord[]) : DEFAULT_PATIENT_RECORDS;
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(finalData));
-          return { data: finalData, fromDatabase: true };
-        } else {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-          return { data: [], fromDatabase: true };
-        }
+      if (!error && data !== null) {
+        const records = data as PatientRecord[];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        return { data: records, fromDatabase: true };
       }
 
       if (error) {
-        console.warn("Supabase patient_records fetch note:", error.message);
+        console.error("Supabase patient_records fetch error:", error.message);
       }
     } catch (err: any) {
-      console.warn("Supabase query exception:", err?.message);
+      console.error("Supabase query exception:", err?.message);
     }
   }
 
-  // Fallback to localStorage
+  // Fallback to localStorage only if Supabase is unconfigured or offline
   const cached = localStorage.getItem(STORAGE_KEY);
   if (cached) {
     try {
       const parsed = JSON.parse(cached);
       return { data: parsed, fromDatabase: false };
-    } catch (e) {
-      // invalid json
-    }
+    } catch (e) {}
   }
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_PATIENT_RECORDS));
-  return { data: DEFAULT_PATIENT_RECORDS, fromDatabase: false };
+  return { data: [], fromDatabase: false };
 }
 
 /**
@@ -294,12 +277,22 @@ export async function deletePatientRecord(
     }
   }
 
+  // Remove from local storage cache immediately
+  const cached = localStorage.getItem(STORAGE_KEY);
+  if (cached) {
+    try {
+      const current: PatientRecord[] = JSON.parse(cached);
+      const filtered = current.filter((p) => p.id !== id);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    } catch (e) {}
+  }
+
   const fresh = await getPatientRecords(true);
   if (typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: fresh.data }));
   }
 
-  return { success: true, message: "Patient record deleted from central database." };
+  return { success: true, message: "Patient record permanently deleted." };
 }
 
 /**
