@@ -39,15 +39,7 @@ function getBrevoApiKey(): string {
     if (k) return k;
   } catch {}
   try {
-    const k = import.meta.env["VITE_BREVO_API_KEY"];
-    if (k) return k;
-  } catch {}
-  try {
     const k = process.env["VITE_BREVO_SMTP_KEY"];
-    if (k) return k;
-  } catch {}
-  try {
-    const k = import.meta.env["VITE_BREVO_SMTP_KEY"];
     if (k) return k;
   } catch {}
   try {
@@ -61,10 +53,6 @@ function getBrevoApiKey(): string {
 }
 
 function getAdminSenderEmail(): string {
-  try {
-    const s = import.meta.env["VITE_ADMIN_SENDER_EMAIL"];
-    if (s) return s;
-  } catch {}
   try {
     const s = process.env["VITE_ADMIN_SENDER_EMAIL"];
     if (s) return s;
