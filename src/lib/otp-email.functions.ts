@@ -2,12 +2,36 @@
  * otp-email.functions.ts
  *
  * TanStack Start server function — runs on the server, never the browser.
- *
- * IMPORTANT: import.meta.env vars must be read at MODULE LEVEL,
- * not inside the handler — Vite injects them during compilation.
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import fs from "node:fs";
+import path from "node:path";
+
+function readEnvFallback(): Record<string, string> {
+  try {
+    const envPath = path.resolve(process.cwd(), ".env");
+    if (fs.existsSync(envPath)) {
+      const content = fs.readFileSync(envPath, "utf-8");
+      const res: Record<string, string> = {};
+      for (const line of content.split("\n")) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const eqIdx = trimmed.indexOf("=");
+        if (eqIdx > 0) {
+          const key = trimmed.slice(0, eqIdx).trim();
+          let val = trimmed.slice(eqIdx + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          res[key] = val;
+        }
+      }
+      return res;
+    }
+  } catch {}
+  return {};
+}
 
 function getBrevoApiKey(): string {
   try {
@@ -30,7 +54,10 @@ function getBrevoApiKey(): string {
     const k = process.env["BREVO_API_KEY"];
     if (k) return k;
   } catch {}
-  return "";
+  
+  // File system fallback for local Node dev server
+  const fileEnv = readEnvFallback();
+  return fileEnv["VITE_BREVO_API_KEY"] || fileEnv["VITE_BREVO_SMTP_KEY"] || "";
 }
 
 function getAdminSenderEmail(): string {
@@ -42,7 +69,9 @@ function getAdminSenderEmail(): string {
     const s = process.env["VITE_ADMIN_SENDER_EMAIL"];
     if (s) return s;
   } catch {}
-  return "yoursclinicnoreply@yahoo.com";
+
+  const fileEnv = readEnvFallback();
+  return fileEnv["VITE_ADMIN_SENDER_EMAIL"] || "yoursclinicnoreply@yahoo.com";
 }
 
 export const sendOTPEmail = createServerFn({ method: "POST" })
