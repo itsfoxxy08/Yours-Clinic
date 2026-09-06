@@ -14,6 +14,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from "./supabase";
+import { sendOTPEmail as sendOTPEmailServerFn } from "./otp-email.functions";
 
 export interface OTPRequestResult {
   success: boolean;
@@ -120,33 +121,23 @@ async function recordAuditLog(
 }
 
 /**
- * Send OTP via /api/send-otp server route (Nitro handles it server-side).
+ * Send OTP via TanStack Start server function (runs on server, no CORS).
  */
 async function sendOTPEmail(email: string, otp: string): Promise<boolean> {
   try {
-    const res = await fetch("/api/send-otp", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ email, otp }),
-    });
-
-    const data = (await res.json()) as { ok: boolean; error?: string };
-
-    if (data.ok) {
-      console.log("✅ OTP email sent via /api/send-otp to:", email);
+    const result = await sendOTPEmailServerFn({ data: { email, otp } });
+    if (result.ok) {
+      console.log("✅ OTP email sent to:", email);
       return true;
     }
-
-    console.warn("⚠️ /api/send-otp returned error:", data.error);
+    console.warn("⚠️ sendOTPEmail server fn error:", result.error);
   } catch (err) {
-    console.error("❌ /api/send-otp fetch failed:", err);
+    console.error("❌ sendOTPEmail server fn threw:", err);
   }
-
-  // Dev fallback — OTP visible in console only
-  console.log(`✉️ [DEV FALLBACK] OTP for ${email} → ${otp}`);
+  // Last resort fallback — OTP printed to server console
+  console.log(`🔑 [FALLBACK] OTP for ${email}: ${otp}`);
   return true;
 }
-
 
 /**
  * 1. Request Secure OTP
