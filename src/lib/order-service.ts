@@ -20,72 +20,8 @@ export interface MedicineOrder {
 
 const STORAGE_KEY = "yc_medicine_orders";
 
-// Initial seed orders for demonstration & testing
-const INITIAL_ORDERS: MedicineOrder[] = [
-  {
-    id: "ord-1",
-    order_id: "YC-ORD-8921",
-    patient_name: "Ananya Deshmukh",
-    phone: "+91 98201 11223",
-    email: "ananya.d@example.com",
-    address: "A-204, Lotus Towers, Andheri West, Mumbai",
-    medicines: "Homeopathic Remedy Pack #4 (Arnica 30C & Rhus Tox 200C)",
-    prescription_note: "Take 4 pills twice daily after meals",
-    status: "Out for Delivery",
-    courier_name: "BlueDart Express",
-    tracking_number: "BD902817429IN",
-    estimated_delivery: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
-    created_at: new Date(Date.now() - 3600000 * 20).toISOString(),
-    total_amount: 650,
-  },
-  {
-    id: "ord-2",
-    order_id: "YC-ORD-8920",
-    patient_name: "Vikramaditya Singh",
-    phone: "+91 99100 44332",
-    email: "vikram.singh@example.com",
-    address: "House No 45, Sector 21-C, Chandigarh",
-    medicines: "Chronic Asthma Homeopathic Tincture & Bio-Chemic Combo",
-    prescription_note: "10 drops in lukewarm water 3 times a day",
-    status: "Dispatched",
-    courier_name: "Delhivery",
-    tracking_number: "DEL84729103IN",
-    estimated_delivery: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10),
-    created_at: new Date(Date.now() - 3600000 * 44).toISOString(),
-    total_amount: 890,
-  },
-  {
-    id: "ord-3",
-    order_id: "YC-ORD-8919",
-    patient_name: "Meera Nair",
-    phone: "+91 94470 99881",
-    email: "meera.nair@example.com",
-    address: "Villa 12, Palm Meadows, Whitefield, Bengaluru",
-    medicines: "Skin Care & Eczema Relief Drops + Calendula Ointment",
-    prescription_note: "Apply ointment gently twice daily",
-    status: "Delivered",
-    courier_name: "DTDC Courier",
-    tracking_number: "D74920184IN",
-    estimated_delivery: new Date(Date.now() - 3600000 * 10).toISOString().slice(0, 10),
-    created_at: new Date(Date.now() - 3600000 * 96).toISOString(),
-    total_amount: 1120,
-  },
-  {
-    id: "ord-4",
-    order_id: "YC-ORD-8918",
-    patient_name: "Rahul Saxena",
-    phone: "+91 98711 22334",
-    email: "rahul.saxena@example.com",
-    address: "C-88, Malviya Nagar, New Delhi",
-    medicines: "Digestive Care Homeopathic Syrup",
-    prescription_note: "1 teaspoonful before lunch and dinner",
-    status: "Processing",
-    courier_name: "Speed Post",
-    tracking_number: "SP94018274IN",
-    created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
-    total_amount: 480,
-  },
-];
+// Initial orders array (clean state)
+const INITIAL_ORDERS: MedicineOrder[] = [];
 
 /**
  * Generate unique Order ID format: YC-ORD-XXXX

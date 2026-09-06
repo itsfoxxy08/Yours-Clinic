@@ -24,49 +24,8 @@ export interface PatientRecord {
 
 const STORAGE_KEY = "yc_patient_records";
 
-// Initial seed patient records if database is empty or fallback needed
-const INITIAL_PATIENT_RECORDS: PatientRecord[] = [
-  {
-    id: "pat-101",
-    name: "Rajesh Sharma",
-    phone: "+91 98765 43210",
-    email: "rajesh.sharma@example.com",
-    address: "B-402, Green Park, New Delhi",
-    reason: "High blood pressure checkup & routine ECG review",
-    status: "Routine",
-    created_at: new Date(Date.now() - 3600000 * 24 * 2).toISOString(),
-  },
-  {
-    id: "pat-102",
-    name: "Priya Verma",
-    phone: "+91 98112 34567",
-    email: "priya.v@example.com",
-    address: "Flat 12A, Sunset Heights, Gurgaon",
-    reason: "Severe migraine and neck tension consultation",
-    status: "Follow-up",
-    created_at: new Date(Date.now() - 3600000 * 24 * 5).toISOString(),
-  },
-  {
-    id: "pat-103",
-    name: "Amitabh Malhotra",
-    phone: "+91 99554 11223",
-    email: "amitabh.m@example.com",
-    address: "House 88, Sector 15, Noida",
-    reason: "Acute knee pain & mobility evaluation post-injury",
-    status: "Urgent",
-    created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
-  },
-  {
-    id: "pat-104",
-    name: "Sunita Patel",
-    phone: "+91 97188 99887",
-    email: "sunita.patel@example.com",
-    address: "C-14, Vasant Kunj, New Delhi",
-    reason: "Annual wellness checkup & diabetes monitoring",
-    status: "Consultation",
-    created_at: new Date(Date.now() - 3600000 * 3).toISOString(),
-  },
-];
+// Initial patient records array (clean state)
+const INITIAL_PATIENT_RECORDS: PatientRecord[] = [];
 
 /**
  * Format ISO date string into 12-hour format with AM/PM (e.g., "05 Sep 2026, 04:27 PM").

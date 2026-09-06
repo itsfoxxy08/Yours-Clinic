@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, MoveRight, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, MoveRight, ShieldCheck } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import consultation from "@/assets/clinic/consultation.jpg";
 
@@ -14,12 +14,7 @@ export function Hero() {
     <section id="home" className="sanctuary paper-grain relative px-5 pb-20 pt-16 md:pt-24">
       <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
         <Reveal>
-          <span className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-card px-4 py-2 text-[0.68rem] font-extrabold uppercase tracking-[0.24em] text-gold shadow-[var(--shadow-soft)]">
-            <Sparkles className="h-3.5 w-3.5" />
-            Built by Clinical Homeopathic Experts
-          </span>
-
-          <h1 className="display-xl mt-8 text-foreground">
+          <h1 className="display-xl text-foreground">
             Your health journey,{" "}
             <em className="relative inline-block font-normal italic text-sage">
               in balance.
