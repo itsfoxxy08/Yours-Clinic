@@ -2,10 +2,16 @@
  * otp-email.functions.ts
  *
  * TanStack Start server function — runs on the server, never the browser.
- * Modelled exactly on the working youtube.functions.ts pattern in this project.
+ *
+ * IMPORTANT: import.meta.env vars must be read at MODULE LEVEL,
+ * not inside the handler — Vite injects them during compilation.
  */
 
 import { createServerFn } from "@tanstack/react-start";
+
+// Read at module level — Vite replaces these at compile/dev time
+const BREVO_KEY = import.meta.env["VITE_BREVO_API_KEY"] as string | undefined;
+const SENDER = (import.meta.env["VITE_ADMIN_SENDER_EMAIL"] as string | undefined) ?? "yoursclinicnoreply@yahoo.com";
 
 export const sendOTPEmail = createServerFn({ method: "POST" })
   .validator((raw: unknown) => {
@@ -16,21 +22,22 @@ export const sendOTPEmail = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { email, otp } = data;
 
-    // import.meta.env is replaced by Vite at bundle time — works in SSR/server fn context
-    const apiKey = import.meta.env["VITE_BREVO_API_KEY"] as string;
-    const senderEmail =
-      (import.meta.env["VITE_ADMIN_SENDER_EMAIL"] as string) || "yoursclinicnoreply@yahoo.com";
+    if (!BREVO_KEY) {
+      console.error("[sendOTPEmail] ❌ VITE_BREVO_API_KEY not available");
+      return { ok: false as const, error: "missing_key" };
+    }
 
+    console.log(`[sendOTPEmail] Sending OTP to ${email} via Brevo...`);
 
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
       method: "POST",
       headers: {
         accept: "application/json",
-        "api-key": apiKey,
+        "api-key": BREVO_KEY,
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        sender: { name: "Yours-Clinic Admin", email: senderEmail },
+        sender: { name: "Yours-Clinic Admin", email: SENDER },
         to: [{ email, name: "Admin" }],
         subject: "Your Yours-Clinic Admin OTP Code",
         htmlContent: `
@@ -47,7 +54,7 @@ export const sendOTPEmail = createServerFn({ method: "POST" })
     });
 
     if (res.ok) {
-      console.log(`[sendOTPEmail] ✅ sent to ${email}`);
+      console.log(`[sendOTPEmail] ✅ OTP sent to ${email}`);
       return { ok: true as const };
     }
 
