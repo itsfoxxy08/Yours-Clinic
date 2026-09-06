@@ -54,11 +54,18 @@ export function PatientHistoryModal({
   );
 
   // Latest patient info
-  const primaryPatient = sortedVisits[0] || {
+  const firstVisit = sortedVisits[0];
+  const primaryPatient = firstVisit || {
     name: "Unknown Patient",
     phone: activePhone,
     email: "N/A",
     address: "N/A",
+  };
+
+  const handleUploadFirstVisit = () => {
+    if (firstVisit) {
+      onOpenUpload(firstVisit);
+    }
   };
 
   // Collect all reports attached across all visits for this mobile number
@@ -160,9 +167,9 @@ export function PatientHistoryModal({
           </div>
 
           <div className="flex items-center gap-2 self-end sm:self-auto">
-            {sortedVisits[0] && (
+            {firstVisit && (
               <button
-                onClick={() => onOpenUpload(sortedVisits[0])}
+                onClick={handleUploadFirstVisit}
                 className="press focus-gold flex items-center gap-2 rounded-xl bg-gold text-slate-950 px-3.5 py-2 text-xs font-extrabold shadow-md hover:bg-gold-soft transition-all"
               >
                 <Plus className="h-4 w-4" />
@@ -321,9 +328,9 @@ export function PatientHistoryModal({
                   <Paperclip className="h-4 w-4 text-gold" />
                   <span>All Uploaded Prescriptions & Diagnosis Documents</span>
                 </h4>
-                {sortedVisits[0] && (
+                {firstVisit && (
                   <button
-                    onClick={() => onOpenUpload(sortedVisits[0])}
+                    onClick={handleUploadFirstVisit}
                     className="rounded-xl bg-gold/20 text-gold border border-gold/40 px-3 py-1 text-xs font-bold hover:bg-gold/30"
                   >
                     + Upload New

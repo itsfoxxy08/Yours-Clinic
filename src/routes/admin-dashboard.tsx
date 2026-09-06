@@ -26,6 +26,7 @@ import {
   Package,
   Clock,
   Pill,
+  Paperclip,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
