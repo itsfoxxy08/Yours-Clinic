@@ -148,12 +148,9 @@ export async function verifyPhoneOTP(phone: string, otp: string) {
   };
 }
 
-let activeFallbackOTP: string | null = null;
-
 /**
  * Send OTP to email address via Supabase Auth
  * Uses options.shouldCreateUser = false so unregistered emails never receive OTP or accounts.
- * Includes rate-limit resilience fallback (123456) so admins are never blocked by Supabase email quotas.
  */
 export async function sendEmailOTP(email: string) {
   const cleanEmail = email.trim().toLowerCase();
@@ -166,13 +163,9 @@ export async function sendEmailOTP(email: string) {
   }
 
   if (!isSupabaseConfigured()) {
-    activeFallbackOTP = "123456";
-    sessionStorage.setItem("yc_fallback_otp", "123456");
     return {
-      success: true,
-      message: "Supabase credentials not configured. Backup code: 123456",
-      isFallback: true,
-      fallbackCode: "123456",
+      success: false,
+      message: "Supabase credentials not configured in environment variables.",
     };
   }
 
@@ -184,27 +177,9 @@ export async function sendEmailOTP(email: string) {
   });
 
   if (error) {
-    const errorMsg = error.message || "";
-    // If Supabase email rate limit is exceeded (e.g. 429 over_email_send_rate_limit)
-    if (
-      errorMsg.toLowerCase().includes("rate limit") ||
-      errorMsg.toLowerCase().includes("exceeded") ||
-      errorMsg.toLowerCase().includes("too many requests") ||
-      (error as any).status === 429
-    ) {
-      activeFallbackOTP = "123456";
-      sessionStorage.setItem("yc_fallback_otp", "123456");
-      return {
-        success: true,
-        message: "Email rate limit reached on Supabase. Use code: 123456",
-        isRateLimited: true,
-        fallbackCode: "123456",
-      };
-    }
-
     return {
       success: false,
-      message: errorMsg || "Failed to send verification code.",
+      message: error.message || "Failed to send verification code.",
     };
   }
 
@@ -216,7 +191,7 @@ export async function sendEmailOTP(email: string) {
 }
 
 /**
- * Verify OTP for email address via Supabase Auth verifyOtp with fallback support
+ * Verify OTP for email address via Supabase Auth verifyOtp
  */
 export async function verifyEmailOTP(email: string, otp: string) {
   const cleanEmail = email.trim().toLowerCase();
@@ -229,58 +204,30 @@ export async function verifyEmailOTP(email: string, otp: string) {
     };
   }
 
-  // 1. Check fallback/backup code 123456
-  const storedFallback = sessionStorage.getItem("yc_fallback_otp") || activeFallbackOTP;
-  if (storedFallback && (token === storedFallback || token === "123456")) {
-    sessionStorage.removeItem("yc_fallback_otp");
+  if (!isSupabaseConfigured()) {
     return {
-      success: true,
-      message: "Verification code accepted!",
-      user: {
-        id: "admin-fallback-user",
-        email: cleanEmail,
-        user_metadata: { role: "admin" },
-      },
+      success: false,
+      message: "Supabase credentials not configured.",
     };
   }
 
-  // 2. Try native Supabase OTP verification
-  if (isSupabaseConfigured()) {
-    try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        email: cleanEmail,
-        token,
-        type: "email",
-      });
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: cleanEmail,
+    token,
+    type: "email",
+  });
 
-      if (!error && data?.user) {
-        return {
-          success: true,
-          message: "Email OTP verified successfully!",
-          user: data.user,
-        };
-      }
-    } catch (e) {
-      console.warn("Supabase verifyOtp notice:", e);
-    }
-  }
-
-  // 3. Global backup code check
-  if (token === "123456") {
+  if (error || !data?.user) {
     return {
-      success: true,
-      message: "Backup verification code accepted!",
-      user: {
-        id: "admin-backup-user",
-        email: cleanEmail,
-        user_metadata: { role: "admin" },
-      },
+      success: false,
+      message: error?.message || "Invalid or expired verification code.",
     };
   }
 
   return {
-    success: false,
-    message: "Invalid or expired verification code.",
+    success: true,
+    message: "Email OTP verified successfully!",
+    user: data.user,
   };
 }
 
