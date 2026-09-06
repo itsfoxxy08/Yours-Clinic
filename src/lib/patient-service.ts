@@ -111,6 +111,7 @@ export async function addPatientRecord(
         .from("patient_records")
         .insert([
           {
+            id: newRecord.id,
             name: newRecord.name,
             phone: newRecord.phone,
             email: newRecord.email || "",

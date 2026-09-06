@@ -6,7 +6,7 @@
 
 -- 1. CLINICIANS & DOCTORS TABLE
 CREATE TABLE IF NOT EXISTS public.clinicians (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     name TEXT NOT NULL,
     reg TEXT NOT NULL,
     photo TEXT NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS public.clinicians (
 
 -- 2. PATIENT RECORDS TABLE
 CREATE TABLE IF NOT EXISTS public.patient_records (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     name TEXT NOT NULL,
     phone TEXT NOT NULL,
     email TEXT DEFAULT '',
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS public.patient_records (
 
 -- 3. PATIENT REPORTS & PRESCRIPTIONS METADATA TABLE
 CREATE TABLE IF NOT EXISTS public.patient_reports (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     patient_id TEXT REFERENCES public.patient_records(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     type TEXT DEFAULT 'prescription',
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS public.patient_reports (
 
 -- 4. MEDICINE ORDERS TABLE
 CREATE TABLE IF NOT EXISTS public.medicine_orders (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     order_id TEXT NOT NULL UNIQUE,
     patient_name TEXT NOT NULL,
     phone TEXT NOT NULL,
