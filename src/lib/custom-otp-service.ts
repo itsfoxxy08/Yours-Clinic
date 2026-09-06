@@ -123,7 +123,10 @@ async function recordAuditLog(
  * Send OTP via Brevo Transactional Email API or Supabase Auth
  */
 async function sendOTPEmail(email: string, otp: string): Promise<boolean> {
-  const brevoApiKey = (import.meta.env["VITE_BREVO_API_KEY"] as string) || "";
+  const brevoApiKey =
+    (import.meta.env["VITE_BREVO_API_KEY"] as string) ||
+    ((typeof window !== "undefined" && (window as any).__BREVO_KEY__) || "");
+
   const senderEmail = (import.meta.env["VITE_ADMIN_SENDER_EMAIL"] as string) || "choudharyvikas2008@gmail.com";
 
   if (brevoApiKey) {
