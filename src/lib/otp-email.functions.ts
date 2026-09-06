@@ -9,14 +9,27 @@
 
 import { createServerFn } from "@tanstack/react-start";
 
-function getEnvVar(name: string): string {
-  if (typeof process !== "undefined" && process.env && process.env[name]) {
-    return process.env[name]!;
+function getBrevoApiKey(): string {
+  if (typeof import.meta !== "undefined" && import.meta.env?.["VITE_BREVO_API_KEY"]) {
+    return import.meta.env["VITE_BREVO_API_KEY"] as string;
   }
-  if (typeof import.meta !== "undefined" && import.meta.env && import.meta.env[name]) {
-    return import.meta.env[name] as string;
+  if (typeof process !== "undefined" && process?.env?.["VITE_BREVO_API_KEY"]) {
+    return process.env["VITE_BREVO_API_KEY"]!;
+  }
+  if (typeof process !== "undefined" && process?.env?.["BREVO_API_KEY"]) {
+    return process.env["BREVO_API_KEY"]!;
   }
   return "";
+}
+
+function getAdminSenderEmail(): string {
+  if (typeof import.meta !== "undefined" && import.meta.env?.["VITE_ADMIN_SENDER_EMAIL"]) {
+    return import.meta.env["VITE_ADMIN_SENDER_EMAIL"] as string;
+  }
+  if (typeof process !== "undefined" && process?.env?.["VITE_ADMIN_SENDER_EMAIL"]) {
+    return process.env["VITE_ADMIN_SENDER_EMAIL"]!;
+  }
+  return "yoursclinicnoreply@yahoo.com";
 }
 
 export const sendOTPEmail = createServerFn({ method: "POST" })
@@ -27,8 +40,8 @@ export const sendOTPEmail = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const { email, otp } = data;
-    const apiKey = getEnvVar("VITE_BREVO_API_KEY") || getEnvVar("BREVO_API_KEY");
-    const senderEmail = getEnvVar("VITE_ADMIN_SENDER_EMAIL") || "yoursclinicnoreply@yahoo.com";
+    const apiKey = getBrevoApiKey();
+    const senderEmail = getAdminSenderEmail();
 
     if (!apiKey) {
       console.error("[sendOTPEmail] ❌ Brevo API key is missing from environment");
