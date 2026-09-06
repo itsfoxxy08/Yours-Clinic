@@ -124,6 +124,7 @@ export async function placeMedicineOrder(
         .from("medicine_orders")
         .insert([
           {
+            id: newOrder.id,
             order_id: newOrder.order_id,
             patient_name: newOrder.patient_name,
             phone: newOrder.phone,

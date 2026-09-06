@@ -24,8 +24,66 @@ export interface PatientRecord {
 
 const STORAGE_KEY = "yc_patient_records";
 
-// Initial patient records array (clean state)
-const INITIAL_PATIENT_RECORDS: PatientRecord[] = [];
+export const DEFAULT_PATIENT_RECORDS: PatientRecord[] = [
+  {
+    id: "pat-manish-01",
+    name: "Manish Choudhary",
+    phone: "9711919263",
+    email: "manish.choudhary@gmail.com",
+    address: "Sector 62, Noida",
+    reason: "Allergic checkup",
+    status: "Follow-up",
+    created_at: "2026-09-05T18:46:00.000Z",
+    reports: [],
+  },
+  {
+    id: "pat-sudeep-02",
+    name: "Sudeep Kushwaha",
+    phone: "9695439998",
+    email: "sudeep.kushwaha@gmail.com",
+    address: "32432423, Delhi",
+    reason: "Piles",
+    status: "Routine",
+    created_at: "2026-09-07T00:45:00.000Z",
+    reports: [],
+  },
+  {
+    id: "pat-priya-03",
+    name: "Priya Sharma",
+    phone: "9876543210",
+    email: "priya.sharma@example.com",
+    address: "C-45, Vasant Kunj, New Delhi",
+    reason: "General Wellness & Immunity Consultation",
+    status: "Consultation",
+    created_at: "2026-09-06T10:30:00.000Z",
+    reports: [],
+  },
+];
+
+async function seedDefaultPatientsInSupabase() {
+  if (!isSupabaseConfigured()) return;
+  try {
+    for (const p of DEFAULT_PATIENT_RECORDS) {
+      await supabase.from("patient_records").upsert(
+        [
+          {
+            id: p.id,
+            name: p.name,
+            phone: p.phone,
+            email: p.email,
+            address: p.address,
+            reason: p.reason,
+            status: p.status,
+            created_at: p.created_at,
+          },
+        ],
+        { onConflict: "id" }
+      );
+    }
+  } catch (err) {
+    console.warn("Error seeding default patients into Supabase:", err);
+  }
+}
 
 /**
  * Format ISO date string into 12-hour format with AM/PM (e.g., "05 Sep 2026, 04:27 PM").
@@ -64,8 +122,20 @@ export async function getPatientRecords(): Promise<{
         .order("created_at", { ascending: false });
 
       if (!error && data) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        return { data: data as PatientRecord[], fromDatabase: true };
+        if (data.length > 0) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+          return { data: data as PatientRecord[], fromDatabase: true };
+        } else {
+          // If table in Supabase is empty (0 records), seed defaults into Supabase DB
+          await seedDefaultPatientsInSupabase();
+          const { data: seeded } = await supabase
+            .from("patient_records")
+            .select("*")
+            .order("created_at", { ascending: false });
+          const finalData = seeded && seeded.length > 0 ? (seeded as PatientRecord[]) : DEFAULT_PATIENT_RECORDS;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(finalData));
+          return { data: finalData, fromDatabase: true };
+        }
       }
 
       if (error) {
@@ -87,8 +157,8 @@ export async function getPatientRecords(): Promise<{
     }
   }
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PATIENT_RECORDS));
-  return { data: INITIAL_PATIENT_RECORDS, fromDatabase: false };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_PATIENT_RECORDS));
+  return { data: DEFAULT_PATIENT_RECORDS, fromDatabase: false };
 }
 
 /**
