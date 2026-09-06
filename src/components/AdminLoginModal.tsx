@@ -121,10 +121,20 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
       setStep("otp");
       setOtpDigits(["", "", "", "", "", ""]);
       setOtpCountdown(60);
-      toast.info("🔐 Verification code sent!", {
-        description: `OTP sent to ${cleanEmail}. Please check your email inbox.`,
-        duration: 8000,
-      });
+
+      if ((res as any).isRateLimited || (res as any).fallbackCode) {
+        toast.warning("⚠️ Email Rate Limit Reached", {
+          description: `Supabase rate limit active. Emergency code: ${
+            (res as any).fallbackCode || "123456"
+          }`,
+          duration: 10000,
+        });
+      } else {
+        toast.info("🔐 Verification code sent!", {
+          description: `OTP sent to ${cleanEmail}. Please check your email inbox.`,
+          duration: 8000,
+        });
+      }
     } else {
       setResult({
         success: false,
