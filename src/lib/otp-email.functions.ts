@@ -10,25 +10,30 @@
 import { createServerFn } from "@tanstack/react-start";
 
 function getBrevoApiKey(): string {
-  if (typeof import.meta !== "undefined" && import.meta.env?.["VITE_BREVO_API_KEY"]) {
-    return import.meta.env["VITE_BREVO_API_KEY"] as string;
-  }
-  if (typeof process !== "undefined" && process?.env?.["VITE_BREVO_API_KEY"]) {
-    return process.env["VITE_BREVO_API_KEY"]!;
-  }
-  if (typeof process !== "undefined" && process?.env?.["BREVO_API_KEY"]) {
-    return process.env["BREVO_API_KEY"]!;
-  }
+  try {
+    const k = import.meta.env["VITE_BREVO_API_KEY"];
+    if (k) return k;
+  } catch {}
+  try {
+    const k = process.env["VITE_BREVO_API_KEY"];
+    if (k) return k;
+  } catch {}
+  try {
+    const k = process.env["BREVO_API_KEY"];
+    if (k) return k;
+  } catch {}
   return "";
 }
 
 function getAdminSenderEmail(): string {
-  if (typeof import.meta !== "undefined" && import.meta.env?.["VITE_ADMIN_SENDER_EMAIL"]) {
-    return import.meta.env["VITE_ADMIN_SENDER_EMAIL"] as string;
-  }
-  if (typeof process !== "undefined" && process?.env?.["VITE_ADMIN_SENDER_EMAIL"]) {
-    return process.env["VITE_ADMIN_SENDER_EMAIL"]!;
-  }
+  try {
+    const s = import.meta.env["VITE_ADMIN_SENDER_EMAIL"];
+    if (s) return s;
+  } catch {}
+  try {
+    const s = process.env["VITE_ADMIN_SENDER_EMAIL"];
+    if (s) return s;
+  } catch {}
   return "yoursclinicnoreply@yahoo.com";
 }
 
