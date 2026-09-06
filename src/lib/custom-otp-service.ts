@@ -14,7 +14,6 @@
  */
 
 import { supabase, isSupabaseConfigured } from "./supabase";
-import { sendOTPEmailFn } from "./otp-email.functions";
 
 export interface OTPRequestResult {
   success: boolean;
@@ -121,25 +120,33 @@ async function recordAuditLog(
 }
 
 /**
- * Send OTP via Brevo – routed through a TanStack Start server function
- * so the API key stays on the server and CORS is never an issue.
+ * Send OTP via /api/send-otp server route (Nitro handles it server-side).
  */
 async function sendOTPEmail(email: string, otp: string): Promise<boolean> {
   try {
-    const result = await sendOTPEmailFn({ data: { email, otp } });
-    if (result.ok) {
-      console.log("✅ Brevo OTP email dispatched via server function to:", email);
+    const res = await fetch("/api/send-otp", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email, otp }),
+    });
+
+    const data = (await res.json()) as { ok: boolean; error?: string };
+
+    if (data.ok) {
+      console.log("✅ OTP email sent via /api/send-otp to:", email);
       return true;
     }
-    console.warn("⚠️ Server function returned error:", result.error);
+
+    console.warn("⚠️ /api/send-otp returned error:", data.error);
   } catch (err) {
-    console.error("❌ sendOTPEmailFn call failed:", err);
+    console.error("❌ /api/send-otp fetch failed:", err);
   }
 
-  // Dev fallback: log to console if server function is unavailable
+  // Dev fallback — OTP visible in console only
   console.log(`✉️ [DEV FALLBACK] OTP for ${email} → ${otp}`);
   return true;
 }
+
 
 /**
  * 1. Request Secure OTP
