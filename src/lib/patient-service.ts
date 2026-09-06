@@ -1,5 +1,15 @@
 import { supabase, isSupabaseConfigured } from "./supabase";
 
+export interface PatientReport {
+  id: string;
+  title: string;
+  type: "prescription" | "diagnosis" | "lab_report" | "other";
+  fileUrl: string;
+  fileName: string;
+  uploadedAt: string;
+  uploadedBy?: string;
+}
+
 export interface PatientRecord {
   id: string;
   name: string;
@@ -9,6 +19,7 @@ export interface PatientRecord {
   reason: string;
   status: "Routine" | "Follow-up" | "Urgent" | "Consultation";
   created_at: string;
+  reports?: PatientReport[];
 }
 
 const STORAGE_KEY = "yc_patient_records";
@@ -349,12 +360,12 @@ export function exportPatientRecordsToExcel(records: PatientRecord[]) {
 }
 
 /**
- * Export Patient Records for Google Sheets & DIRECTLY REDIRECT to google sheets (https://sheets.new).
+ * Export Patient Records formatted for Google Sheets.
  * Features:
- * - NO pat-ID (starts with S.No 1, 2, 3...)
+ * - NO pat-ID (starts with clean sequential S.No 1, 2, 3...)
  * - Headers are formatted in BOLD
- * - Dates in 12-hour format with AM/PM
- * - Automatically opens https://sheets.new in a new tab so admin can press Ctrl+V directly into Google Sheets!
+ * - Dates formatted in 12-hour format with AM/PM
+ * - Downloads populated CSV file for Google Sheets & copies formatted table to clipboard
  */
 export async function exportPatientRecordsToGoogleSheets(
   records: PatientRecord[]
@@ -365,78 +376,111 @@ export async function exportPatientRecordsToGoogleSheets(
     "Mobile Number",
     "Email Address",
     "Address",
-    "Reason for Visit",
+    "Chief Complaint / Reason",
     "Status",
     "Date Registered",
   ];
 
-  const tsvRows = records.map((r, index) => [
+  const csvRows = records.map((r, index) => [
     String(index + 1),
-    r.name,
-    r.phone,
-    r.email || "N/A",
-    r.address || "N/A",
-    r.reason,
-    r.status || "Routine",
-    formatDate12Hour(r.created_at),
+    `"${(r.name || "").replace(/"/g, '""')}"`,
+    `"${(r.phone || "").replace(/"/g, '""')}"`,
+    `"${(r.email || "N/A").replace(/"/g, '""')}"`,
+    `"${(r.address || "N/A").replace(/"/g, '""')}"`,
+    `"${(r.reason || "").replace(/"/g, '""')}"`,
+    `"${(r.status || "Routine").replace(/"/g, '""')}"`,
+    `"${formatDate12Hour(r.created_at)}"`,
   ]);
 
-  const tsvContent = [headers.join("\t"), ...tsvRows.map((row) => row.join("\t"))].join("\n");
+  const csvContent =
+    "\uFEFF" + [headers.join(","), ...csvRows.map((row) => row.join(","))].join("\n");
 
-  const htmlTable = `
-    <table>
-      <thead>
-        <tr>
-          ${headers.map((h) => `<th style="font-weight: bold; background-color: #e2e8f0;">${escapeHtml(h)}</th>`).join("")}
-        </tr>
-      </thead>
-      <tbody>
-        ${tsvRows
-          .map(
-            (row) => `
-          <tr>
-            ${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join("")}
-          </tr>`
-          )
-          .join("")}
-      </tbody>
-    </table>
-  `;
+  // 1. Download populated CSV file for Google Sheets
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const dateStr = new Date().toISOString().slice(0, 10);
+  link.setAttribute("href", url);
+  link.setAttribute("download", `Yours_Clinic_Patient_Records_GoogleSheets_${dateStr}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 
-  let clipboardSuccess = false;
+  // 2. Copy formatted TSV data to clipboard
   try {
-    if (navigator.clipboard && window.ClipboardItem) {
-      const blobText = new Blob([tsvContent], { type: "text/plain" });
-      const blobHtml = new Blob([htmlTable], { type: "text/html" });
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          "text/plain": blobText,
-          "text/html": blobHtml,
-        }),
-      ]);
-      clipboardSuccess = true;
-    } else {
+    const tsvContent = [
+      headers.join("\t"),
+      ...records.map((r, index) =>
+        [
+          index + 1,
+          r.name,
+          r.phone,
+          r.email || "N/A",
+          r.address || "N/A",
+          r.reason,
+          r.status || "Routine",
+          formatDate12Hour(r.created_at),
+        ].join("\t")
+      ),
+    ].join("\n");
+
+    if (navigator.clipboard) {
       await navigator.clipboard.writeText(tsvContent);
-      clipboardSuccess = true;
     }
   } catch (err) {
-    try {
-      await navigator.clipboard.writeText(tsvContent);
-      clipboardSuccess = true;
-    } catch (e) {
-      console.warn("Clipboard fallback error:", e);
-    }
-  }
-
-  // Direct redirect to Google Sheets (sheets.new)
-  if (typeof window !== "undefined") {
-    window.open("https://sheets.new", "_blank");
+    console.warn("Clipboard copy notice:", err);
   }
 
   return {
     success: true,
-    message: clipboardSuccess
-      ? "Opening Google Sheets! Press Ctrl+V (or Cmd+V) in the new tab to paste your formatted patient records."
-      : "Opening Google Sheets tab...",
+    message: `📊 Exported ${records.length} patient record(s)! CSV file downloaded & table copied to clipboard.`,
+  };
+}
+
+/**
+ * Attach a new prescription/diagnosis report to a patient record.
+ */
+export async function attachPatientReport(
+  patientId: string,
+  report: Omit<PatientReport, "id" | "uploadedAt">
+): Promise<{ success: boolean; message: string; report?: PatientReport }> {
+  const newReport: PatientReport = {
+    ...report,
+    id: "rep-" + Date.now().toString(36) + Math.random().toString(36).substring(2, 5),
+    uploadedAt: new Date().toISOString(),
+  };
+
+  const recordsRes = await getPatientRecords();
+  const records = recordsRes.data;
+  const targetRecord = records.find((r) => r.id === patientId);
+
+  if (!targetRecord) {
+    return { success: false, message: "Patient record not found." };
+  }
+
+  const existingReports = targetRecord.reports || [];
+  const updatedReports = [newReport, ...existingReports];
+  targetRecord.reports = updatedReports;
+
+  // Update Supabase if configured
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase
+        .from("patient_records")
+        .update({ reports: updatedReports })
+        .eq("id", patientId);
+    } catch (e) {
+      console.warn("Supabase update report notice:", e);
+    }
+  }
+
+  // Save to local cache
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+
+  return {
+    success: true,
+    message: "📄 Prescription / Report attached successfully!",
+    report: newReport,
   };
 }

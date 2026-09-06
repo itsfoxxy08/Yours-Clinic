@@ -45,6 +45,9 @@ import {
 } from "@/lib/order-service";
 import { AdminLoginModal } from "@/components/AdminLoginModal";
 import { FollowUpSheetModal } from "@/components/FollowUpSheetModal";
+import { GoogleSheetsModal } from "@/components/GoogleSheetsModal";
+import { UploadReportModal } from "@/components/UploadReportModal";
+import { PatientHistoryModal } from "@/components/PatientHistoryModal";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 export const Route = createFileRoute("/admin-dashboard")({
@@ -82,9 +85,14 @@ function AdminDashboardPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  // Add / Edit / Sheet Modal state
+  // Add / Edit / Sheet / Upload / History Modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSheetModalOpen, setIsSheetModalOpen] = useState(false);
+  const [googleSheetsModalOpen, setGoogleSheetsModalOpen] = useState(false);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [selectedPatientForUpload, setSelectedPatientForUpload] = useState<PatientRecord | null>(null);
+  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [selectedPhoneForHistory, setSelectedPhoneForHistory] = useState("");
   const [editingRecord, setEditingRecord] = useState<PatientRecord | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -339,8 +347,8 @@ function AdminDashboardPage() {
       toast.error("No matching patient records available to export");
       return;
     }
-    const res = await exportPatientRecordsToGoogleSheets(filteredRecords);
-    toast.success(res.message);
+    await exportPatientRecordsToGoogleSheets(filteredRecords);
+    setGoogleSheetsModalOpen(true);
   };
 
   if (loadingSession) {
@@ -1009,10 +1017,17 @@ function AdminDashboardPage() {
                           {patient.name}
                         </td>
                         <td className="py-4 px-4 text-foreground/90 font-medium">
-                          <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => {
+                              setSelectedPhoneForHistory(patient.phone);
+                              setHistoryModalOpen(true);
+                            }}
+                            className="hover:underline flex items-center gap-1.5 font-mono text-gold font-bold text-xs"
+                            title="Click to view all past checkups for this mobile number"
+                          >
                             <Phone className="h-3 w-3 text-gold shrink-0" />
                             <span>{patient.phone}</span>
-                          </div>
+                          </button>
                         </td>
                         <td className="py-4 px-4 text-muted-foreground">
                           <div className="flex items-center gap-1.5">
@@ -1054,6 +1069,26 @@ function AdminDashboardPage() {
                         </td>
                         <td className="py-4 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => {
+                                setSelectedPatientForUpload(patient);
+                                setUploadModalOpen(true);
+                              }}
+                              title="Upload Prescription / Diagnosis Report (Device or Live Camera)"
+                              className="press p-1.5 rounded-lg border border-gold/40 bg-gold/10 text-gold hover:bg-gold/20 transition-colors"
+                            >
+                              <Paperclip className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedPhoneForHistory(patient.phone);
+                                setHistoryModalOpen(true);
+                              }}
+                              title="View Patient Medical History Timeline for this Phone Number"
+                              className="press p-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-colors"
+                            >
+                              <Clock className="h-3.5 w-3.5" />
+                            </button>
                             <button
                               onClick={() => startEdit(patient)}
                               title="Edit Patient Record"
@@ -1405,6 +1440,36 @@ function AdminDashboardPage() {
         isOpen={isSheetModalOpen}
         onClose={() => setIsSheetModalOpen(false)}
         records={records}
+      />
+
+      {/* Interactive Google Sheets Pre-Populated View Modal */}
+      <GoogleSheetsModal
+        isOpen={googleSheetsModalOpen}
+        onClose={() => setGoogleSheetsModalOpen(false)}
+        records={filteredRecords}
+      />
+
+      {/* Upload Prescription & Diagnosis Report Modal */}
+      <UploadReportModal
+        isOpen={uploadModalOpen}
+        onClose={() => setUploadModalOpen(false)}
+        patient={selectedPatientForUpload}
+        onSuccess={async () => {
+          const updated = await getPatientRecords();
+          setRecords(updated.data);
+        }}
+      />
+
+      {/* Patient Medical History & Mobile Timeline Modal */}
+      <PatientHistoryModal
+        isOpen={historyModalOpen}
+        onClose={() => setHistoryModalOpen(false)}
+        phone={selectedPhoneForHistory}
+        allRecords={records}
+        onOpenUpload={(patientToUpload) => {
+          setSelectedPatientForUpload(patientToUpload);
+          setUploadModalOpen(true);
+        }}
       />
     </div>
   );

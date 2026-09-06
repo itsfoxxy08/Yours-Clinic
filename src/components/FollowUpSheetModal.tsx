@@ -282,18 +282,10 @@ export function FollowUpSheetModal({
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="press focus-gold flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-md hover:opacity-95 transition-all"
+              className="press focus-gold flex items-center gap-2 rounded-xl bg-primary px-4.5 py-2 text-xs font-bold text-primary-foreground shadow-md hover:opacity-95 transition-all"
             >
-              <Printer className="h-4 w-4" />
+              <Printer className="h-4 w-4 text-gold-soft" />
               <span>Print / Download PDF</span>
-            </button>
-
-            <button
-              onClick={handleDownloadHtmlSheet}
-              className="press focus-gold flex items-center gap-2 rounded-xl border border-gold/40 bg-gold/10 px-4 py-2 text-xs font-bold text-gold hover:bg-gold/20 transition-all"
-            >
-              <Download className="h-4 w-4" />
-              <span>Download HTML Sheet</span>
             </button>
 
             <button
@@ -340,7 +332,12 @@ export function FollowUpSheetModal({
 
                   {/* Date Box */}
                   <div className="date-box w-1/4 text-right text-xs font-bold text-slate-800">
-                    <span>Date: ___ / ___ / 2026</span>
+                    <div className="text-slate-900 font-extrabold text-sm">
+                      Date: <span className="text-[#003875] font-mono">{new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" })}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-600 font-bold mt-0.5">
+                      {new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                    </div>
                   </div>
                 </div>
 
