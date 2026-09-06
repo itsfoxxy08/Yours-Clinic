@@ -177,9 +177,17 @@ export async function sendEmailOTP(email: string) {
   });
 
   if (error) {
+    const errorMsg = error.message || "";
+    if (errorMsg.toLowerCase().includes("rate limit") || errorMsg.toLowerCase().includes("exceeded")) {
+      return {
+        success: false,
+        message:
+          "Supabase Email Rate Limit Exceeded. Default free limit is 3 emails/hour. Go to Supabase Dashboard → Authentication → Rate Limits to increase or disable limits.",
+      };
+    }
     return {
       success: false,
-      message: error.message || "Failed to send verification code.",
+      message: errorMsg || "Failed to send verification code.",
     };
   }
 
