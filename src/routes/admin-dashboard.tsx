@@ -271,13 +271,33 @@ function AdminDashboardPage() {
     checkSession();
   }, []);
 
+  const [isSyncing, setIsSyncing] = useState(false);
+
   // Fetch patient records and medicine orders when session is verified
-  const loadRecords = async () => {
+  const loadRecords = async (force: boolean = false) => {
     setLoadingRecords(true);
-    const res = await getPatientRecords();
+    const res = await getPatientRecords(force);
     setRecords(res.data);
     setFromDatabase(res.fromDatabase);
     setLoadingRecords(false);
+  };
+
+  const handleManualSyncRefresh = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await getPatientRecords(true);
+      setRecords(res.data);
+      setFromDatabase(res.fromDatabase);
+      if (res.fromDatabase) {
+        toast.success(`⚡ Synced live from Supabase DB! ${res.data.length} record(s) loaded.`);
+      } else {
+        toast.info(`Local cache active (${res.data.length} records). Execute supabase-schema.sql in Supabase Dashboard to enable cloud DB table.`);
+      }
+    } catch (err) {
+      toast.error("Failed to sync with Supabase database.");
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const loadOrders = async () => {
@@ -1084,6 +1104,16 @@ function AdminDashboardPage() {
 
             {/* Actions: Add Patient & Export Buttons */}
             <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                onClick={handleManualSyncRefresh}
+                disabled={isSyncing}
+                className="press focus-gold flex items-center gap-2 rounded-xl border border-sky-500/40 bg-sky-500/10 px-4 py-2.5 text-xs font-bold text-sky-600 dark:text-sky-400 hover:bg-sky-500/20 shadow-sm transition-all disabled:opacity-50"
+                title="Fetch latest live records directly from Supabase database"
+              >
+                <RefreshCw className={`h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
+                <span>{isSyncing ? "Syncing DB..." : "Refresh DB Sync"}</span>
+              </button>
+
               <button
                 onClick={() => {
                   resetForm();

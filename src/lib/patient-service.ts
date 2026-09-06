@@ -109,7 +109,7 @@ export function formatDate12Hour(dateIsoStr: string): string {
 /**
  * Fetch patient records from Supabase `patient_records` table (with local fallback).
  */
-export async function getPatientRecords(): Promise<{
+export async function getPatientRecords(forceRefresh: boolean = false): Promise<{
   data: PatientRecord[];
   fromDatabase: boolean;
   error?: string;
@@ -125,8 +125,8 @@ export async function getPatientRecords(): Promise<{
         if (data.length > 0) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
           return { data: data as PatientRecord[], fromDatabase: true };
-        } else {
-          // If table in Supabase is empty (0 records), seed defaults into Supabase DB
+        } else if (!forceRefresh) {
+          // If table in Supabase is empty (0 records) on initial load, seed defaults into Supabase DB
           await seedDefaultPatientsInSupabase();
           const { data: seeded } = await supabase
             .from("patient_records")
@@ -135,6 +135,9 @@ export async function getPatientRecords(): Promise<{
           const finalData = seeded && seeded.length > 0 ? (seeded as PatientRecord[]) : DEFAULT_PATIENT_RECORDS;
           localStorage.setItem(STORAGE_KEY, JSON.stringify(finalData));
           return { data: finalData, fromDatabase: true };
+        } else {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+          return { data: [], fromDatabase: true };
         }
       }
 
@@ -496,7 +499,7 @@ export function subscribeToPatientRecordsRealtime(
         { event: "*", schema: "public", table: "patient_records" },
         async () => {
           try {
-            const res = await getPatientRecords();
+            const res = await getPatientRecords(true);
             onUpdate(res.data);
             if (typeof window !== "undefined") {
               window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: res.data }));
@@ -509,7 +512,7 @@ export function subscribeToPatientRecordsRealtime(
         { event: "*", schema: "public", table: "patient_reports" },
         async () => {
           try {
-            const res = await getPatientRecords();
+            const res = await getPatientRecords(true);
             onUpdate(res.data);
             if (typeof window !== "undefined") {
               window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: res.data }));
