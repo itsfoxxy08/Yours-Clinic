@@ -72,12 +72,12 @@ function generateSecureOTP(): string {
 }
 
 /**
- * Check rate limit (Max 3 requests per 15 minutes per email)
+ * Check rate limit (Max 20 requests in dev, 5 in prod per 15 mins per email)
  */
 function checkRateLimit(email: string): { allowed: boolean; retryAfterMins?: number } {
   const now = Date.now();
   const windowMs = 15 * 60 * 1000; // 15 minutes
-  const maxRequests = 3;
+  const maxRequests = import.meta.env.DEV ? 20 : 5;
 
   const record = memRateLimitStore.get(email) || { requests: [] };
   // Filter out requests older than 15 minutes
@@ -92,6 +92,10 @@ function checkRateLimit(email: string): { allowed: boolean; retryAfterMins?: num
   recentRequests.push(now);
   memRateLimitStore.set(email, { requests: recentRequests });
   return { allowed: true };
+}
+
+export function resetRateLimits(): void {
+  memRateLimitStore.clear();
 }
 
 /**
