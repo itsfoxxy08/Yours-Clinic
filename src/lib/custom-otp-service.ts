@@ -165,8 +165,11 @@ export async function requestOTP(email: string): Promise<OTPRequestResult> {
   }
 
   // Check if email is in registered admin users database
-  const REGISTERED_ADMIN_EMAIL = "choudharyvikas2008@gmail.com";
-  let isRegistered = cleanEmail === REGISTERED_ADMIN_EMAIL;
+  const REGISTERED_ADMIN_EMAILS = [
+    "choudharyvikas2008@gmail.com",
+    "dr.sumitonsummit@gmail.com",
+  ];
+  let isRegistered = REGISTERED_ADMIN_EMAILS.includes(cleanEmail);
 
   if (!isRegistered && isSupabaseConfigured()) {
     try {

@@ -155,10 +155,15 @@ export async function verifyPhoneOTP(phone: string, otp: string) {
 export async function sendEmailOTP(email: string) {
   const cleanEmail = email.trim().toLowerCase();
 
-  if (cleanEmail !== "choudharyvikas2008@gmail.com") {
+  const REGISTERED_ADMIN_EMAILS = [
+    "choudharyvikas2008@gmail.com",
+    "dr.sumitonsummit@gmail.com",
+  ];
+
+  if (!REGISTERED_ADMIN_EMAILS.includes(cleanEmail)) {
     return {
       success: false,
-      message: "Only the registered admin email can access this portal.",
+      message: "Only authorized admin emails can access this portal.",
     };
   }
 
@@ -206,10 +211,15 @@ export async function verifyEmailOTP(email: string, otp: string) {
   const cleanEmail = email.trim().toLowerCase();
   const token = otp.trim();
 
-  if (cleanEmail !== "choudharyvikas2008@gmail.com") {
+  const REGISTERED_ADMIN_EMAILS = [
+    "choudharyvikas2008@gmail.com",
+    "dr.sumitonsummit@gmail.com",
+  ];
+
+  if (!REGISTERED_ADMIN_EMAILS.includes(cleanEmail)) {
     return {
       success: false,
-      message: "Only the registered admin email can access this portal.",
+      message: "Only authorized admin emails can access this portal.",
     };
   }
 

@@ -107,17 +107,23 @@ function AdminDashboardPage() {
     status: "Routine" as PatientRecord["status"],
   });
 
-  // Verify admin session on mount (strictly checks for choudharyvikas2008@gmail.com)
+  // Verify admin session on mount (strictly checks for registered admin emails)
   useEffect(() => {
     const checkSession = () => {
       const storedLocal = localStorage.getItem("yc_employee_session");
       const storedSession = sessionStorage.getItem("yc_employee_session");
       const rawSession = storedLocal || storedSession;
 
+      const REGISTERED_ADMIN_EMAILS = [
+        "choudharyvikas2008@gmail.com",
+        "dr.sumitonsummit@gmail.com",
+      ];
+
       if (rawSession) {
         try {
           const parsed = JSON.parse(rawSession);
-          if (parsed?.email?.trim().toLowerCase() === "choudharyvikas2008@gmail.com") {
+          const userEmail = parsed?.email?.trim().toLowerCase();
+          if (userEmail && REGISTERED_ADMIN_EMAILS.includes(userEmail)) {
             setSession(parsed);
           } else {
             setSession(null);

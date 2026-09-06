@@ -57,7 +57,15 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
 
   if (!isOpen) return null;
 
-  const REGISTERED_ADMIN_EMAIL = "choudharyvikas2008@gmail.com";
+  const REGISTERED_ADMIN_EMAILS = [
+    "choudharyvikas2008@gmail.com",
+    "dr.sumitonsummit@gmail.com",
+  ];
+
+  const ADMIN_PASSWORDS: Record<string, string[]> = {
+    "choudharyvikas2008@gmail.com": ["Yours_Clinic@2018", "YoursClinic@2018"],
+    "dr.sumitonsummit@gmail.com": ["YoursClinic@2018", "Yours_Clinic@2018"],
+  };
 
   // STEP 1: Verify Email & Password, then Send 6-Digit Email OTP via Brevo / Custom OTP
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
@@ -77,18 +85,19 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
       return;
     }
 
-    if (cleanEmail !== REGISTERED_ADMIN_EMAIL) {
+    if (!REGISTERED_ADMIN_EMAILS.includes(cleanEmail)) {
       setResult({
         success: false,
-        message: "Only the registered admin email can access this portal.",
+        message: "Only authorized admin emails can access this portal.",
       });
       return;
     }
 
     setLoading(true);
 
-    // Verify Password against registered admin password
-    const isPasswordValid = cleanPassword === "Yours_Clinic@2018";
+    // Verify Password against registered admin password map
+    const allowedPasswords = ADMIN_PASSWORDS[cleanEmail] || ["YoursClinic@2018"];
+    const isPasswordValid = allowedPasswords.includes(cleanPassword);
 
     if (!isPasswordValid) {
       setLoading(false);
@@ -124,10 +133,10 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     if (otpCountdown > 0) return;
     const cleanEmail = email.trim().toLowerCase();
 
-    if (cleanEmail !== REGISTERED_ADMIN_EMAIL) {
+    if (!REGISTERED_ADMIN_EMAILS.includes(cleanEmail)) {
       setResult({
         success: false,
-        message: "Only the registered admin email can access this portal.",
+        message: "Only authorized admin emails can access this portal.",
       });
       return;
     }
@@ -191,11 +200,11 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
 
     const cleanEmail = email.trim().toLowerCase();
 
-    if (cleanEmail !== REGISTERED_ADMIN_EMAIL) {
+    if (!REGISTERED_ADMIN_EMAILS.includes(cleanEmail)) {
       setOtpLoading(false);
       setResult({
         success: false,
-        message: "Only the registered admin email can access this portal.",
+        message: "Only authorized admin emails can access this portal.",
       });
       return;
     }
@@ -204,11 +213,12 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     setOtpLoading(false);
 
     if (res.success && res.user) {
+      const adminName = cleanEmail === "dr.sumitonsummit@gmail.com" ? "Dr. Sumit" : "Vikas Choudhary";
       const sessionData = {
         id: res.user.id,
         email: cleanEmail,
         role: "Super Admin",
-        name: "Vikas Choudhary",
+        name: adminName,
         loginTime: new Date().toISOString(),
       };
 
