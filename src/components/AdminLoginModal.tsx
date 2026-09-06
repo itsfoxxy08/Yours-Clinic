@@ -13,7 +13,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
-import { sendEmailOTP, verifyEmailOTP } from "@/lib/seed-admin";
+import { requestOTP, verifyOTP } from "@/lib/custom-otp-service";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 interface AdminLoginModalProps {
@@ -59,7 +59,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
 
   const REGISTERED_ADMIN_EMAIL = "choudharyvikas2008@gmail.com";
 
-  // STEP 1: Verify Email & Password, then Send 6-Digit Email OTP via Supabase Auth
+  // STEP 1: Verify Email & Password, then Send 6-Digit Email OTP via Brevo / Custom OTP
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setResult(null);
@@ -99,8 +99,8 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
       return;
     }
 
-    // Password valid -> Send 6-Digit OTP Code via Supabase
-    const res = await sendEmailOTP(cleanEmail);
+    // Password valid -> Send 6-Digit OTP Code via Brevo
+    const res = await requestOTP(cleanEmail);
     setLoading(false);
 
     if (res.success) {
@@ -133,7 +133,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     }
 
     setOtpLoading(true);
-    const res = await sendEmailOTP(cleanEmail);
+    const res = await requestOTP(cleanEmail);
     setOtpLoading(false);
 
     if (res.success) {
@@ -176,7 +176,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     }
   };
 
-  // STEP 2: Verify 6-digit token using Supabase Auth verifyOtp
+  // STEP 2: Verify 6-digit token using custom OTP verification service
   const handleVerifyOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = otpDigits.join("");
@@ -200,7 +200,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
       return;
     }
 
-    const res = await verifyEmailOTP(cleanEmail, token);
+    const res = await verifyOTP(cleanEmail, token);
     setOtpLoading(false);
 
     if (res.success && res.user) {

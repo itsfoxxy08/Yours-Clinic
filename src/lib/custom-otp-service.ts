@@ -120,40 +120,55 @@ async function recordAuditLog(
 }
 
 /**
- * Send OTP via Email Provider / Custom SMTP API
+ * Send OTP via Brevo Transactional Email API or Supabase Auth
  */
 async function sendOTPEmail(email: string, otp: string): Promise<boolean> {
-  const emailServiceUrl = (import.meta.env["VITE_EMAIL_API_URL"] as string) || "";
-  const emailApiKey = (import.meta.env["VITE_EMAIL_API_KEY"] as string) || "";
+  const brevoApiKey = (import.meta.env["VITE_BREVO_API_KEY"] as string) || "";
+  const senderEmail = (import.meta.env["VITE_ADMIN_SENDER_EMAIL"] as string) || "choudharyvikas2008@gmail.com";
 
-  // If a custom Email API / Webhook (e.g. Resend / Brevo / SendGrid endpoint) is configured
-  if (emailServiceUrl) {
+  if (brevoApiKey) {
     try {
-      const response = await fetch(emailServiceUrl, {
+      const response = await fetch("https://api.brevo.com/v3/smtp/email", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${emailApiKey}`,
+          accept: "application/json",
+          "api-key": brevoApiKey,
+          "content-type": "application/json",
         },
         body: JSON.stringify({
-          to: email,
-          subject: "Yours-Clinic Admin Login OTP Code",
-          html: `
-            <div style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f6f8; border-radius: 12px;">
-              <h2 style="color: #0f172a;">Yours-Clinic Admin Login</h2>
-              <p style="color: #334155; font-size: 14px;">Your secure one-time password (OTP) for admin login is:</p>
-              <div style="background-color: #0f172a; color: #fbbf24; font-size: 28px; font-weight: bold; letter-spacing: 8px; padding: 16px 24px; border-radius: 10px; display: inline-block; margin: 12px 0;">
-                ${otp}
-              </div>
-              <p style="color: #64748b; font-size: 12px;">This code will expire in 10 minutes. Maximum 3 verification attempts allowed.</p>
-              <p style="color: #94a3b8; font-size: 11px; margin-top: 20px;">If you did not request this code, please ignore this email.</p>
+          sender: {
+            name: "Yours-Clinic Admin Login",
+            email: senderEmail,
+          },
+          to: [
+            {
+              email: email,
+              name: "Admin User",
+            },
+          ],
+          subject: "Yours-Clinic Admin Login",
+          htmlContent: `
+            <div style="font-family: Arial, sans-serif; padding: 24px; background-color: #ffffff; color: #1e293b; border-radius: 8px; border: 1px solid #e2e8f0;">
+              <h2 style="color: #0f172a; margin-top: 0;">Yours-Clinic Admin Login</h2>
+              <p style="color: #334155; font-size: 15px;">Your One Time Password (OTP) for ADMIN LOGIN at Yours_Clinic is:</p>
+              <h1 style="letter-spacing: 6px; font-size: 36px; color: #0f172a; background-color: #f1f5f9; padding: 12px 20px; border-radius: 8px; display: inline-block; margin: 16px 0;">${otp}</h1>
+              <p style="color: #334155; font-size: 14px;">Enter this six-digit code to continue.</p>
+              <p style="color: #64748b; font-size: 13px;">This code expires shortly and can only be used once.</p>
+              <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">If you did not request this code, please ignore this email.</p>
             </div>
           `,
         }),
       });
-      return response.ok;
+
+      if (response.ok) {
+        console.log("✅ Brevo Email OTP successfully dispatched to:", email);
+        return true;
+      } else {
+        const errData = await response.json().catch(() => ({}));
+        console.warn("Brevo API error response:", errData);
+      }
     } catch (err) {
-      console.error("Custom Email Provider request failed:", err);
+      console.error("Brevo Email API dispatch failed:", err);
     }
   }
 
@@ -161,7 +176,7 @@ async function sendOTPEmail(email: string, otp: string): Promise<boolean> {
   if (isSupabaseConfigured()) {
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: false },
+      options: { shouldCreateUser: true },
     });
     if (!error) return true;
     console.warn("Supabase auth OTP request failed:", error.message);
