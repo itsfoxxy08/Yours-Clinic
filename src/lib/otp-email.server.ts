@@ -11,7 +11,7 @@ export async function sendBrevoOTPEmail(
 ): Promise<{ ok: boolean; error?: string }> {
   const apiKey = process.env["VITE_BREVO_API_KEY"] ?? "";
   const senderEmail =
-    process.env["VITE_ADMIN_SENDER_EMAIL"] ?? "choudharyvikas2008@gmail.com";
+    process.env["VITE_ADMIN_SENDER_EMAIL"] ?? "yoursclinicnoreply@yahoo.com";
 
   if (!apiKey) {
     console.error("[OTP Server] VITE_BREVO_API_KEY is not set in environment.");
