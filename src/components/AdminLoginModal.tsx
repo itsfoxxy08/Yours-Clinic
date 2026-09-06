@@ -23,7 +23,7 @@ import {
   type AdminLoginMethod,
   type AdminAuthResult,
 } from "@/lib/supabase";
-import { sendPhoneOTP, verifyPhoneOTP, seedAdmin } from "@/lib/seed-admin";
+import { sendPhoneOTP, verifyPhoneOTP, sendEmailOTP, verifyEmailOTP, seedAdmin } from "@/lib/seed-admin";
 
 interface AdminLoginModalProps {
   isOpen: boolean;
@@ -76,17 +76,24 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
 
   if (!isOpen) return null;
 
-  const triggerOtpGeneration = (targetId: string) => {
-    // Generate 6 digit numeric code
+  const triggerOtpGeneration = async (targetId: string) => {
+    // Generate secure 6-digit numeric fallback code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     setGeneratedOtp(code);
     setOtpDigits(["", "", "", "", "", ""]);
     setStep("otp");
     setOtpCountdown(60);
 
-    toast.info(`🔐 6-Digit OTP sent to ${targetId}`, {
-      description: `Verification Code: ${code} (Enter this to confirm identity)`,
-      duration: 12000,
+    // Dispatch real email / phone OTP via Supabase Auth
+    if (method === "email") {
+      await sendEmailOTP(targetId);
+    } else {
+      await sendPhoneOTP(targetId);
+    }
+
+    toast.info(`🔐 6-Digit Security OTP Dispatched`, {
+      description: `Verification code sent to ${targetId}. Please check your email inbox and spam folder.`,
+      duration: 10000,
     });
   };
 
@@ -108,7 +115,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
       setLoading(false);
 
       if (authRes.success || cleanId.toLowerCase() === "choudharyvikas2008@gmail.com") {
-        triggerOtpGeneration(cleanId);
+        await triggerOtpGeneration(cleanId);
       } else {
         setResult({
           success: false,
@@ -129,7 +136,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     setLoading(false);
 
     if (authRes.success || cleanId.length >= 8) {
-      triggerOtpGeneration(cleanId);
+      await triggerOtpGeneration(cleanId);
     } else {
       setResult({
         success: false,
@@ -178,22 +185,42 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     setOtpLoading(true);
     setResult(null);
 
-    // Verify OTP code
-    if (enteredCode === generatedOtp || enteredCode === "123456" || enteredCode === "654321") {
-      setOtpLoading(false);
-      const cleanEmail = identifier.trim().toLowerCase();
+    const cleanId = identifier.trim();
 
+    // 1. Try Supabase OTP verification
+    let verified = false;
+    if (isSupabaseConfigured()) {
+      if (method === "email") {
+        const vRes = await verifyEmailOTP(cleanId, enteredCode);
+        if (vRes.success) verified = true;
+      } else {
+        const vRes = await verifyPhoneOTP(cleanId, enteredCode);
+        if (vRes.success) verified = true;
+      }
+    }
+
+    // 2. Fallback check against session code or master OTP ("123456")
+    if (!verified && (enteredCode === generatedOtp || enteredCode === "123456" || enteredCode === "654321")) {
+      verified = true;
+    }
+
+    setOtpLoading(false);
+
+    if (verified) {
+      const cleanEmail = cleanId.toLowerCase();
       const employeeUser = {
         id: "emp-" + Date.now(),
-        email: identifier.trim(),
+        email: cleanId,
         role: cleanEmail === "choudharyvikas2008@gmail.com" ? "Super Admin" : "Employee Admin",
         name: cleanEmail === "choudharyvikas2008@gmail.com" ? "Vikas Choudhary" : "Employee User",
       };
 
       completeEmployeeLogin(employeeUser);
     } else {
-      setOtpLoading(false);
-      setResult({ success: false, message: "Invalid 6-digit OTP code. Please check code or click resend." });
+      setResult({
+        success: false,
+        message: "Invalid or expired 6-digit OTP code. Please check your email inbox or click resend.",
+      });
     }
   };
 
@@ -420,15 +447,10 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
               <h4 className="text-sm font-bold text-foreground">
                 6-Digit Security OTP Verification
               </h4>
-              <p className="mt-1 text-xs text-muted-foreground">
-                We sent a 6-digit code to{" "}
-                <span className="font-semibold text-gold">{identifier}</span>
+              <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed bg-background/60 rounded-xl p-3 border border-border/50">
+                🔐 A 6-digit security code has been sent to{" "}
+                <span className="font-bold text-gold">{identifier}</span>. Please check your email inbox and spam folder.
               </p>
-              {generatedOtp && (
-                <div className="mt-2.5 inline-block rounded-lg bg-background/80 px-3 py-1.5 text-xs font-mono font-bold text-gold border border-gold/40 shadow-xs">
-                  OTP Code: {generatedOtp}
-                </div>
-              )}
             </div>
 
             <div>

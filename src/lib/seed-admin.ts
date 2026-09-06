@@ -142,9 +142,70 @@ export async function verifyPhoneOTP(phone: string, otp: string) {
     user: {
       id: data.user?.id || String(adminData.id),
       phone: adminData.phone,
-      username: adminData.username,
       email: adminData.email,
       role: adminData.role || "admin",
     },
   };
 }
+
+/**
+ * Send OTP to email address via Supabase Auth
+ */
+export async function sendEmailOTP(email: string) {
+  if (!isSupabaseConfigured()) {
+    return { success: false, message: "Supabase credentials not configured." };
+  }
+
+  const cleanEmail = email.trim();
+  const { data, error } = await supabase.auth.signInWithOtp({
+    email: cleanEmail,
+    options: {
+      shouldCreateUser: false,
+    },
+  });
+
+  if (error) {
+    const { data: fallbackData, error: fallbackError } = await supabase.auth.signInWithOtp({
+      email: cleanEmail,
+    });
+    if (fallbackError) {
+      return { success: false, message: fallbackError.message };
+    }
+    return { success: true, message: "OTP sent to email!", data: fallbackData };
+  }
+
+  return {
+    success: true,
+    message: "OTP sent to email successfully!",
+    data,
+  };
+}
+
+/**
+ * Verify OTP for email address via Supabase Auth
+ */
+export async function verifyEmailOTP(email: string, otp: string) {
+  if (!isSupabaseConfigured()) {
+    return { success: false, message: "Supabase credentials not configured." };
+  }
+
+  const cleanEmail = email.trim();
+  const token = otp.trim();
+
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: cleanEmail,
+    token,
+    type: "email",
+  });
+
+  if (error) {
+    return { success: false, message: error.message };
+  }
+
+  return {
+    success: true,
+    message: "Email OTP verified!",
+    user: data.user,
+  };
+}
+
