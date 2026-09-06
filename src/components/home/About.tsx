@@ -142,7 +142,7 @@ export function About() {
           </div>
 
           <div className="mt-14 grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-            {specialists.map((d, i) => (
+            {(specialists || []).map((d, i) => (
               <Reveal key={d.id || d.name} delay={i * 90}>
                 <article className="tactile ink-bleed group h-full overflow-hidden rounded-[2rem] bg-card/60 ring-1 ring-border/60 hover:ring-gold/50">
                   <div className="aspect-[4/5] w-full overflow-hidden bg-primary-light">

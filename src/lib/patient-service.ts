@@ -415,37 +415,48 @@ export async function exportPatientRecordsToGoogleSheets(
 export function subscribeToPatientRecordsRealtime(
   onUpdate: (records: PatientRecord[]) => void
 ): () => void {
-  if (!isSupabaseConfigured()) return () => {};
+  if (typeof window === "undefined" || !isSupabaseConfigured()) return () => {};
 
-  const channel = supabase
-    .channel("patient-records-realtime-changes")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "patient_records" },
-      async () => {
-        const res = await getPatientRecords();
-        onUpdate(res.data);
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: res.data }));
+  try {
+    const channel = supabase
+      .channel("patient-records-realtime-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "patient_records" },
+        async () => {
+          try {
+            const res = await getPatientRecords();
+            onUpdate(res.data);
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: res.data }));
+            }
+          } catch (e) {}
         }
-      }
-    )
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "patient_reports" },
-      async () => {
-        const res = await getPatientRecords();
-        onUpdate(res.data);
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: res.data }));
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "patient_reports" },
+        async () => {
+          try {
+            const res = await getPatientRecords();
+            onUpdate(res.data);
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: res.data }));
+            }
+          } catch (e) {}
         }
-      }
-    )
-    .subscribe();
+      )
+      .subscribe();
 
-  return () => {
-    supabase.removeChannel(channel);
-  };
+    return () => {
+      try {
+        supabase.removeChannel(channel);
+      } catch (e) {}
+    };
+  } catch (err) {
+    console.warn("Could not subscribe to patient records realtime:", err);
+    return () => {};
+  }
 }
 
 /**

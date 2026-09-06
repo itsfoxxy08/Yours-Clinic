@@ -71,26 +71,35 @@ export async function getMedicineOrders(): Promise<{
 export function subscribeToMedicineOrdersRealtime(
   onUpdate: (orders: MedicineOrder[]) => void
 ): () => void {
-  if (!isSupabaseConfigured()) return () => {};
+  if (typeof window === "undefined" || !isSupabaseConfigured()) return () => {};
 
-  const channel = supabase
-    .channel("medicine-orders-realtime-changes")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "medicine_orders" },
-      async () => {
-        const res = await getMedicineOrders();
-        onUpdate(res.data);
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("yc-orders-updated", { detail: res.data }));
+  try {
+    const channel = supabase
+      .channel("medicine-orders-realtime-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "medicine_orders" },
+        async () => {
+          try {
+            const res = await getMedicineOrders();
+            onUpdate(res.data);
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new CustomEvent("yc-orders-updated", { detail: res.data }));
+            }
+          } catch (e) {}
         }
-      }
-    )
-    .subscribe();
+      )
+      .subscribe();
 
-  return () => {
-    supabase.removeChannel(channel);
-  };
+    return () => {
+      try {
+        supabase.removeChannel(channel);
+      } catch (e) {}
+    };
+  } catch (err) {
+    console.warn("Could not subscribe to medicine orders realtime:", err);
+    return () => {};
+  }
 }
 
 /**

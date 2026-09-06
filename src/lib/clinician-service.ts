@@ -170,23 +170,34 @@ export async function fetchCliniciansFromSupabase(): Promise<Clinician[]> {
 export function subscribeToCliniciansRealtime(
   onUpdate: (clinicians: Clinician[]) => void
 ): () => void {
-  if (!isSupabaseConfigured()) return () => {};
+  if (typeof window === "undefined" || !isSupabaseConfigured()) return () => {};
 
-  const channel = supabase
-    .channel("clinicians-realtime-changes")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "clinicians" },
-      async () => {
-        const fresh = await fetchCliniciansFromSupabase();
-        onUpdate(fresh);
-      }
-    )
-    .subscribe();
+  try {
+    const channel = supabase
+      .channel("clinicians-realtime-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "clinicians" },
+        async () => {
+          try {
+            const fresh = await fetchCliniciansFromSupabase();
+            onUpdate(fresh);
+          } catch (e) {
+            console.warn("Realtime clinician update note:", e);
+          }
+        }
+      )
+      .subscribe();
 
-  return () => {
-    supabase.removeChannel(channel);
-  };
+    return () => {
+      try {
+        supabase.removeChannel(channel);
+      } catch (e) {}
+    };
+  } catch (err) {
+    console.warn("Could not subscribe to clinicians realtime:", err);
+    return () => {};
+  }
 }
 
 /**
