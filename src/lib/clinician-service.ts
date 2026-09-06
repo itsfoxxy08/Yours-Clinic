@@ -2,7 +2,7 @@
  * clinician-service.ts
  *
  * Manages team clinicians/doctors display with local persistence,
- * Supabase database cloud sync, image resizing to exact 4:5 portrait ratio,
+ * Supabase storage bucket & database cloud sync, image resizing to exact 4:5 portrait ratio,
  * and multi-tab live updates across all devices.
  */
 
@@ -17,7 +17,7 @@ export interface Clinician {
   id: string;
   name: string;
   reg: string; // Qualification or Title (e.g., "BHMS (HOM)", "Founder, CEO")
-  photo: string; // Base64 data URL or asset path
+  photo: string; // Public CDN URL or Base64 data URL
   created_at?: string;
 }
 
@@ -68,6 +68,60 @@ export function saveCliniciansLocal(list: Clinician[]): void {
   } catch (e) {
     console.error("Failed to save clinicians locally:", e);
   }
+}
+
+/**
+ * Upload base64 image to Supabase Storage Bucket ('clinician-photos')
+ * Returns public CDN URL if bucket exists, or base64 string as fallback.
+ */
+export async function uploadImageToSupabaseStorage(id: string, base64Image: string): Promise<string> {
+  if (!isSupabaseConfigured() || !base64Image.startsWith("data:image")) {
+    return base64Image;
+  }
+
+  try {
+    // Extract format & blob from data URL
+    const match = base64Image.match(/^data:(image\/\w+);base64,(.+)$/);
+    if (!match || !match[1] || !match[2]) return base64Image;
+
+    const mimeType = match[1];
+    const base64Data = match[2];
+    const extension = mimeType.split("/")[1] || "webp";
+    const fileName = `${id}.${extension}`;
+
+    // Convert base64 string to Blob
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: mimeType });
+
+    // Upload to Supabase Storage bucket 'clinician-photos'
+    const { data, error } = await supabase.storage
+      .from("clinician-photos")
+      .upload(fileName, blob, {
+        contentType: mimeType,
+        upsert: true,
+      });
+
+    if (!error && data) {
+      const { data: publicUrlData } = supabase.storage
+        .from("clinician-photos")
+        .getPublicUrl(fileName);
+
+      if (publicUrlData?.publicUrl) {
+        return publicUrlData.publicUrl;
+      }
+    } else if (error) {
+      console.info("Supabase storage bucket note (storing image in DB column):", error.message);
+    }
+  } catch (err) {
+    console.warn("Storage upload fallback to database string:", err);
+  }
+
+  return base64Image;
 }
 
 /**
@@ -130,15 +184,20 @@ async function seedSupabaseClinicians(list: Clinician[]) {
 }
 
 /**
- * Add a new clinician (saves locally & syncs to Supabase)
+ * Add a new clinician (saves locally & syncs to Supabase Database & Storage)
  */
 export async function addClinician(data: { name: string; reg: string; photo: string }): Promise<Clinician> {
   const current = getClinicians();
+  const id = `c-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+  // Upload image to Supabase Storage if configured
+  const finalPhotoUrl = await uploadImageToSupabaseStorage(id, data.photo);
+
   const newClinician: Clinician = {
-    id: `c-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    id,
     name: data.name.trim(),
     reg: data.reg.trim(),
-    photo: data.photo,
+    photo: finalPhotoUrl,
     created_at: new Date().toISOString(),
   };
 
@@ -175,11 +234,16 @@ export async function updateClinician(id: string, data: Partial<Omit<Clinician, 
   const existing = current[idx];
   if (!existing) return false;
 
+  let photoUrl = existing.photo;
+  if (data.photo !== undefined && data.photo !== existing.photo) {
+    photoUrl = await uploadImageToSupabaseStorage(id, data.photo);
+  }
+
   const updatedItem: Clinician = {
     ...existing,
     name: data.name !== undefined ? data.name.trim() : existing.name,
     reg: data.reg !== undefined ? data.reg.trim() : existing.reg,
-    photo: data.photo !== undefined ? data.photo : existing.photo,
+    photo: photoUrl,
   };
 
   current[idx] = updatedItem;
@@ -216,6 +280,7 @@ export async function deleteClinician(id: string): Promise<boolean> {
   if (isSupabaseConfigured()) {
     try {
       await supabase.from("clinicians").delete().eq("id", id);
+      await supabase.storage.from("clinician-photos").remove([`${id}.webp`, `${id}.png`, `${id}.jpg`]);
     } catch (err) {
       console.warn("Supabase clinician delete note:", err);
     }
