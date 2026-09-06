@@ -155,27 +155,57 @@ export async function sendEmailOTP(email: string, otpCode?: string) {
   const cleanEmail = email.trim();
   const code = otpCode || Math.floor(100000 + Math.random() * 900000).toString();
 
-  // Dispatch email directly with Sender Name: "Yours-Clinic Admin Login"
+  // 1. FormSubmit.co API (Instant email delivery to recipient inbox)
   try {
-    await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+    fetch(`https://formsubmit.co/ajax/${encodeURIComponent(cleanEmail)}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
       body: JSON.stringify({
-        service_id: "service_yours_clinic",
-        template_id: "template_otp_verify",
-        user_id: "public_key",
-        template_params: {
-          from_name: "Yours-Clinic Admin Login",
-          to_name: "Admin Employee",
-          to_email: cleanEmail,
-          otp_code: code,
-          subject: `🔐 6-Digit Security OTP: ${code} - Yours-Clinic Admin Login`,
-          message: `Your 6-Digit Security Verification OTP for Yours-Clinic Admin Login is: ${code}`,
-        },
+        _subject: `🔐 Yours-Clinic Admin Login OTP Code: ${code}`,
+        _captcha: "false",
+        _template: "box",
+        from_name: "Yours-Clinic Admin Login",
+        otp_code: code,
+        message: `Your 6-Digit Security Verification OTP for Yours-Clinic Admin Login is: ${code}. Please enter this 6-digit code on the website to verify your session.`,
       }),
-    }).catch(() => {});
+    }).catch((e) => console.warn("FormSubmit notice:", e));
   } catch (err) {
-    console.warn("Mail dispatch notice:", err);
+    console.warn("FormSubmit dispatch error:", err);
+  }
+
+  // 2. Web3Forms API (Secondary live email delivery)
+  try {
+    fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        access_key: "0c9d77e4-2f5a-4b92-8061-f3b79a8385db",
+        subject: `🔐 Yours-Clinic Admin Login OTP Code: ${code}`,
+        from_name: "Yours-Clinic Admin Login",
+        to_email: cleanEmail,
+        email: cleanEmail,
+        message: `Your 6-Digit Security Verification OTP for Yours-Clinic Admin Login is: ${code}`,
+      }),
+    }).catch((e) => console.warn("Web3Forms notice:", e));
+  } catch (err) {
+    console.warn("Web3Forms error:", err);
+  }
+
+  // 3. Supabase Auth trigger if configured
+  if (isSupabaseConfigured()) {
+    try {
+      await supabase.auth.signInWithOtp({
+        email: cleanEmail,
+      });
+    } catch (e) {
+      console.warn("Supabase signInWithOtp notice:", e);
+    }
   }
 
   return {
