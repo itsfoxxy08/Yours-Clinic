@@ -176,8 +176,6 @@ export async function addPatientRecord(
     created_at: new Date().toISOString(),
   };
 
-  let savedToDb = false;
-
   if (isSupabaseConfigured()) {
     try {
       const { data, error } = await supabase
@@ -196,39 +194,37 @@ export async function addPatientRecord(
         ])
         .select();
 
-      if (!error && data && data[0]) {
-        savedToDb = true;
+      if (error) {
+        console.error("Supabase insert error:", error.message);
+        return {
+          success: false,
+          message: `Failed to save patient record to Supabase database: ${error.message}`,
+        };
+      }
+
+      if (data && data[0]) {
         newRecord.id = String(data[0].id || newRecord.id);
-      } else if (error) {
-        console.warn("Supabase insert error:", error.message);
       }
     } catch (err: any) {
-      console.warn("Supabase insert exception:", err?.message);
+      console.error("Supabase insert exception:", err?.message);
+      return {
+        success: false,
+        message: `Database connection error: ${err?.message || "Failed to write to Supabase"}`,
+      };
     }
   }
 
-  // Update local cache
-  const cached = localStorage.getItem(STORAGE_KEY);
-  let current: PatientRecord[] = [];
-  if (cached) {
-    try {
-      current = JSON.parse(cached);
-    } catch (e) {}
-  }
-  const updated = [newRecord, ...current.filter((p) => p.id !== newRecord.id)];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  // Re-fetch fresh list from Supabase DB and sync local cache & UI events
+  const fresh = await getPatientRecords(true);
 
-  // Trigger live cross-tab & window event
   if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: updated }));
+    window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: fresh.data }));
   }
 
   return {
     success: true,
     record: newRecord,
-    message: savedToDb
-      ? "Patient record saved to Supabase database!"
-      : "Patient record saved.",
+    message: "Patient record saved to central Supabase database!",
   };
 }
 
@@ -239,8 +235,6 @@ export async function updatePatientRecord(
   id: string,
   updatedFields: Partial<Omit<PatientRecord, "id">>
 ): Promise<{ success: boolean; message: string }> {
-  let savedToDb = false;
-
   if (isSupabaseConfigured()) {
     try {
       const { error } = await supabase
@@ -248,25 +242,30 @@ export async function updatePatientRecord(
         .update(updatedFields)
         .eq("id", id);
 
-      if (!error) {
-        savedToDb = true;
+      if (error) {
+        console.error("Supabase update error:", error.message);
+        return {
+          success: false,
+          message: `Failed to update patient in Supabase: ${error.message}`,
+        };
       }
-    } catch (err) {
-      console.warn("Supabase update error:", err);
+    } catch (err: any) {
+      console.error("Supabase update exception:", err?.message);
+      return {
+        success: false,
+        message: `Database update error: ${err?.message}`,
+      };
     }
   }
 
-  const current = (await getPatientRecords()).data;
-  const updated = current.map((p) =>
-    p.id === id ? { ...p, ...updatedFields } : p
-  );
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  const fresh = await getPatientRecords(true);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: fresh.data }));
+  }
 
   return {
     success: true,
-    message: savedToDb
-      ? "Patient record updated in Supabase!"
-      : "Patient record updated in local storage.",
+    message: "Patient record updated in central Supabase database!",
   };
 }
 
@@ -278,17 +277,29 @@ export async function deletePatientRecord(
 ): Promise<{ success: boolean; message: string }> {
   if (isSupabaseConfigured()) {
     try {
-      await supabase.from("patient_records").delete().eq("id", id);
-    } catch (err) {
-      console.warn("Supabase delete error:", err);
+      const { error } = await supabase.from("patient_records").delete().eq("id", id);
+      if (error) {
+        console.error("Supabase delete error:", error.message);
+        return {
+          success: false,
+          message: `Failed to delete patient from Supabase: ${error.message}`,
+        };
+      }
+    } catch (err: any) {
+      console.error("Supabase delete exception:", err?.message);
+      return {
+        success: false,
+        message: `Database delete error: ${err?.message}`,
+      };
     }
   }
 
-  const current = (await getPatientRecords()).data;
-  const updated = current.filter((p) => p.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  const fresh = await getPatientRecords(true);
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: fresh.data }));
+  }
 
-  return { success: true, message: "Patient record deleted." };
+  return { success: true, message: "Patient record deleted from central database." };
 }
 
 /**

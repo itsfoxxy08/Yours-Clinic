@@ -224,7 +224,6 @@ async function seedSupabaseClinicians(list: Clinician[]) {
  * Add a new clinician (saves locally & syncs to Supabase Database & Storage)
  */
 export async function addClinician(data: { name: string; reg: string; photo: string }): Promise<Clinician> {
-  const current = getClinicians();
   const id = `c-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
   // Upload image to Supabase Storage if configured
@@ -238,12 +237,9 @@ export async function addClinician(data: { name: string; reg: string; photo: str
     created_at: new Date().toISOString(),
   };
 
-  const updated = [...current, newClinician];
-  saveCliniciansLocal(updated);
-
   if (isSupabaseConfigured()) {
     try {
-      await supabase.from("clinicians").insert([
+      const { error } = await supabase.from("clinicians").insert([
         {
           id: newClinician.id,
           name: newClinician.name,
@@ -252,11 +248,15 @@ export async function addClinician(data: { name: string; reg: string; photo: str
           created_at: newClinician.created_at,
         },
       ]);
+      if (error) {
+        console.error("Supabase clinician insert error:", error.message);
+      }
     } catch (err) {
-      console.warn("Supabase clinician insert note:", err);
+      console.error("Supabase clinician insert note:", err);
     }
   }
 
+  await fetchCliniciansFromSupabase();
   return newClinician;
 }
 
@@ -283,12 +283,9 @@ export async function updateClinician(id: string, data: Partial<Omit<Clinician, 
     photo: photoUrl,
   };
 
-  current[idx] = updatedItem;
-  saveCliniciansLocal(current);
-
   if (isSupabaseConfigured()) {
     try {
-      await supabase
+      const { error } = await supabase
         .from("clinicians")
         .update({
           name: updatedItem.name,
@@ -296,11 +293,15 @@ export async function updateClinician(id: string, data: Partial<Omit<Clinician, 
           photo: updatedItem.photo,
         })
         .eq("id", id);
+      if (error) {
+        console.error("Supabase clinician update error:", error.message);
+      }
     } catch (err) {
-      console.warn("Supabase clinician update note:", err);
+      console.error("Supabase clinician update note:", err);
     }
   }
 
+  await fetchCliniciansFromSupabase();
   return true;
 }
 
@@ -308,21 +309,16 @@ export async function updateClinician(id: string, data: Partial<Omit<Clinician, 
  * Delete a clinician by ID
  */
 export async function deleteClinician(id: string): Promise<boolean> {
-  const current = getClinicians();
-  const filtered = current.filter((c) => c.id !== id);
-  if (filtered.length === current.length) return false;
-
-  saveCliniciansLocal(filtered);
-
   if (isSupabaseConfigured()) {
     try {
       await supabase.from("clinicians").delete().eq("id", id);
       await supabase.storage.from("clinician-photos").remove([`${id}.webp`, `${id}.png`, `${id}.jpg`]);
     } catch (err) {
-      console.warn("Supabase clinician delete note:", err);
+      console.error("Supabase clinician delete note:", err);
     }
   }
 
+  await fetchCliniciansFromSupabase();
   return true;
 }
 

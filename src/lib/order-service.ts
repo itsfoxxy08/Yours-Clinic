@@ -116,8 +116,6 @@ export async function placeMedicineOrder(
     created_at: new Date().toISOString(),
   };
 
-  let savedToDb = false;
-
   if (isSupabaseConfigured()) {
     try {
       const { data, error } = await supabase
@@ -139,18 +137,30 @@ export async function placeMedicineOrder(
         ])
         .select();
 
-      if (!error && data && data[0]) {
-        savedToDb = true;
+      if (error) {
+        console.error("Supabase insert error:", error.message);
+        return {
+          success: false,
+          message: `Failed to place order in Supabase database: ${error.message}`,
+        };
+      }
+
+      if (data && data[0]) {
         newOrder.id = String(data[0].id || newOrder.id);
       }
-    } catch (err) {
-      console.warn("Supabase placeMedicineOrder exception:", err);
+    } catch (err: any) {
+      console.error("Supabase placeMedicineOrder exception:", err?.message);
+      return {
+        success: false,
+        message: `Database error: ${err?.message}`,
+      };
     }
   }
 
-  const current = (await getMedicineOrders()).data;
-  const updated = [newOrder, ...current];
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  const fresh = await getMedicineOrders();
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("yc-orders-updated", { detail: fresh.data }));
+  }
 
   return {
     success: true,
@@ -166,8 +176,6 @@ export async function updateOrderStatus(
   orderId: string,
   updatedFields: Partial<MedicineOrder>
 ): Promise<{ success: boolean; message: string }> {
-  let savedToDb = false;
-
   if (isSupabaseConfigured()) {
     try {
       const { error } = await supabase
@@ -175,21 +183,30 @@ export async function updateOrderStatus(
         .update(updatedFields)
         .eq("order_id", orderId);
 
-      if (!error) savedToDb = true;
-    } catch (err) {
-      console.warn("Supabase updateOrderStatus error:", err);
+      if (error) {
+        console.error("Supabase updateOrderStatus error:", error.message);
+        return {
+          success: false,
+          message: `Failed to update order status in Supabase: ${error.message}`,
+        };
+      }
+    } catch (err: any) {
+      console.error("Supabase updateOrderStatus exception:", err?.message);
+      return {
+        success: false,
+        message: `Database error: ${err?.message}`,
+      };
     }
   }
 
-  const current = (await getMedicineOrders()).data;
-  const updated = current.map((o) =>
-    o.order_id === orderId || o.id === orderId ? { ...o, ...updatedFields } : o
-  );
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  const fresh = await getMedicineOrders();
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("yc-orders-updated", { detail: fresh.data }));
+  }
 
   return {
     success: true,
-    message: savedToDb ? "Order updated in Supabase!" : "Order updated locally.",
+    message: "Order updated in central Supabase database!",
   };
 }
 
