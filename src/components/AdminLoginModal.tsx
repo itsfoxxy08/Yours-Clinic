@@ -77,16 +77,16 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
   if (!isOpen) return null;
 
   const triggerOtpGeneration = async (targetId: string) => {
-    // Generate secure 6-digit numeric fallback code
+    // Generate secure 6-digit numeric OTP code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     setGeneratedOtp(code);
     setOtpDigits(["", "", "", "", "", ""]);
     setStep("otp");
     setOtpCountdown(60);
 
-    // Dispatch real email / phone OTP via Supabase Auth
+    // Dispatch real email / phone OTP
     if (method === "email") {
-      await sendEmailOTP(targetId);
+      await sendEmailOTP(targetId, code);
     } else {
       await sendPhoneOTP(targetId);
     }
@@ -104,43 +104,41 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
 
     const cleanId = identifier.trim();
 
-    if (method === "email") {
-      if (!cleanId || !cleanId.includes("@")) {
-        setLoading(false);
-        setResult({ success: false, message: "Please enter a valid email address." });
-        return;
-      }
-
-      const authRes = await authenticateAdmin("email", cleanId, password || "Yours_Clinic@2018");
+    if (!cleanId) {
       setLoading(false);
-
-      if (authRes.success || cleanId.toLowerCase() === "choudharyvikas2008@gmail.com") {
-        await triggerOtpGeneration(cleanId);
-      } else {
-        setResult({
-          success: false,
-          message: authRes.message || "Invalid email or password. Please check your credentials.",
-        });
-      }
+      setResult({ success: false, message: "Please enter your employee email or phone number." });
       return;
     }
 
-    // Mobile Phone login - trigger OTP
-    if (!cleanId || cleanId.length < 8) {
+    if (!password) {
       setLoading(false);
-      setResult({ success: false, message: "Please enter a valid phone number." });
+      setResult({ success: false, message: "Please enter your employee password." });
       return;
     }
 
-    const authRes = await authenticateAdmin("phone", cleanId, password || "Yours_Clinic@2018");
+    if (method === "email" && !cleanId.includes("@")) {
+      setLoading(false);
+      setResult({ success: false, message: "Please enter a valid email address." });
+      return;
+    }
+
+    if (method === "phone" && cleanId.length < 8) {
+      setLoading(false);
+      setResult({ success: false, message: "Please enter a valid mobile number." });
+      return;
+    }
+
+    // STRICT PASSWORD AUTHENTICATION AGAINST SUPABASE
+    const authRes = await authenticateAdmin(method, cleanId, password);
     setLoading(false);
 
-    if (authRes.success || cleanId.length >= 8) {
+    // ONLY IF EMAIL AND PASSWORD ARE VALID AND PRESENT IN DATABASE:
+    if (authRes.success) {
       await triggerOtpGeneration(cleanId);
     } else {
       setResult({
         success: false,
-        message: authRes.message || "Invalid mobile number or password.",
+        message: authRes.message || "Invalid credentials. Email or password incorrect.",
       });
     }
   };

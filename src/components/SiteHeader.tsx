@@ -75,31 +75,7 @@ export function SiteHeader() {
               <button
                 type="button"
                 onClick={() => {
-                  setOrderModalTab("order");
-                  setOrderModalOpen(true);
-                }}
-                className="focus-gold flex items-center gap-1.5 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400 hover:text-foreground transition-colors"
-              >
-                <Pill className="h-3.5 w-3.5" />
-                <span>Order Medicines</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setOrderModalTab("track");
-                  setOrderModalOpen(true);
-                }}
-                className="focus-gold flex items-center gap-1.5 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-blue-600 dark:text-blue-400 hover:text-foreground transition-colors"
-              >
-                <Truck className="h-3.5 w-3.5" />
-                <span>Track Order</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (typeof window !== "undefined" && localStorage.getItem("yc_employee_session")) {
+                  if (typeof window !== "undefined" && (localStorage.getItem("yc_employee_session") || sessionStorage.getItem("yc_employee_session"))) {
                     window.location.href = "/admin-dashboard";
                   } else {
                     setAdminModalOpen(true);
@@ -142,18 +118,6 @@ export function SiteHeader() {
                 {l.label}
               </Link>
             ))}
-
-            <button
-              type="button"
-              onClick={() => {
-                setOrderModalTab("order");
-                setOrderModalOpen(true);
-              }}
-              className="link-gold focus-gold text-[0.7rem] font-extrabold uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-400 hover:text-foreground transition-colors flex items-center gap-1"
-            >
-              <Pill className="h-3.5 w-3.5" />
-              <span>Order Medicines</span>
-            </button>
           </nav>
 
           <div className="flex items-center gap-2">
@@ -181,21 +145,6 @@ export function SiteHeader() {
             >
               <Pill className="h-3.5 w-3.5" />
               <span>Order Medicines</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (typeof window !== "undefined" && localStorage.getItem("yc_employee_session")) {
-                  window.location.href = "/admin-dashboard";
-                } else {
-                  setAdminModalOpen(true);
-                }
-              }}
-              className="press focus-gold hidden rounded-full border border-gold/40 px-4 py-2 text-xs font-bold uppercase tracking-wider text-foreground hover:bg-gold/15 hover:border-gold md:inline-flex items-center gap-1.5 shadow-sm hover:shadow"
-            >
-              <Lock className="h-3.5 w-3.5 text-gold" />
-              <span>Employee Login</span>
             </button>
 
             <Link
