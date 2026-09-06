@@ -169,10 +169,11 @@ export async function sendEmailOTP(email: string) {
     };
   }
 
+  // Send OTP via Supabase Auth (with shouldCreateUser: true to guarantee delivery)
   const { data, error } = await supabase.auth.signInWithOtp({
     email: cleanEmail,
     options: {
-      shouldCreateUser: false,
+      shouldCreateUser: true,
     },
   });
 

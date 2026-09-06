@@ -13,7 +13,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
-import { requestOTP, verifyOTP } from "@/lib/custom-otp-service";
+import { sendEmailOTP, verifyEmailOTP } from "@/lib/seed-admin";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 interface AdminLoginModalProps {
@@ -59,7 +59,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
 
   const REGISTERED_ADMIN_EMAIL = "choudharyvikas2008@gmail.com";
 
-  // STEP 1: Verify Email & Password, then Request Secure 6-Digit Email OTP
+  // STEP 1: Verify Email & Password, then Send 6-Digit Email OTP via Supabase Auth
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setResult(null);
@@ -99,8 +99,8 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
       return;
     }
 
-    // Password valid -> Send Secure 6-Digit OTP Code
-    const res = await requestOTP(cleanEmail);
+    // Password valid -> Send 6-Digit OTP Code via Supabase
+    const res = await sendEmailOTP(cleanEmail);
     setLoading(false);
 
     if (res.success) {
@@ -108,7 +108,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
       setOtpDigits(["", "", "", "", "", ""]);
       setOtpCountdown(60);
       toast.info("🔐 Verification code sent!", {
-        description: res.message,
+        description: `OTP sent to ${cleanEmail}. Please check your email inbox.`,
         duration: 8000,
       });
     } else {
@@ -119,7 +119,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     }
   };
 
-  // Resend OTP handler with rate-limit tracking
+  // Resend OTP handler
   const handleResendOtp = async () => {
     if (otpCountdown > 0) return;
     const cleanEmail = email.trim().toLowerCase();
@@ -133,13 +133,13 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     }
 
     setOtpLoading(true);
-    const res = await requestOTP(cleanEmail);
+    const res = await sendEmailOTP(cleanEmail);
     setOtpLoading(false);
 
     if (res.success) {
       setOtpCountdown(60);
       toast.info("🔐 Code Resent!", {
-        description: res.message,
+        description: `A new 6-digit OTP code has been sent to ${cleanEmail}.`,
       });
     } else {
       setResult({
@@ -176,7 +176,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     }
   };
 
-  // STEP 2: Verify 6-digit token using custom OTP verification service
+  // STEP 2: Verify 6-digit token using Supabase Auth verifyOtp
   const handleVerifyOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = otpDigits.join("");
@@ -200,7 +200,7 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
       return;
     }
 
-    const res = await verifyOTP(cleanEmail, token);
+    const res = await verifyEmailOTP(cleanEmail, token);
     setOtpLoading(false);
 
     if (res.success && res.user) {
