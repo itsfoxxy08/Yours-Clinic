@@ -127,16 +127,14 @@ async function sendOTPEmail(email: string, otp: string): Promise<boolean> {
   try {
     const result = await sendOTPEmailServerFn({ data: { email, otp } });
     if (result.ok) {
-      console.log("✅ OTP email sent to:", email);
+      console.log("✅ OTP email sent successfully to registered address.");
       return true;
     }
     console.warn("⚠️ sendOTPEmail server fn error:", result.error);
   } catch (err) {
     console.error("❌ sendOTPEmail server fn threw:", err);
   }
-  // Last resort fallback — OTP printed to server console
-  console.log(`🔑 [FALLBACK] OTP for ${email}: ${otp}`);
-  return true;
+  return false;
 }
 
 /**
@@ -231,8 +229,15 @@ export async function requestOTP(email: string): Promise<OTPRequestResult> {
   });
 
   // Dispatch Email
-  await sendOTPEmail(cleanEmail, rawOTP);
-  await recordAuditLog(cleanEmail, "OTP_REQUESTED", { registered: true });
+  const emailSent = await sendOTPEmail(cleanEmail, rawOTP);
+  await recordAuditLog(cleanEmail, "OTP_REQUESTED", { registered: true, sent: emailSent });
+
+  if (!emailSent) {
+    return {
+      success: false,
+      message: "Unable to send verification email. Please try again shortly.",
+    };
+  }
 
   return {
     success: true,
