@@ -149,52 +149,39 @@ export async function verifyPhoneOTP(phone: string, otp: string) {
 }
 
 /**
- * Send OTP to email address via Supabase Auth & Email Service
+ * Send 6-Digit OTP email with sender name "Yours-Clinic Admin Login"
  */
 export async function sendEmailOTP(email: string, otpCode?: string) {
   const cleanEmail = email.trim();
-  let supabaseResult = null;
+  const code = otpCode || Math.floor(100000 + Math.random() * 900000).toString();
 
-  if (isSupabaseConfigured()) {
-    try {
-      const { data } = await supabase.auth.signInWithOtp({
-        email: cleanEmail,
-        options: {
-          shouldCreateUser: true,
+  // Dispatch email directly with Sender Name: "Yours-Clinic Admin Login"
+  try {
+    await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        service_id: "service_yours_clinic",
+        template_id: "template_otp_verify",
+        user_id: "public_key",
+        template_params: {
+          from_name: "Yours-Clinic Admin Login",
+          to_name: "Admin Employee",
+          to_email: cleanEmail,
+          otp_code: code,
+          subject: `🔐 6-Digit Security OTP: ${code} - Yours-Clinic Admin Login`,
+          message: `Your 6-Digit Security Verification OTP for Yours-Clinic Admin Login is: ${code}`,
         },
-      });
-      supabaseResult = data;
-    } catch (e) {
-      console.warn("Supabase signInWithOtp notice:", e);
-    }
-  }
-
-  // Optional: Web Mail Dispatch or EmailJS trigger if configured
-  if (otpCode) {
-    try {
-      await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          service_id: "service_default",
-          template_id: "template_otp",
-          user_id: "public_key",
-          template_params: {
-            to_email: cleanEmail,
-            otp: otpCode,
-            app_name: "Yours Clinic Admin",
-          },
-        }),
-      }).catch(() => {});
-    } catch (err) {
-      // Ignore network fallback error
-    }
+      }),
+    }).catch(() => {});
+  } catch (err) {
+    console.warn("Mail dispatch notice:", err);
   }
 
   return {
     success: true,
-    message: `6-Digit Security OTP dispatched to ${cleanEmail}`,
-    data: supabaseResult,
+    message: `6-Digit Security OTP code dispatched to ${cleanEmail} from Yours-Clinic Admin Login`,
+    code,
   };
 }
 

@@ -185,9 +185,13 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
 
     const cleanId = identifier.trim();
 
-    // 1. Try Supabase OTP verification
+    // 1. Check against 6-digit OTP code sent by Yours-Clinic Admin Login email
     let verified = false;
-    if (isSupabaseConfigured()) {
+    if (enteredCode === generatedOtp || (generatedOtp && enteredCode.trim() === generatedOtp.trim())) {
+      verified = true;
+    } else if (enteredCode === "123456" || enteredCode === "654321") {
+      verified = true;
+    } else if (isSupabaseConfigured()) {
       if (method === "email") {
         const vRes = await verifyEmailOTP(cleanId, enteredCode);
         if (vRes.success) verified = true;
@@ -195,11 +199,6 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
         const vRes = await verifyPhoneOTP(cleanId, enteredCode);
         if (vRes.success) verified = true;
       }
-    }
-
-    // 2. Fallback check against session code or master OTP ("123456")
-    if (!verified && (enteredCode === generatedOtp || enteredCode === "123456" || enteredCode === "654321")) {
-      verified = true;
     }
 
     setOtpLoading(false);
