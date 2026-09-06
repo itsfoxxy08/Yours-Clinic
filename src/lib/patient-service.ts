@@ -639,7 +639,7 @@ export async function attachPatientReport(
   // Update Supabase Database if configured
   if (isSupabaseConfigured()) {
     try {
-      // 1. Insert into patient_reports metadata table
+      // 1. Insert into patient_reports metadata table if present
       await supabase.from("patient_reports").insert([
         {
           id: reportId,
@@ -655,24 +655,35 @@ export async function attachPatientReport(
       ]);
 
       // 2. Update patient_records JSON column
-      await supabase
+      const { error } = await supabase
         .from("patient_records")
         .update({ reports: updatedReports })
         .eq("id", patientId);
-    } catch (e) {
-      console.warn("Supabase update report notice:", e);
+
+      if (error) {
+        console.error("Supabase attach report error:", error.message);
+        return {
+          success: false,
+          message: `Failed to save prescription to Supabase: ${error.message}`,
+        };
+      }
+    } catch (e: any) {
+      console.error("Supabase update report notice:", e);
+      return {
+        success: false,
+        message: `Database Exception: ${e?.message || "Failed to save prescription."}`,
+      };
     }
   }
 
-  // Save to local cache
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  const fresh = await getPatientRecords(true);
   if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: records }));
+    window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: fresh.data }));
   }
 
   return {
     success: true,
-    message: "📄 Prescription / Report uploaded to Supabase & attached successfully!",
+    message: "📄 Prescription / Report uploaded & synchronized across all devices!",
     report: newReport,
   };
 }
@@ -698,19 +709,31 @@ export async function deletePatientReport(
   if (isSupabaseConfigured()) {
     try {
       await supabase.from("patient_reports").delete().eq("id", reportId);
-      await supabase
+      const { error } = await supabase
         .from("patient_records")
         .update({ reports: filteredReports })
         .eq("id", patientId);
-    } catch (err) {
-      console.warn("Supabase delete report notice:", err);
+
+      if (error) {
+        console.error("Supabase delete report error:", error.message);
+        return {
+          success: false,
+          message: `Failed to delete prescription from Supabase: ${error.message}`,
+        };
+      }
+    } catch (err: any) {
+      console.error("Supabase delete report notice:", err);
+      return {
+        success: false,
+        message: `Database Exception: ${err?.message || "Failed to delete prescription."}`,
+      };
     }
   }
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  const fresh = await getPatientRecords(true);
   if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: records }));
+    window.dispatchEvent(new CustomEvent("yc-patients-updated", { detail: fresh.data }));
   }
 
-  return { success: true, message: "Report deleted successfully." };
+  return { success: true, message: "Prescription / Report deleted permanently from central database." };
 }
