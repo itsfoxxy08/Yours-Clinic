@@ -20,7 +20,6 @@ const clinicians = [
   "Dr. Bandana Kumari",
   "Dr. M. N. Jha",
   "Dr. Ansu Singh",
-  "Dr. Megha Anand",
   "Dr. Shweta Sangini",
 ];
 

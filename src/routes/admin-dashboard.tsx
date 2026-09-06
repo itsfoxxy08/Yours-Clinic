@@ -27,6 +27,12 @@ import {
   Clock,
   Pill,
   Paperclip,
+  Stethoscope,
+  UserPlus,
+  Upload,
+  Image as ImageIcon,
+  RotateCcw,
+  UserCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -44,6 +50,15 @@ import {
   updateOrderStatus,
   type MedicineOrder,
 } from "@/lib/order-service";
+import {
+  getClinicians,
+  addClinician,
+  updateClinician,
+  deleteClinician,
+  resetCliniciansToDefault,
+  resizeAndCropImage,
+  type Clinician,
+} from "@/lib/clinician-service";
 import { AdminLoginModal } from "@/components/AdminLoginModal";
 import { FollowUpSheetModal } from "@/components/FollowUpSheetModal";
 import { GoogleSheetsModal } from "@/components/GoogleSheetsModal";
@@ -58,8 +73,8 @@ export const Route = createFileRoute("/admin-dashboard")({
 function AdminDashboardPage() {
   const navigate = useNavigate();
 
-  // Active Admin View Tab ("patients" | "orders") - Defaults to orders
-  const [adminTab, setAdminTab] = useState<"patients" | "orders">("orders");
+  // Active Admin View Tab ("patients" | "orders" | "clinicians") - Defaults to orders
+  const [adminTab, setAdminTab] = useState<"patients" | "orders" | "clinicians">("orders");
 
   // Auth session check
   const [session, setSession] = useState<any>(null);
@@ -80,6 +95,106 @@ function AdminDashboardPage() {
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
   const [editingOrder, setEditingOrder] = useState<MedicineOrder | null>(null);
   const [updatingOrder, setUpdatingOrder] = useState(false);
+
+  // Clinicians / Workers Management State
+  const [clinicians, setClinicians] = useState<Clinician[]>([]);
+  const [isClinicianModalOpen, setIsClinicianModalOpen] = useState(false);
+  const [editingClinician, setEditingClinician] = useState<Clinician | null>(null);
+  const [clinicianForm, setClinicianForm] = useState({ name: "", reg: "", photo: "" });
+  const [imageProcessing, setImageProcessing] = useState(false);
+
+  useEffect(() => {
+    setClinicians(getClinicians());
+    const handleUpdate = (e: CustomEvent<Clinician[]>) => {
+      if (Array.isArray(e.detail)) {
+        setClinicians(e.detail);
+      } else {
+        setClinicians(getClinicians());
+      }
+    };
+    window.addEventListener("yc-clinicians-updated", handleUpdate as EventListener);
+    return () => {
+      window.removeEventListener("yc-clinicians-updated", handleUpdate as EventListener);
+    };
+  }, []);
+
+  const handleOpenAddClinician = () => {
+    setEditingClinician(null);
+    setClinicianForm({ name: "", reg: "BHMS (HOM)", photo: "" });
+    setIsClinicianModalOpen(true);
+  };
+
+  const handleOpenEditClinician = (c: Clinician) => {
+    setEditingClinician(c);
+    setClinicianForm({ name: c.name, reg: c.reg, photo: c.photo });
+    setIsClinicianModalOpen(true);
+  };
+
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImageProcessing(true);
+    try {
+      // Auto resize & crop to exact 4:5 aspect ratio (600x750) matching clinicians display
+      const resizedWebpUrl = await resizeAndCropImage(file, 600, 750, 0.85);
+      setClinicianForm((prev) => ({ ...prev, photo: resizedWebpUrl }));
+      toast.success("📷 Image uploaded & cropped to 4:5 portrait ratio!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to process image file. Please try another image.");
+    } finally {
+      setImageProcessing(false);
+    }
+  };
+
+  const handleClinicianSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!clinicianForm.name.trim()) {
+      toast.error("Please enter the clinician's full name.");
+      return;
+    }
+
+    if (!clinicianForm.reg.trim()) {
+      toast.error("Please enter qualification/role (e.g., BHMS (HOM)).");
+      return;
+    }
+
+    if (!clinicianForm.photo) {
+      toast.error("Please upload or provide a photo for the clinician.");
+      return;
+    }
+
+    if (editingClinician) {
+      const ok = updateClinician(editingClinician.id, clinicianForm);
+      if (ok) {
+        toast.success(`Updated details for ${clinicianForm.name}`);
+        setIsClinicianModalOpen(false);
+      } else {
+        toast.error("Failed to update clinician details.");
+      }
+    } else {
+      addClinician(clinicianForm);
+      toast.success(`Added new clinician ${clinicianForm.name} to homepage display!`);
+      setIsClinicianModalOpen(false);
+    }
+  };
+
+  const handleDeleteClinician = (id: string, name: string) => {
+    if (window.confirm(`Are you sure you want to remove ${name} from the homepage clinicians panel?`)) {
+      const ok = deleteClinician(id);
+      if (ok) {
+        toast.success(`Removed ${name} from clinicians list.`);
+      }
+    }
+  };
+
+  const handleResetClinicians = () => {
+    if (window.confirm("Restore default clinicians panel?")) {
+      resetCliniciansToDefault();
+      toast.success("Clinicians panel reset to default doctors.");
+    }
+  };
 
   // Date Filter State
   const [datePreset, setDatePreset] = useState<"all" | "today" | "yesterday" | "week" | "month" | "custom">("all");
@@ -540,7 +655,7 @@ function AdminDashboardPage() {
         </div>
 
         {/* Main Dashboard Navigation Tabs */}
-        <div className="flex border-b border-border/80 bg-card/40 rounded-2xl p-1.5 gap-2">
+        <div className="flex flex-col sm:flex-row border-b border-border/80 bg-card/40 rounded-2xl p-1.5 gap-2">
           <button
             onClick={() => setAdminTab("patients")}
             className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold transition-all ${
@@ -564,9 +679,110 @@ function AdminDashboardPage() {
             <Truck className="h-4 w-4" />
             <span>Track & Manage Medicine Orders ({orders.length})</span>
           </button>
+
+          <button
+            onClick={() => setAdminTab("clinicians")}
+            className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-bold transition-all ${
+              adminTab === "clinicians"
+                ? "bg-gold text-primary-foreground shadow-md font-extrabold"
+                : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+            }`}
+          >
+            <Stethoscope className="h-4 w-4" />
+            <span>Homepage Clinicians Panel ({clinicians.length})</span>
+          </button>
         </div>
 
-        {adminTab === "orders" ? (
+        {adminTab === "clinicians" ? (
+          /* MANAGE CLINICIANS & DOCTORS SECTION */
+          <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-md space-y-6 glide-in">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-border/60">
+              <div>
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <Stethoscope className="h-5 w-5 text-gold" />
+                  <span>Homepage Clinicians & Healthcare Team</span>
+                </h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Add new doctors/workers, edit credentials, remove staff, and upload 4:5 portrait photos for display on the homepage.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={handleResetClinicians}
+                  title="Reset panel to default doctors"
+                  className="press focus-gold flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground hover:border-gold/40 transition-colors"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  <span>Restore Defaults</span>
+                </button>
+
+                <button
+                  onClick={handleOpenAddClinician}
+                  className="press focus-gold flex items-center gap-2 rounded-xl bg-gold px-4 py-2.5 text-xs font-bold text-primary-foreground shadow-md hover:opacity-95 transition-all"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  <span>Add New Clinician / Doctor</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Clinicians Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {clinicians.map((c) => (
+                <div
+                  key={c.id}
+                  className="group relative flex flex-col rounded-3xl border border-border/80 bg-background/80 overflow-hidden shadow-xs hover:border-gold/50 transition-all"
+                >
+                  {/* Photo with 4:5 aspect ratio matching homepage */}
+                  <div className="aspect-[4/5] w-full overflow-hidden bg-muted/30 relative">
+                    <img
+                      src={c.photo}
+                      alt={c.name}
+                      className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute top-3 right-3 flex items-center gap-1 bg-card/85 backdrop-blur-md rounded-xl p-1 shadow-md border border-border/60">
+                      <button
+                        onClick={() => handleOpenEditClinician(c)}
+                        title="Edit clinician"
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-gold hover:bg-gold/15 transition-all"
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClinician(c.id, c.name)}
+                        title="Remove clinician"
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-500 hover:bg-rose-500/15 transition-all"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-5 text-center flex-1 flex flex-col justify-between">
+                    <div>
+                      <h4 className="font-bold text-base text-foreground">{c.name}</h4>
+                      <span className="gold-rule mx-auto mt-2 block max-w-[2.5rem]" />
+                      <p className="mt-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-sage">
+                        {c.reg}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-border/50 flex items-center justify-between text-xs">
+                      <button
+                        onClick={() => handleOpenEditClinician(c)}
+                        className="press w-full rounded-xl border border-gold/30 bg-gold/10 py-1.5 text-xs font-bold text-gold hover:bg-gold/20 transition-all flex items-center justify-center gap-1.5"
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                        <span>Edit Details</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : adminTab === "orders" ? (
           /* TRACK & MANAGE MEDICINE ORDERS SECTION */
           <div className="rounded-3xl border border-border/80 bg-card p-6 shadow-md space-y-6 glide-in">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-border/60">
@@ -1478,6 +1694,143 @@ function AdminDashboardPage() {
           setUploadModalOpen(true);
         }}
       />
+
+      {/* Add / Edit Clinician & Doctor Modal */}
+      {isClinicianModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-lg rounded-3xl border border-gold/30 bg-card p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-border/60 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gold/15 border border-gold/30 text-gold">
+                  <Stethoscope className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground">
+                    {editingClinician ? "Edit Clinician Details" : "Add New Clinician / Doctor"}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Manage clinician profile card shown on the homepage
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsClinicianModalOpen(false)}
+                className="rounded-xl p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleClinicianSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Full Name & Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={clinicianForm.name}
+                  onChange={(e) => setClinicianForm({ ...clinicianForm, name: e.target.value })}
+                  placeholder="e.g. Dr. Meera Sharma"
+                  className="w-full rounded-xl border border-border bg-background/60 px-3.5 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Qualification / Role / Registration *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={clinicianForm.reg}
+                  onChange={(e) => setClinicianForm({ ...clinicianForm, reg: e.target.value })}
+                  placeholder="e.g. BHMS (HOM), Founder, CEO, M.D. Homeopathy"
+                  className="w-full rounded-xl border border-border bg-background/60 px-3.5 py-2.5 text-sm text-foreground focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
+                  Upload Clinician Photo (Auto-Resized to 4:5 Portrait Ratio) *
+                </label>
+
+                <div className="mt-1 flex flex-col gap-3">
+                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gold/40 rounded-2xl cursor-pointer bg-background/50 hover:bg-gold/5 transition-all">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                      {imageProcessing ? (
+                        <div className="flex items-center gap-2 text-gold text-xs font-bold">
+                          <RefreshCw className="h-5 w-5 animate-spin" />
+                          <span>Scaling & Cropping Image to 4:5...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <Upload className="w-7 h-7 mb-2 text-gold" />
+                          <p className="text-xs text-foreground font-bold">
+                            Click to upload clinician photo
+                          </p>
+                          <p className="text-[0.68rem] text-muted-foreground mt-0.5">
+                            PNG, JPG, or WebP (Auto cropped to 600x750 4:5 aspect ratio)
+                          </p>
+                        </>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageFileChange}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {/* Live Card Preview */}
+                  {clinicianForm.photo && (
+                    <div className="p-3 border border-border/80 bg-background/70 rounded-2xl space-y-2">
+                      <span className="text-[0.65rem] font-bold uppercase tracking-wider text-muted-foreground block text-center">
+                        Live Homepage Card Preview
+                      </span>
+                      <div className="mx-auto max-w-[160px] rounded-2xl overflow-hidden border border-gold/40 shadow-md">
+                        <div className="aspect-[4/5] w-full overflow-hidden bg-primary-light">
+                          <img
+                            src={clinicianForm.photo}
+                            alt="Preview"
+                            className="h-full w-full object-cover object-top"
+                          />
+                        </div>
+                        <div className="p-3 text-center bg-card">
+                          <h5 className="font-bold text-xs text-foreground truncate">
+                            {clinicianForm.name || "Doctor Name"}
+                          </h5>
+                          <p className="text-[0.55rem] text-sage font-semibold uppercase tracking-wider mt-1 truncate">
+                            {clinicianForm.reg || "BHMS (HOM)"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsClinicianModalOpen(false)}
+                  className="flex-1 rounded-xl border border-border bg-background py-3 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={imageProcessing}
+                  className="flex-1 rounded-xl bg-gold py-3 text-xs font-bold text-primary-foreground shadow-md hover:opacity-95 disabled:opacity-50"
+                >
+                  {editingClinician ? "Save Clinician" : "Add to Homepage"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

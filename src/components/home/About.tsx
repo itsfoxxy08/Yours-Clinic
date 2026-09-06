@@ -1,25 +1,31 @@
+import { useState, useEffect } from "react";
 import { Reveal } from "@/components/Reveal";
 import { Microscope, BriefcaseMedical, ShieldCheck } from "lucide-react";
 import consultation from "@/assets/clinic/consultation.jpg";
-import sumitJha from "@/assets/team/sumit-jha.webp";
-import bandanaKumari from "@/assets/team/bandana-kumari.webp";
-import mnJha from "@/assets/team/mn-jha.webp";
-import anshuSingh from "@/assets/team/anshu-singh.webp";
-import meghaAnand from "@/assets/team/megha-anand.webp";
-import shwetaSangini from "@/assets/team/shweta-sangini.webp";
-
-const specialists = [
-  { photo: sumitJha, name: "Dr. Sumit Jha", reg: "Founder, CEO" },
-  { photo: bandanaKumari, name: "Dr. Bandana Kumari", reg: "BHMS (HOM)" },
-  { photo: mnJha, name: "Dr. M.N. Jha", reg: "BHMS (HOM)" },
-  { photo: anshuSingh, name: "Dr. Anshu Singh", reg: "BHMS (HOM)" },
-  { photo: meghaAnand, name: "Dr. Megha Anand", reg: "BHMS (HOM)" },
-  { photo: shwetaSangini, name: "Dr. Shweta Sangini", reg: "BHMS (HOM)" },
-];
-
-
+import { getClinicians, type Clinician } from "@/lib/clinician-service";
 
 export function About() {
+  const [specialists, setSpecialists] = useState<Clinician[]>([]);
+
+  useEffect(() => {
+    // Initial load
+    setSpecialists(getClinicians());
+
+    // Listen for live update events from Admin Dashboard
+    const handleUpdate = (e: CustomEvent<Clinician[]>) => {
+      if (Array.isArray(e.detail)) {
+        setSpecialists(e.detail);
+      } else {
+        setSpecialists(getClinicians());
+      }
+    };
+
+    window.addEventListener("yc-clinicians-updated", handleUpdate as EventListener);
+    return () => {
+      window.removeEventListener("yc-clinicians-updated", handleUpdate as EventListener);
+    };
+  }, []);
+
   return (
     <section id="about" className="px-5 py-28">
       <div className="mx-auto max-w-6xl">
@@ -29,7 +35,8 @@ export function About() {
               <img
                 src={consultation}
                 alt="A Yours Clinic homeopath in consultation with a patient"
-                loading="lazy" decoding="async"
+                loading="lazy"
+                decoding="async"
                 width={1280}
                 height={960}
                 className="h-full w-full object-cover"
@@ -103,20 +110,20 @@ export function About() {
             </h3>
             <span className="gold-rule mx-auto mt-6 block max-w-[7rem]" />
             <p className="mx-auto mt-6 max-w-xl text-sm leading-loose text-muted-foreground">
-              The six doctors who see patients at Yours Clinic every week.
+              The accredited doctors and healthcare specialists who see patients at Yours Clinic every week.
             </p>
           </div>
 
-
           <div className="mt-14 grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
             {specialists.map((d, i) => (
-              <Reveal key={d.name} delay={i * 90}>
+              <Reveal key={d.id || d.name} delay={i * 90}>
                 <article className="tactile ink-bleed group h-full overflow-hidden rounded-[2rem] bg-card/60 ring-1 ring-border/60 hover:ring-gold/50">
                   <div className="aspect-[4/5] w-full overflow-hidden bg-primary-light">
                     <img
                       src={d.photo}
                       alt={`${d.name} at Yours Clinic`}
-                      loading="lazy" decoding="async"
+                      loading="lazy"
+                      decoding="async"
                       width={768}
                       height={960}
                       className="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.04]"
@@ -133,7 +140,6 @@ export function About() {
               </Reveal>
             ))}
           </div>
-
         </Reveal>
       </div>
     </section>
