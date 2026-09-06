@@ -11,11 +11,19 @@ import { createServerFn } from "@tanstack/react-start";
 
 function getBrevoApiKey(): string {
   try {
+    const k = process.env["VITE_BREVO_API_KEY"];
+    if (k) return k;
+  } catch {}
+  try {
     const k = import.meta.env["VITE_BREVO_API_KEY"];
     if (k) return k;
   } catch {}
   try {
-    const k = process.env["VITE_BREVO_API_KEY"];
+    const k = process.env["VITE_BREVO_SMTP_KEY"];
+    if (k) return k;
+  } catch {}
+  try {
+    const k = import.meta.env["VITE_BREVO_SMTP_KEY"];
     if (k) return k;
   } catch {}
   try {
