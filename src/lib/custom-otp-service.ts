@@ -14,6 +14,7 @@
  */
 
 import { supabase, isSupabaseConfigured } from "./supabase";
+import { sendOTPEmailFn } from "./otp-email.functions";
 
 export interface OTPRequestResult {
   success: boolean;
@@ -120,72 +121,23 @@ async function recordAuditLog(
 }
 
 /**
- * Send OTP via Brevo Transactional Email API or Supabase Auth
+ * Send OTP via Brevo – routed through a TanStack Start server function
+ * so the API key stays on the server and CORS is never an issue.
  */
 async function sendOTPEmail(email: string, otp: string): Promise<boolean> {
-  const brevoApiKey =
-    (import.meta.env["VITE_BREVO_API_KEY"] as string) ||
-    ((typeof window !== "undefined" && (window as any).__BREVO_KEY__) || "");
-
-  const senderEmail = (import.meta.env["VITE_ADMIN_SENDER_EMAIL"] as string) || "choudharyvikas2008@gmail.com";
-
-  if (brevoApiKey) {
-    try {
-      const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-        method: "POST",
-        headers: {
-          accept: "application/json",
-          "api-key": brevoApiKey,
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          sender: {
-            name: "Yours-Clinic Admin Login",
-            email: senderEmail,
-          },
-          to: [
-            {
-              email: email,
-              name: "Admin User",
-            },
-          ],
-          subject: "Yours-Clinic Admin Login",
-          htmlContent: `
-            <div style="font-family: Arial, sans-serif; padding: 24px; background-color: #ffffff; color: #1e293b; border-radius: 8px; border: 1px solid #e2e8f0;">
-              <h2 style="color: #0f172a; margin-top: 0;">Yours-Clinic Admin Login</h2>
-              <p style="color: #334155; font-size: 15px;">Your One Time Password (OTP) for ADMIN LOGIN at Yours_Clinic is:</p>
-              <h1 style="letter-spacing: 6px; font-size: 36px; color: #0f172a; background-color: #f1f5f9; padding: 12px 20px; border-radius: 8px; display: inline-block; margin: 16px 0;">${otp}</h1>
-              <p style="color: #334155; font-size: 14px;">Enter this six-digit code to continue.</p>
-              <p style="color: #64748b; font-size: 13px;">This code expires shortly and can only be used once.</p>
-              <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">If you did not request this code, please ignore this email.</p>
-            </div>
-          `,
-        }),
-      });
-
-      if (response.ok) {
-        console.log("✅ Brevo Email OTP successfully dispatched to:", email);
-        return true;
-      } else {
-        const errData = await response.json().catch(() => ({}));
-        console.warn("Brevo API error response:", errData);
-      }
-    } catch (err) {
-      console.error("Brevo Email API dispatch failed:", err);
+  try {
+    const result = await sendOTPEmailFn({ data: { email, otp } });
+    if (result.ok) {
+      console.log("✅ Brevo OTP email dispatched via server function to:", email);
+      return true;
     }
+    console.warn("⚠️ Server function returned error:", result.error);
+  } catch (err) {
+    console.error("❌ sendOTPEmailFn call failed:", err);
   }
 
-  // Fallback to Supabase Auth OTP if native Supabase is active
-  if (isSupabaseConfigured()) {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { shouldCreateUser: true },
-    });
-    if (!error) return true;
-    console.warn("Supabase auth OTP request failed:", error.message);
-  }
-
-  console.log(`✉️ [DEV EMAIL SIMULATOR] Destination: ${email} | Security OTP: ${otp}`);
+  // Dev fallback: log to console if server function is unavailable
+  console.log(`✉️ [DEV FALLBACK] OTP for ${email} → ${otp}`);
   return true;
 }
 
