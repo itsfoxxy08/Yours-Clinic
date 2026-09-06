@@ -140,7 +140,7 @@ export async function fetchCliniciansFromSupabase(): Promise<Clinician[]> {
       .select("*")
       .order("created_at", { ascending: true });
 
-    if (!error && data && data.length > 0) {
+    if (!error && data) {
       const formatted: Clinician[] = data.map((item: any) => ({
         id: String(item.id),
         name: item.name,
@@ -150,12 +150,14 @@ export async function fetchCliniciansFromSupabase(): Promise<Clinician[]> {
       }));
 
       saveCliniciansLocal(formatted);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("yc-clinicians-updated", { detail: formatted }));
+      }
       return formatted;
-    } else if (!error && data && data.length === 0) {
-      // If table is empty, seed defaults into Supabase
-      await seedSupabaseClinicians(DEFAULT_CLINICIANS);
-      saveCliniciansLocal(DEFAULT_CLINICIANS);
-      return DEFAULT_CLINICIANS;
+    }
+
+    if (error) {
+      console.error("Supabase clinicians fetch error:", error.message);
     }
   } catch (err) {
     console.warn("Supabase clinicians fetch fallback to local:", err);
@@ -201,29 +203,11 @@ export function subscribeToCliniciansRealtime(
 }
 
 /**
- * Seed default clinicians into Supabase database table
- */
-async function seedSupabaseClinicians(list: Clinician[]) {
-  if (!isSupabaseConfigured()) return;
-  try {
-    await supabase.from("clinicians").upsert(
-      list.map((c) => ({
-        id: c.id,
-        name: c.name,
-        reg: c.reg,
-        photo: c.photo,
-        created_at: new Date().toISOString(),
-      }))
-    );
-  } catch (err) {
-    console.warn("Could not seed default clinicians to Supabase:", err);
-  }
-}
-
-/**
  * Add a new clinician (saves locally & syncs to Supabase Database & Storage)
  */
-export async function addClinician(data: { name: string; reg: string; photo: string }): Promise<Clinician> {
+export async function addClinician(
+  data: { name: string; reg: string; photo: string }
+): Promise<{ success: boolean; message: string; clinician?: Clinician }> {
   const id = `c-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 
   // Upload image to Supabase Storage if configured
@@ -250,76 +234,115 @@ export async function addClinician(data: { name: string; reg: string; photo: str
       ]);
       if (error) {
         console.error("Supabase clinician insert error:", error.message);
+        return {
+          success: false,
+          message: `Database Error: ${error.message}. Failed to save clinician to cloud database.`,
+        };
       }
-    } catch (err) {
-      console.error("Supabase clinician insert note:", err);
+    } catch (err: any) {
+      console.error("Supabase clinician insert exception:", err);
+      return {
+        success: false,
+        message: `Database Exception: ${err?.message || "Failed to save clinician."}`,
+      };
     }
   }
 
-  await fetchCliniciansFromSupabase();
-  return newClinician;
+  const fresh = await fetchCliniciansFromSupabase();
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("yc-clinicians-updated", { detail: fresh }));
+  }
+
+  return {
+    success: true,
+    message: "Clinician added successfully to central database and homepage display!",
+    clinician: newClinician,
+  };
 }
 
 /**
  * Update an existing clinician
  */
-export async function updateClinician(id: string, data: Partial<Omit<Clinician, "id">>): Promise<boolean> {
-  const current = getClinicians();
-  const idx = current.findIndex((c) => c.id === id);
-  if (idx === -1) return false;
-
-  const existing = current[idx];
-  if (!existing) return false;
-
-  let photoUrl = existing.photo;
-  if (data.photo !== undefined && data.photo !== existing.photo) {
+export async function updateClinician(
+  id: string,
+  data: Partial<Omit<Clinician, "id">>
+): Promise<{ success: boolean; message: string }> {
+  let photoUrl = data.photo;
+  if (data.photo !== undefined && !data.photo.startsWith("http")) {
     photoUrl = await uploadImageToSupabaseStorage(id, data.photo);
   }
 
-  const updatedItem: Clinician = {
-    ...existing,
-    name: data.name !== undefined ? data.name.trim() : existing.name,
-    reg: data.reg !== undefined ? data.reg.trim() : existing.reg,
-    photo: photoUrl,
-  };
-
   if (isSupabaseConfigured()) {
     try {
+      const updatePayload: any = {};
+      if (data.name !== undefined) updatePayload.name = data.name.trim();
+      if (data.reg !== undefined) updatePayload.reg = data.reg.trim();
+      if (photoUrl !== undefined) updatePayload.photo = photoUrl;
+      updatePayload.updated_at = new Date().toISOString();
+
       const { error } = await supabase
         .from("clinicians")
-        .update({
-          name: updatedItem.name,
-          reg: updatedItem.reg,
-          photo: updatedItem.photo,
-        })
+        .update(updatePayload)
         .eq("id", id);
+
       if (error) {
         console.error("Supabase clinician update error:", error.message);
+        return {
+          success: false,
+          message: `Database Update Error: ${error.message}`,
+        };
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Supabase clinician update note:", err);
+      return {
+        success: false,
+        message: `Database Exception: ${err?.message}`,
+      };
     }
   }
 
-  await fetchCliniciansFromSupabase();
-  return true;
+  const fresh = await fetchCliniciansFromSupabase();
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("yc-clinicians-updated", { detail: fresh }));
+  }
+
+  return { success: true, message: "Clinician updated successfully in central database!" };
 }
 
 /**
  * Delete a clinician by ID
  */
-export async function deleteClinician(id: string): Promise<boolean> {
+export async function deleteClinician(id: string): Promise<{ success: boolean; message: string }> {
   if (isSupabaseConfigured()) {
     try {
-      await supabase.from("clinicians").delete().eq("id", id);
+      const { error } = await supabase.from("clinicians").delete().eq("id", id);
+      if (error) {
+        console.error("Supabase clinician delete error:", error.message);
+        return {
+          success: false,
+          message: `Database Delete Error: ${error.message}`,
+        };
+      }
       await supabase.storage.from("clinician-photos").remove([`${id}.webp`, `${id}.png`, `${id}.jpg`]);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Supabase clinician delete note:", err);
+      return {
+        success: false,
+        message: `Database Exception: ${err?.message}`,
+      };
     }
   }
 
-  await fetchCliniciansFromSupabase();
-  return true;
+  const current = getClinicians();
+  const filtered = current.filter((c) => c.id !== id);
+  saveCliniciansLocal(filtered);
+
+  const fresh = await fetchCliniciansFromSupabase();
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("yc-clinicians-updated", { detail: fresh }));
+  }
+
+  return { success: true, message: "Clinician deleted permanently from central database." };
 }
 
 /**
@@ -331,13 +354,22 @@ export async function resetCliniciansToDefault(): Promise<Clinician[]> {
   if (isSupabaseConfigured()) {
     try {
       await supabase.from("clinicians").delete().neq("id", "0");
-      await seedSupabaseClinicians(DEFAULT_CLINICIANS);
+      await supabase.from("clinicians").upsert(
+        DEFAULT_CLINICIANS.map((c) => ({
+          id: c.id,
+          name: c.name,
+          reg: c.reg,
+          photo: c.photo,
+          created_at: new Date().toISOString(),
+        }))
+      );
     } catch (err) {
       console.warn("Supabase clinician reset note:", err);
     }
   }
 
-  return DEFAULT_CLINICIANS;
+  const fresh = await fetchCliniciansFromSupabase();
+  return fresh;
 }
 
 /**

@@ -183,25 +183,31 @@ function AdminDashboardPage() {
     }
 
     if (editingClinician) {
-      const ok = await updateClinician(editingClinician.id, clinicianForm);
-      if (ok) {
-        toast.success(`Updated details for ${clinicianForm.name}`);
+      const res = await updateClinician(editingClinician.id, clinicianForm);
+      if (res.success) {
+        toast.success(res.message);
         setIsClinicianModalOpen(false);
       } else {
-        toast.error("Failed to update clinician details.");
+        toast.error(res.message);
       }
     } else {
-      await addClinician(clinicianForm);
-      toast.success(`Added new clinician ${clinicianForm.name} to homepage display!`);
-      setIsClinicianModalOpen(false);
+      const res = await addClinician(clinicianForm);
+      if (res.success) {
+        toast.success(res.message);
+        setIsClinicianModalOpen(false);
+      } else {
+        toast.error(res.message);
+      }
     }
   };
 
   const handleDeleteClinician = async (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to remove ${name} from the homepage clinicians panel?`)) {
-      const ok = await deleteClinician(id);
-      if (ok) {
-        toast.success(`Removed ${name} from clinicians list.`);
+      const res = await deleteClinician(id);
+      if (res.success) {
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
       }
     }
   };
