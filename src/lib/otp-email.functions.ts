@@ -9,9 +9,15 @@
 
 import { createServerFn } from "@tanstack/react-start";
 
-// Read at module level — Vite replaces these at compile/dev time
-const BREVO_KEY = import.meta.env["VITE_BREVO_API_KEY"] as string | undefined;
-const SENDER = (import.meta.env["VITE_ADMIN_SENDER_EMAIL"] as string | undefined) ?? "yoursclinicnoreply@yahoo.com";
+function getEnvVar(name: string): string {
+  if (typeof process !== "undefined" && process.env && process.env[name]) {
+    return process.env[name]!;
+  }
+  if (typeof import.meta !== "undefined" && import.meta.env && import.meta.env[name]) {
+    return import.meta.env[name] as string;
+  }
+  return "";
+}
 
 export const sendOTPEmail = createServerFn({ method: "POST" })
   .validator((raw: unknown) => {
@@ -21,9 +27,11 @@ export const sendOTPEmail = createServerFn({ method: "POST" })
   })
   .handler(async ({ data }) => {
     const { email, otp } = data;
+    const apiKey = getEnvVar("VITE_BREVO_API_KEY") || getEnvVar("BREVO_API_KEY");
+    const senderEmail = getEnvVar("VITE_ADMIN_SENDER_EMAIL") || "yoursclinicnoreply@yahoo.com";
 
-    if (!BREVO_KEY) {
-      console.error("[sendOTPEmail] ❌ VITE_BREVO_API_KEY not available");
+    if (!apiKey) {
+      console.error("[sendOTPEmail] ❌ Brevo API key is missing from environment");
       return { ok: false as const, error: "missing_key" };
     }
 
@@ -33,11 +41,11 @@ export const sendOTPEmail = createServerFn({ method: "POST" })
       method: "POST",
       headers: {
         accept: "application/json",
-        "api-key": BREVO_KEY,
+        "api-key": apiKey,
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        sender: { name: "Yours-Clinic Admin", email: SENDER },
+        sender: { name: "Yours-Clinic Admin", email: senderEmail },
         to: [{ email, name: "Admin" }],
         subject: "Your Yours-Clinic Admin OTP Code",
         htmlContent: `
