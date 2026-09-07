@@ -79,8 +79,8 @@ export const Route = createFileRoute("/admin-dashboard")({
 function AdminDashboardPage() {
   const navigate = useNavigate();
 
-  // Active Admin View Tab ("patients" | "orders" | "clinicians") - Defaults to orders
-  const [adminTab, setAdminTab] = useState<"patients" | "orders" | "clinicians">("orders");
+  // Active Admin View Tab ("patients" | "orders" | "clinicians") - Defaults to patients
+  const [adminTab, setAdminTab] = useState<"patients" | "orders" | "clinicians">("patients");
 
   // Auth session check
   const [session, setSession] = useState<any>(null);
