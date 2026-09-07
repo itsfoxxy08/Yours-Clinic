@@ -12,6 +12,7 @@ import mnJha from "@/assets/team/mn-jha.webp";
 import anshuSingh from "@/assets/team/anshu-singh.webp";
 import shwetaSangini from "@/assets/team/shweta-sangini.webp";
 import { supabase, isSupabaseConfigured } from "./supabase";
+import { compressDataUrl } from "./image-compress";
 
 export interface Clinician {
   id: string;
@@ -80,13 +81,16 @@ export async function uploadImageToSupabaseStorage(id: string, base64Image: stri
   }
 
   try {
-    // Extract format & blob from data URL
-    const match = base64Image.match(/^data:(image\/\w+);base64,(.+)$/);
+    // ── Compress before uploading (max 800×1000 portrait, quality 0.78) ──
+    const compressed = await compressDataUrl(base64Image, { maxDimension: 1000, quality: 0.78 });
+
+    // Extract format & blob from compressed data URL
+    const match = compressed.match(/^data:(image\/\w+);base64,(.+)$/);
     if (!match || !match[1] || !match[2]) return base64Image;
 
     const mimeType = match[1];
     const base64Data = match[2];
-    const extension = mimeType.split("/")[1] || "webp";
+    const extension = mimeType === "image/webp" ? "webp" : (mimeType.split("/")[1] || "webp");
     const fileName = `${id}_${Date.now()}.${extension}`;
 
     // Convert base64 string to Blob

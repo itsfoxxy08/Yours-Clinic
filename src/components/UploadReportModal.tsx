@@ -9,8 +9,10 @@ import {
   RotateCcw,
   Sparkles,
   Paperclip,
+  Zap,
 } from "lucide-react";
 import { attachPatientReport, formatDate12Hour, type PatientRecord, type PatientReport } from "@/lib/patient-service";
+import { compressFile, compressDataUrl, formatBytes, estimateDataUrlBytes } from "@/lib/image-compress";
 import { toast } from "sonner";
 
 interface UploadReportModalProps {
@@ -32,6 +34,8 @@ export function UploadReportModal({
   const [fileDataUrl, setFileDataUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [compressing, setCompressing] = useState(false);
+  const [compressedSize, setCompressedSize] = useState<string | null>(null);
 
   // Camera State
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -40,8 +44,8 @@ export function UploadReportModal({
 
   if (!isOpen || !patient) return null;
 
-  // Handle File Input from Device
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle File Input from Device — compress images before storing
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -63,11 +67,34 @@ export function UploadReportModal({
       setTitle(file.name.replace(/\.[^/.]+$/, ""));
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setFileDataUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+
+    if (isPdf) {
+      // PDFs: just read as-is, no compression
+      const reader = new FileReader();
+      reader.onload = () => {
+        setFileDataUrl(reader.result as string);
+        setCompressedSize(null);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Images: compress before storing
+      setCompressing(true);
+      setCompressedSize(null);
+      try {
+        const compressed = await compressFile(file, { maxDimension: 1600, quality: 0.75 });
+        setFileDataUrl(compressed);
+        const sizeBytes = estimateDataUrlBytes(compressed);
+        setCompressedSize(formatBytes(sizeBytes));
+      } catch (err) {
+        // fallback: read original
+        const reader = new FileReader();
+        reader.onload = () => setFileDataUrl(reader.result as string);
+        reader.readAsDataURL(file);
+      } finally {
+        setCompressing(false);
+      }
+    }
   };
 
   // Start Camera
@@ -95,8 +122,8 @@ export function UploadReportModal({
     setIsCameraActive(false);
   };
 
-  // Take Snapshot from Camera
-  const capturePhoto = () => {
+  // Take Snapshot from Camera — compress immediately after capture
+  const capturePhoto = async () => {
     if (!videoRef.current) return;
     const canvas = document.createElement("canvas");
     canvas.width = videoRef.current.videoWidth || 1280;
@@ -105,14 +132,28 @@ export function UploadReportModal({
     if (!ctx) return;
 
     ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
-    setFileDataUrl(dataUrl);
+    const rawDataUrl = canvas.toDataURL("image/jpeg", 0.92);
+    stopCamera();
+
     setFileName(`Prescription_Snap_${Date.now()}.jpg`);
     if (!title) {
       setTitle(`Prescription Capture (${new Date().toLocaleDateString("en-IN")})`);
     }
-    stopCamera();
-    toast.success("📸 Photo captured successfully!");
+
+    setCompressing(true);
+    setCompressedSize(null);
+    try {
+      const compressed = await compressDataUrl(rawDataUrl, { maxDimension: 1600, quality: 0.75 });
+      setFileDataUrl(compressed);
+      const sizeBytes = estimateDataUrlBytes(compressed);
+      setCompressedSize(formatBytes(sizeBytes));
+      toast.success("📸 Photo captured & compressed!");
+    } catch {
+      setFileDataUrl(rawDataUrl);
+      toast.success("📸 Photo captured successfully!");
+    } finally {
+      setCompressing(false);
+    }
   };
 
   // Reset Form & Close
@@ -122,6 +163,8 @@ export function UploadReportModal({
     setFileDataUrl(null);
     setFileName("");
     setActiveSource("device");
+    setCompressedSize(null);
+    setCompressing(false);
     onClose();
   };
 
@@ -281,8 +324,21 @@ export function UploadReportModal({
             </div>
           )}
 
+          {/* Compressing indicator */}
+          {compressing && (
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 flex items-center gap-3 animate-pulse">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20">
+                <Zap className="h-5 w-5 text-amber-400 animate-spin" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-amber-400">Compressing image…</p>
+                <p className="text-[10px] text-muted-foreground">Optimising for fast upload</p>
+              </div>
+            </div>
+          )}
+
           {/* Captured / Selected Preview */}
-          {fileDataUrl && (
+          {!compressing && fileDataUrl && (
             <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 flex items-center gap-3">
               {fileDataUrl.startsWith("data:image") ? (
                 <img
@@ -297,13 +353,22 @@ export function UploadReportModal({
               )}
               <div className="flex-1 overflow-hidden">
                 <p className="text-xs font-bold text-foreground truncate">{fileName}</p>
-                <p className="text-[10px] text-emerald-500 font-semibold">Ready to attach to patient profile</p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-[10px] text-emerald-500 font-semibold">Ready to attach to patient profile</p>
+                  {compressedSize && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-bold text-emerald-400 border border-emerald-500/30">
+                      <Zap className="h-2.5 w-2.5" />
+                      Compressed · {compressedSize}
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => {
                   setFileDataUrl(null);
                   setFileName("");
+                  setCompressedSize(null);
                 }}
                 className="text-muted-foreground hover:text-rose-500"
               >
@@ -363,11 +428,11 @@ export function UploadReportModal({
 
             <button
               type="submit"
-              disabled={uploading || !fileDataUrl}
+              disabled={uploading || compressing || !fileDataUrl}
               className="press focus-gold rounded-xl bg-primary px-6 py-2.5 text-xs font-bold text-primary-foreground shadow-lg hover:opacity-95 disabled:opacity-50 flex items-center gap-2"
             >
               <CheckCircle2 className="h-4 w-4 text-gold-soft" />
-              <span>{uploading ? "Uploading..." : "Save to Patient Profile"}</span>
+              <span>{uploading ? "Uploading..." : compressing ? "Compressing..." : "Save to Patient Profile"}</span>
             </button>
           </div>
         </form>
