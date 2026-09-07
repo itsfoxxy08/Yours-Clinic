@@ -68,6 +68,7 @@ import { FollowUpSheetModal } from "@/components/FollowUpSheetModal";
 import { GoogleSheetsModal } from "@/components/GoogleSheetsModal";
 import { UploadReportModal } from "@/components/UploadReportModal";
 import { PatientHistoryModal } from "@/components/PatientHistoryModal";
+import { ViewPrescriptionModal } from "@/components/ViewPrescriptionModal";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 export const Route = createFileRoute("/admin-dashboard")({
@@ -230,6 +231,8 @@ function AdminDashboardPage() {
   const [googleSheetsModalOpen, setGoogleSheetsModalOpen] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [selectedPatientForUpload, setSelectedPatientForUpload] = useState<PatientRecord | null>(null);
+  const [viewPrescriptionModalOpen, setViewPrescriptionModalOpen] = useState(false);
+  const [selectedPatientForViewPrescription, setSelectedPatientForViewPrescription] = useState<PatientRecord | null>(null);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [selectedPhoneForHistory, setSelectedPhoneForHistory] = useState("");
   const [editingRecord, setEditingRecord] = useState<PatientRecord | null>(null);
@@ -1371,6 +1374,22 @@ function AdminDashboardPage() {
                         </td>
                         <td className="py-4 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            {patient.reports && patient.reports.length > 0 ? (
+                              <button
+                                onClick={() => {
+                                  setSelectedPatientForViewPrescription(patient);
+                                  setViewPrescriptionModalOpen(true);
+                                }}
+                                title="View Attached Prescriptions & Reports for this Patient Record"
+                                className="press flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-gold/50 bg-gold/15 text-gold hover:bg-gold/30 text-xs font-bold transition-all shadow-xs"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                                <span>
+                                  {patient.reports.length} Rx
+                                </span>
+                              </button>
+                            ) : null}
+
                             <button
                               onClick={() => {
                                 setSelectedPatientForUpload(patient);
@@ -1484,6 +1503,39 @@ function AdminDashboardPage() {
                       </span>
                       {patient.reason}
                     </div>
+
+                    {/* Prescription Section */}
+                    {patient.reports && patient.reports.length > 0 ? (
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-gold/10 border border-gold/30">
+                        <div className="flex items-center gap-2">
+                          <Paperclip className="h-4 w-4 text-gold" />
+                          <span className="text-xs font-bold text-foreground">
+                            {patient.reports.length} Prescription{patient.reports.length === 1 ? "" : "s"} Attached
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedPatientForViewPrescription(patient);
+                            setViewPrescriptionModalOpen(true);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-gold text-slate-950 text-xs font-extrabold flex items-center gap-1 shadow-xs hover:bg-gold-soft"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          <span>View</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setSelectedPatientForUpload(patient);
+                          setUploadModalOpen(true);
+                        }}
+                        className="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-xl border border-dashed border-gold/40 text-gold text-xs font-bold hover:bg-gold/10 transition-colors"
+                      >
+                        <Paperclip className="h-3.5 w-3.5" />
+                        <span>Attach Prescription / Report</span>
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1786,6 +1838,27 @@ function AdminDashboardPage() {
         onOpenUpload={(patientToUpload) => {
           setSelectedPatientForUpload(patientToUpload);
           setUploadModalOpen(true);
+        }}
+      />
+
+      {/* View Prescriptions & Medical Reports Modal */}
+      <ViewPrescriptionModal
+        isOpen={viewPrescriptionModalOpen}
+        onClose={() => setViewPrescriptionModalOpen(false)}
+        patient={selectedPatientForViewPrescription}
+        onOpenUpload={(patientToUpload) => {
+          setSelectedPatientForUpload(patientToUpload);
+          setUploadModalOpen(true);
+        }}
+        onRefresh={async () => {
+          const updated = await getPatientRecords(true);
+          setRecords(updated.data);
+          if (selectedPatientForViewPrescription) {
+            const fresh = updated.data.find((r) => r.id === selectedPatientForViewPrescription.id);
+            if (fresh) {
+              setSelectedPatientForViewPrescription(fresh);
+            }
+          }
         }}
       />
 
