@@ -655,42 +655,6 @@ function AdminDashboardPage() {
       </div>
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm hover:shadow transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Total Patients
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gold/15 text-gold">
-                <Users className="h-4 w-4" />
-              </div>
-            </div>
-            <p className="mt-3 text-3xl font-extrabold text-foreground">
-              {records.length}
-            </p>
-            <p className="mt-1 text-[0.7rem] text-muted-foreground">
-              Stored in Supabase Database
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm hover:shadow transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Urgent / Follow-ups
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/15 text-amber-500">
-                <Sparkles className="h-4 w-4" />
-              </div>
-            </div>
-            <p className="mt-3 text-3xl font-extrabold text-foreground">
-              {records.filter((r) => r.status === "Urgent" || r.status === "Follow-up").length}
-            </p>
-            <p className="mt-1 text-[0.7rem] text-muted-foreground">
-              Requires special consultation
-            </p>
-          </div>
-        </div>
 
         {/* Main Dashboard Navigation Tabs */}
         <div className="flex flex-col sm:flex-row border-b border-border/80 bg-card/40 rounded-2xl p-1.5 gap-2">
