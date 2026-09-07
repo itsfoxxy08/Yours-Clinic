@@ -656,7 +656,7 @@ function AdminDashboardPage() {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm hover:shadow transition-all">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -671,41 +671,6 @@ function AdminDashboardPage() {
             </p>
             <p className="mt-1 text-[0.7rem] text-muted-foreground">
               Stored in Supabase Database
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm hover:shadow transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Database Status
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-500">
-                <Database className="h-4 w-4" />
-              </div>
-            </div>
-            <p className="mt-3 text-lg font-bold text-emerald-500 flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4" />
-              {isSupabaseConfigured() ? "Supabase Connected" : "Local Sync Mode"}
-            </p>
-            <p className="mt-1 text-[0.7rem] text-muted-foreground">
-              Real-time patient record storage
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm hover:shadow transition-all">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Excel Exports
-              </span>
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-500/15 text-blue-500">
-                <FileSpreadsheet className="h-4 w-4" />
-              </div>
-            </div>
-            <p className="mt-3 text-lg font-bold text-foreground">
-              Ready (.xlsx / .csv)
-            </p>
-            <p className="mt-1 text-[0.7rem] text-muted-foreground">
-              Instant download & Google Sheets
             </p>
           </div>
 
