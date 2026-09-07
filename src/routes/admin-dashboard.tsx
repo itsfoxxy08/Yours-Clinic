@@ -33,6 +33,7 @@ import {
   Image as ImageIcon,
   RotateCcw,
   UserCheck,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
