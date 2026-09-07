@@ -168,6 +168,7 @@ export async function requestOTP(email: string): Promise<OTPRequestResult> {
   const REGISTERED_ADMIN_EMAILS = [
     "choudharyvikas2008@gmail.com",
     "dr.sumitonsummit@gmail.com",
+    "infopetrolube@gmail.com",
   ];
   let isRegistered = REGISTERED_ADMIN_EMAILS.includes(cleanEmail);
 

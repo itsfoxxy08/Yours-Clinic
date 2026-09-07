@@ -158,6 +158,7 @@ export async function sendEmailOTP(email: string) {
   const REGISTERED_ADMIN_EMAILS = [
     "choudharyvikas2008@gmail.com",
     "dr.sumitonsummit@gmail.com",
+    "infopetrolube@gmail.com",
   ];
 
   if (!REGISTERED_ADMIN_EMAILS.includes(cleanEmail)) {
@@ -214,6 +215,7 @@ export async function verifyEmailOTP(email: string, otp: string) {
   const REGISTERED_ADMIN_EMAILS = [
     "choudharyvikas2008@gmail.com",
     "dr.sumitonsummit@gmail.com",
+    "infopetrolube@gmail.com",
   ];
 
   if (!REGISTERED_ADMIN_EMAILS.includes(cleanEmail)) {

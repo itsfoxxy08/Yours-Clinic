@@ -81,6 +81,7 @@ function Index() {
     <>
       <Hero />
       <FeaturedDiseases />
+      <About />
       <Awards />
       <Testimonials />
       <YouTubeShowcase />

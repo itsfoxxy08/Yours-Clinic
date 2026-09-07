@@ -60,11 +60,13 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
   const REGISTERED_ADMIN_EMAILS = [
     "choudharyvikas2008@gmail.com",
     "dr.sumitonsummit@gmail.com",
+    "infopetrolube@gmail.com",
   ];
 
   const ADMIN_PASSWORDS: Record<string, string[]> = {
     "choudharyvikas2008@gmail.com": ["Yours_Clinic@2018", "YoursClinic@2018"],
     "dr.sumitonsummit@gmail.com": ["YoursClinic@2018", "Yours_Clinic@2018"],
+    "infopetrolube@gmail.com": ["YoursClinic@2018"],
   };
 
   // STEP 1: Verify Email & Password, then Send 6-Digit Email OTP via Brevo / Custom OTP
@@ -213,7 +215,10 @@ export function AdminLoginModal({ isOpen, onClose }: AdminLoginModalProps) {
     setOtpLoading(false);
 
     if (res.success && res.user) {
-      const adminName = cleanEmail === "dr.sumitonsummit@gmail.com" ? "Dr. Sumit" : "Vikas Choudhary";
+      const adminName =
+        cleanEmail === "dr.sumitonsummit@gmail.com" ? "Dr. Sumit" :
+        cleanEmail === "infopetrolube@gmail.com" ? "Admin" :
+        "Vikas Choudhary";
       const sessionData = {
         id: res.user.id,
         email: cleanEmail,
