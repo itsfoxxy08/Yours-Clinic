@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, MoveRight, ShieldCheck } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
-import consultation from "@/assets/clinic/consultation.jpg";
+import consultation from "@/assets/clinic/dr-sumit-jha-consultation.png";
 
 const parts = [
   { num: "I", label: "PART ONE", title: "Triage Symptoms", hash: "treatment" },
@@ -68,7 +68,6 @@ export function Hero() {
             </Link>
           </div>
 
-
           <div className="mt-11 grid max-w-lg grid-cols-3 divide-x divide-border border-y border-border">
             {[
               { v: "18k+", l: "Consultations" },
@@ -83,7 +82,6 @@ export function Hero() {
               </div>
             ))}
           </div>
-
         </Reveal>
 
         <Reveal delay={150}>
@@ -93,13 +91,13 @@ export function Hero() {
             </span>
             <img
               src={consultation}
-              alt="A Yours Clinic homeopath listening to a patient during a consultation"
+              alt="Dr. Sumit Jha in consultation with a patient at Yours Clinic"
               loading="eager"
               fetchPriority="high"
               decoding="async"
               width={1280}
               height={960}
-              className="mb-7 h-52 w-full rounded-[1.75rem] bg-primary-light object-cover object-[50%_45%] ring-1 ring-gold/25"
+              className="mb-7 h-52 w-full rounded-[1.75rem] bg-primary-light object-cover object-[50%_30%] ring-1 ring-gold/25"
             />
 
             <span className="eyebrow">The Triage Panel</span>

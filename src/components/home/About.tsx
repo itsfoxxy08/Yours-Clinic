@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Reveal } from "@/components/Reveal";
 import { Microscope, BriefcaseMedical, ShieldCheck } from "lucide-react";
-import consultation from "@/assets/clinic/consultation.jpg";
+import consultation from "@/assets/clinic/dr-sumit-jha-consultation.png";
 import {
   getClinicians,
   fetchCliniciansFromSupabase,
@@ -61,12 +61,12 @@ export function About() {
             <div className="tactile relative overflow-hidden rounded-[2.5rem] ring-1 ring-gold/25">
               <img
                 src={consultation}
-                alt="A Yours Clinic homeopath in consultation with a patient"
+                alt="Dr. Sumit Jha in consultation with a patient at Yours Clinic"
                 loading="lazy"
                 decoding="async"
                 width={1280}
                 height={960}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover object-[50%_30%]"
               />
               <div className="absolute bottom-5 left-5 right-5 rounded-2xl bg-card/85 px-5 py-4 backdrop-blur-md">
                 <p className="text-[0.62rem] font-extrabold uppercase tracking-[0.2em] text-gold">
