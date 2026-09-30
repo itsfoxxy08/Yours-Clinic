@@ -1,42 +1,33 @@
 import { useCallback, useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Quote, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Quote, ShieldCheck, Star } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
-import p1 from "@/assets/patients/p1.jpg";
-import p2 from "@/assets/patients/p2.jpg";
-import p3 from "@/assets/patients/p3.jpg";
 
 const stories = [
   {
-    photo: p1,
     name: "Manish Singh",
-    meta: "Chronic illness • JustDial review",
+    topic: "Chronic illness",
     quote:
       "Yours Clinic is best. I have used the medicine from Dr. Sumit sir for many issues — he is miraculous. I have seen several patients in my locality and family who got their treatment done by sir for fatal diseases and they are enjoying their life. Thanks to the whole Yours Clinic team for support, diet advice and care.",
   },
   {
-    photo: p2,
     name: "Azad Ali Khan",
-    meta: "Excellent treatment • JustDial review",
+    topic: "Excellent treatment",
     quote:
       "I had a great experience at Yours Clinic! The doctors and physiotherapists are very kind and helpful. They listened to my problems and gave me excellent treatment. I felt better after just a few visits. The staff is friendly and the place is clean. I highly recommend Yours Clinic for anyone needing good care!",
   },
   {
-    photo: p3,
     name: "Manish Choudhary",
-    meta: "Speedy recovery • JustDial review",
+    topic: "Speedy recovery",
     quote:
       "Excellent doctor with great humanity — I highly recommend him to everyone. I have not yet met any other doctor like him, who takes so much personal care of the patients.",
   },
   {
-    photo: p1,
     name: "OM",
-    meta: "Personalised care • JustDial review",
+    topic: "Personalised care",
     quote:
       "Yours Clinic is truly a gem for anyone seeking medical assistance. The doctors are not only highly skilled but also incredibly compassionate. My recovery was remarkably speedy, thanks to their personalised treatment plans and attentive care.",
   },
 ];
-
-
 
 export function Testimonials() {
   const [i, setI] = useState(0);
@@ -60,42 +51,46 @@ export function Testimonials() {
         <Reveal className="text-center">
           <span className="eyebrow">Patient Stories</span>
           <h2 className="mt-6 text-[2.4rem] leading-[1.08] tracking-[-0.02em] text-foreground md:text-5xl">
-            Real people. Measured recoveries.
+            Real people. Real recoveries.
           </h2>
           <span className="gold-rule mx-auto mt-7 block max-w-[7rem]" />
+          <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-muted-foreground">
+            Verified patient reviews from JustDial, shared word for word.
+          </p>
         </Reveal>
 
         <Reveal delay={120} className="mt-12">
-          <div className="surface-soft relative overflow-hidden rounded-[2.5rem] p-8 md:p-12">
+          <div className="surface-soft relative overflow-hidden rounded-[2.5rem] px-7 py-12 md:px-16 md:py-16">
             <Quote className="pointer-events-none absolute -right-2 -top-3 h-28 w-28 text-gold/10" />
 
             <div
               key={i}
+              aria-live="polite"
               className={dir === 1 ? "slide-in-right" : "slide-in-left"}
             >
-              <div className="flex flex-col items-center gap-7 md:flex-row md:items-start">
-                <img
-                  src={s.photo}
-                  alt={`${s.name}, patient at Yours Clinic`}
-                  loading="lazy" decoding="async"
-                  width={640}
-                  height={640}
-                  className="h-24 w-24 shrink-0 rounded-full object-cover ring-2 ring-gold/40"
-                />
-                <div className="min-w-0 text-center md:text-left">
-                  <div className="flex justify-center gap-1 md:justify-start">
-                    {Array.from({ length: 5 }).map((_, k) => (
-                      <Star key={k} className="h-4 w-4 fill-gold text-gold" />
-                    ))}
-                  </div>
-                  <blockquote className="mt-5 font-serif text-xl leading-relaxed text-foreground md:text-[1.6rem] md:leading-[1.5]">
-                    &ldquo;{s.quote}&rdquo;
-                  </blockquote>
-                  <p className="mt-6 font-serif text-lg text-sage">{s.name}</p>
-                  <p className="mt-1 text-[0.65rem] font-extrabold uppercase tracking-[0.18em] text-muted-foreground">
-                    {s.meta}
-                  </p>
+              <div className="flex flex-col items-center text-center">
+                <div className="flex justify-center gap-1.5">
+                  {Array.from({ length: 5 }).map((_, k) => (
+                    <Star key={k} className="h-4 w-4 fill-gold text-gold" />
+                  ))}
                 </div>
+
+                <blockquote className="mt-7 max-w-3xl font-serif text-[1.35rem] leading-[1.6] text-foreground md:text-[1.75rem] md:leading-[1.55]">
+                  &ldquo;{s.quote}&rdquo;
+                </blockquote>
+
+                <span className="mt-8 h-px w-16 bg-border" />
+
+                <p className="mt-6 flex items-center gap-2 font-serif text-xl text-sage">
+                  {s.name}
+                  <ShieldCheck
+                    className="h-4 w-4 text-sage/70"
+                    aria-label="Verified review"
+                  />
+                </p>
+                <p className="mt-1.5 text-[0.65rem] font-extrabold uppercase tracking-[0.18em] text-muted-foreground">
+                  {s.topic} &bull; JustDial review
+                </p>
               </div>
             </div>
 
