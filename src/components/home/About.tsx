@@ -1,6 +1,6 @@
+import { useState, useEffect } from "react";
 import { Reveal } from "@/components/Reveal";
 import { Microscope, BriefcaseMedical, ShieldCheck } from "lucide-react";
-<<<<<<< HEAD
 import consultation from "@/assets/clinic/dr-sumit-jha-consultation.png";
 import {
   getClinicians,
@@ -8,28 +8,51 @@ import {
   subscribeToCliniciansRealtime,
   type Clinician,
 } from "@/lib/clinician-service";
-=======
-import consultation from "@/assets/clinic/consultation.jpg";
-import sumitJha from "@/assets/team/sumit-jha.png.asset.json";
-import bandanaKumari from "@/assets/team/bandana-kumari.png.asset.json";
-import mnJha from "@/assets/team/mn-jha.png.asset.json";
-import ansuSingh from "@/assets/team/ansu-singh.png.asset.json";
-import meghaAnand from "@/assets/team/megha-anand.webp.asset.json";
-import shwetaSangini from "@/assets/team/shweta-sangini.png.asset.json";
-
-const specialists = [
-  { photo: sumitJha.url, name: "Dr. Sumit Jha", reg: "Founder, CEO" },
-  { photo: bandanaKumari.url, name: "Dr. Bandana Kumari", reg: "BHMS (HOM)" },
-  { photo: mnJha.url, name: "Dr. M.N. Jha", reg: "BHMS (HOM)" },
-  { photo: ansuSingh.url, name: "Dr. Anshu Singh", reg: "BHMS (HOM)" },
-  { photo: meghaAnand.url, name: "Dr. Megha Anand", reg: "BHMS (HOM)" },
-  { photo: shwetaSangini.url, name: "Dr. Shweta Sangini", reg: "BHMS (HOM)" },
-];
-
-
->>>>>>> 68f93a1683155409107afa8491675051e44a8571
 
 export function About() {
+  // Synchronously initialize state with existing clinicians from local storage/defaults
+  const [specialists, setSpecialists] = useState<Clinician[]>(getClinicians);
+
+  useEffect(() => {
+    // 1. Initial fetch from Supabase cloud database
+    fetchCliniciansFromSupabase().then((data) => {
+      if (data && data.length > 0) {
+        setSpecialists(data);
+      }
+    });
+
+    // 2. Subscribe to Supabase Realtime live postgres changes across all devices
+    const unsubscribeRealtime = subscribeToCliniciansRealtime((updated) => {
+      if (updated && updated.length > 0) {
+        setSpecialists(updated);
+      }
+    });
+
+    // 3. Listen for same-window live updates & storage events
+    const handleCustomUpdate = (e: CustomEvent<Clinician[]>) => {
+      if (Array.isArray(e.detail) && e.detail.length > 0) {
+        setSpecialists(e.detail);
+      } else {
+        setSpecialists(getClinicians());
+      }
+    };
+
+    const handleStorageUpdate = (e: StorageEvent) => {
+      if (e.key === "yc_clinicians_data_v1") {
+        setSpecialists(getClinicians());
+      }
+    };
+
+    window.addEventListener("yc-clinicians-updated", handleCustomUpdate as EventListener);
+    window.addEventListener("storage", handleStorageUpdate);
+
+    return () => {
+      unsubscribeRealtime();
+      window.removeEventListener("yc-clinicians-updated", handleCustomUpdate as EventListener);
+      window.removeEventListener("storage", handleStorageUpdate);
+    };
+  }, []);
+
   return (
     <section id="about" className="px-5 py-28">
       <div className="mx-auto max-w-6xl">
@@ -38,14 +61,9 @@ export function About() {
             <div className="tactile relative overflow-hidden rounded-[2.5rem] ring-1 ring-gold/25">
               <img
                 src={consultation}
-<<<<<<< HEAD
                 alt="Dr. Sumit Jha in consultation with a patient at Yours Clinic"
                 loading="lazy"
                 decoding="async"
-=======
-                alt="A Yours Clinic homeopath in consultation with a patient"
-                loading="lazy" decoding="async"
->>>>>>> 68f93a1683155409107afa8491675051e44a8571
                 width={1280}
                 height={960}
                 className="h-full w-full object-cover object-[50%_30%]"
@@ -119,20 +137,20 @@ export function About() {
             </h3>
             <span className="gold-rule mx-auto mt-6 block max-w-[7rem]" />
             <p className="mx-auto mt-6 max-w-xl text-sm leading-loose text-muted-foreground">
-              The six doctors who see patients at Yours Clinic every week.
+              The accredited doctors and healthcare specialists who see patients at Yours Clinic every week.
             </p>
           </div>
 
-
           <div className="mt-14 grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-            {specialists.map((d, i) => (
-              <Reveal key={d.name} delay={i * 90}>
+            {(specialists || []).map((d, i) => (
+              <Reveal key={d.id || d.name} delay={i * 90}>
                 <article className="tactile ink-bleed group h-full overflow-hidden rounded-[2rem] bg-card/60 ring-1 ring-border/60 hover:ring-gold/50">
                   <div className="aspect-[4/5] w-full overflow-hidden bg-primary-light">
                     <img
                       src={d.photo}
                       alt={`${d.name} at Yours Clinic`}
-                      loading="lazy" decoding="async"
+                      loading="lazy"
+                      decoding="async"
                       width={768}
                       height={960}
                       className="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.04]"
@@ -149,7 +167,6 @@ export function About() {
               </Reveal>
             ))}
           </div>
-
         </Reveal>
       </div>
     </section>
