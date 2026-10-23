@@ -89,8 +89,8 @@ function DiseaseDetail() {
     .slice(0, 3);
 
   return (
-    <div className="px-5 py-16">
-      <article className="mx-auto max-w-4xl">
+    <div className="px-5 sm:px-8 xl:px-12 py-16">
+      <article className="mx-auto max-w-5xl xl:max-w-6xl">
         <Link
           to="/diseases"
           className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-primary"

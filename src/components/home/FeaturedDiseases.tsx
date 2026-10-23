@@ -10,9 +10,9 @@ export function FeaturedDiseases() {
   return (
     <section
       id="diseases"
-      className="sanctuary rule-grid bg-card/25 px-5 py-32"
+      className="sanctuary rule-grid bg-card/25 px-5 sm:px-8 xl:px-12 py-32"
     >
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-7xl xl:max-w-[1400px]">
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="eyebrow">Healthcare Guide</span>
           <h2 className="mt-6 text-[2.6rem] leading-[1.08] tracking-[-0.02em] text-foreground md:text-6xl">

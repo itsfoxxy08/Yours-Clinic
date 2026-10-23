@@ -24,8 +24,8 @@ export function YouTubeShowcase() {
   const rest = videos.slice(1, 4);
 
   return (
-    <section id="videos" className="border-t border-border px-5 py-24">
-      <div className="mx-auto max-w-6xl">
+    <section id="videos" className="border-t border-border px-5 sm:px-8 xl:px-12 py-24">
+      <div className="mx-auto max-w-7xl xl:max-w-[1400px]">
         <Reveal className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
           <div className="max-w-2xl">
             <span className="eyebrow text-sage">On YouTube</span>

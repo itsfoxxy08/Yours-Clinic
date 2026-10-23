@@ -61,7 +61,7 @@ export function SiteHeader() {
           Skip to main content
         </a>
         <div className="hidden border-b border-border/60 bg-card/70 backdrop-blur-sm md:block">
-          <div className="mx-auto flex h-9 max-w-6xl items-center justify-between px-5">
+          <div className="mx-auto flex h-9 max-w-7xl xl:max-w-[1400px] items-center justify-between px-5 sm:px-8 xl:px-12">
             {/* Left: label + social icons grouped together */}
             <div className="flex items-center gap-3">
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -89,7 +89,7 @@ export function SiteHeader() {
             </div>
           </div>
         </div>
-        <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between gap-4 px-5">
+        <div className="mx-auto flex h-[72px] max-w-7xl xl:max-w-[1400px] items-center justify-between gap-4 px-5 sm:px-8 xl:px-12">
           <Link
             to="/"
             className="focus-gold flex items-center"

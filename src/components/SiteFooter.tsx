@@ -6,7 +6,7 @@ import { SocialLinks } from "@/components/SocialLinks";
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-card">
-      <div className="mx-auto grid max-w-6xl gap-12 px-5 py-16 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-7xl xl:max-w-[1400px] gap-12 px-5 sm:px-8 xl:px-12 py-16 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <img
             src={logoAsset}
@@ -89,8 +89,8 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <div className="border-t border-border px-5 py-6">
-        <p className="mx-auto max-w-6xl text-xs text-muted-foreground">
+      <div className="border-t border-border px-5 sm:px-8 xl:px-12 py-6">
+        <p className="mx-auto max-w-7xl xl:max-w-[1400px] text-xs text-muted-foreground">
           © {new Date().getFullYear()} Yours Clinic. Information on this site is
           educational and does not replace a personal consultation.
         </p>

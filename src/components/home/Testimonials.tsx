@@ -46,8 +46,8 @@ export function Testimonials() {
   const s = stories[i]!;
 
   return (
-    <section id="stories" className="sanctuary px-5 py-28">
-      <div className="mx-auto max-w-5xl">
+    <section id="stories" className="sanctuary px-5 sm:px-8 xl:px-12 py-28">
+      <div className="mx-auto max-w-7xl xl:max-w-[1400px]">
         <Reveal className="text-center">
           <span className="eyebrow">Patient Stories</span>
           <h2 className="mt-6 text-[2.4rem] leading-[1.08] tracking-[-0.02em] text-foreground md:text-5xl">

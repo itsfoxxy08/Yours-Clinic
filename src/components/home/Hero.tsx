@@ -11,8 +11,8 @@ const parts = [
 
 export function Hero() {
   return (
-    <section id="home" className="sanctuary paper-grain relative px-5 pb-20 pt-16 md:pt-24">
-      <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
+    <section id="home" className="sanctuary paper-grain relative px-5 sm:px-8 xl:px-12 pb-20 pt-16 md:pt-24">
+      <div className="mx-auto grid max-w-7xl xl:max-w-[1400px] items-center gap-10 lg:gap-16 lg:grid-cols-[1.1fr_0.9fr]">
         <Reveal>
           <h1 className="display-xl text-foreground">
             Your health journey,{" "}
@@ -36,7 +36,7 @@ export function Hero() {
             </em>
           </h1>
 
-          <div className="mt-8 max-w-xl border-l-2 border-gold/40 pl-6">
+          <div className="mt-8 max-w-2xl border-l-2 border-gold/40 pl-6">
             <p className="text-base leading-relaxed text-muted-foreground">
               You have probably thought about holistic healing and natural wellness.
               The chronic concerns, the symptoms you can't quite resolve, the state of
@@ -97,7 +97,7 @@ export function Hero() {
               decoding="async"
               width={1280}
               height={960}
-              className="mb-7 h-52 w-full rounded-[1.75rem] bg-primary-light object-cover object-[50%_30%] ring-1 ring-gold/25"
+              className="mb-7 h-52 md:h-60 xl:h-64 w-full rounded-[1.75rem] bg-primary-light object-cover object-[50%_30%] ring-1 ring-gold/25"
             />
 
             <span className="eyebrow">The Triage Panel</span>

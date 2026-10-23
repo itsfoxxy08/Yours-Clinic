@@ -77,8 +77,8 @@ function DiseasesIndex() {
   }, [query, category]);
 
   return (
-    <div className="px-5 py-20">
-      <div className="mx-auto max-w-6xl">
+    <div className="px-5 sm:px-8 xl:px-12 py-20">
+      <div className="mx-auto max-w-7xl xl:max-w-[1400px]">
         <Reveal className="mx-auto max-w-2xl text-center">
           <span className="text-xs font-semibold uppercase tracking-[0.16em] text-sage">
             Healthcare Guide

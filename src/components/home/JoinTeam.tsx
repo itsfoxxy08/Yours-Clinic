@@ -4,8 +4,8 @@ import { Reveal } from "@/components/Reveal";
 
 export function JoinTeam() {
   return (
-    <section className="px-5 pb-24">
-      <Reveal className="mx-auto max-w-6xl">
+    <section className="px-5 sm:px-8 xl:px-12 pb-24">
+      <Reveal className="mx-auto max-w-7xl xl:max-w-[1400px]">
         <div className="flex flex-col items-start gap-6 rounded-[2rem] bg-primary px-8 py-12 text-primary-foreground md:flex-row md:items-center md:justify-between md:px-14">
           <div>
             <h3 className="font-serif text-3xl text-primary-foreground">

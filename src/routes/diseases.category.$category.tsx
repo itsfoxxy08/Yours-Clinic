@@ -94,8 +94,8 @@ function CategoryPage() {
 
   return (
     <div>
-      <section className="sanctuary rule-grid px-5 pb-16 pt-16 md:pt-24">
-        <div className="mx-auto max-w-6xl">
+      <section className="sanctuary rule-grid px-5 sm:px-8 xl:px-12 pb-16 pt-16 md:pt-24">
+        <div className="mx-auto max-w-7xl xl:max-w-[1400px]">
           <Link
             to="/diseases"
             className="focus-gold inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
@@ -127,8 +127,8 @@ function CategoryPage() {
         </div>
       </section>
 
-      <section className="px-5 py-8">
-        <div className="mx-auto max-w-6xl">
+      <section className="px-5 sm:px-8 xl:px-12 py-8">
+        <div className="mx-auto max-w-7xl xl:max-w-[1400px]">
           <Reveal>
             <h2 className="text-2xl text-foreground md:text-3xl">
               Symptoms we look for
@@ -189,8 +189,8 @@ function CategoryPage() {
         </div>
       </section>
 
-      <section className="px-5 pb-20 pt-8">
-        <div className="mx-auto max-w-6xl">
+      <section className="px-5 sm:px-8 xl:px-12 pb-20 pt-8">
+        <div className="mx-auto max-w-7xl xl:max-w-[1400px]">
           <Reveal>
             <h2 className="text-2xl text-foreground md:text-3xl">
               Conditions in {meta.label}
@@ -207,8 +207,8 @@ function CategoryPage() {
         </div>
       </section>
 
-      <section className="sanctuary px-5 pb-28">
-        <div className="mx-auto max-w-6xl">
+      <section className="sanctuary px-5 sm:px-8 xl:px-12 pb-28">
+        <div className="mx-auto max-w-7xl xl:max-w-[1400px]">
           <h2 className="text-sm font-semibold uppercase tracking-[0.16em] text-foreground">
             Other departments
           </h2>

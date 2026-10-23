@@ -54,8 +54,8 @@ export function About() {
   }, []);
 
   return (
-    <section id="about" className="px-5 py-28">
-      <div className="mx-auto max-w-6xl">
+    <section id="about" className="px-5 sm:px-8 xl:px-12 py-28">
+      <div className="mx-auto max-w-7xl xl:max-w-[1400px]">
         <div className="grid gap-14 lg:grid-cols-2 lg:items-center">
           <Reveal>
             <div className="tactile relative overflow-hidden rounded-[2.5rem] ring-1 ring-gold/25">
