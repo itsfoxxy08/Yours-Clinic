@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Menu, Moon, Sun, X, ShieldCheck, Lock } from "lucide-react";
+import { Menu, Moon, Sun, X, ShieldCheck, Pill, Truck } from "lucide-react";
 import logoAsset from "@/assets/yours-logo-trim.png";
 import { SocialLinks } from "@/components/SocialLinks";
 import { AdminLoginModal } from "@/components/AdminLoginModal";
 import { OrderMedicinesModal } from "@/components/home/OrderMedicinesModal";
-import { Pill, Truck } from "lucide-react";
 
 const links: { label: string; to: "/" | "/diseases"; hash?: string }[] = [
   { label: "Home", to: "/" },
