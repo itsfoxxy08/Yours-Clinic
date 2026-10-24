@@ -10,7 +10,7 @@ export function FeaturedDiseases() {
   return (
     <section
       id="diseases"
-      className="sanctuary rule-grid bg-card/25 px-5 sm:px-8 xl:px-12 py-32"
+      className="relative px-5 sm:px-8 xl:px-12 py-24 md:py-32"
     >
       <div className="mx-auto max-w-7xl xl:max-w-[1400px]">
         <Reveal className="mx-auto max-w-2xl text-center">

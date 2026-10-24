@@ -11,7 +11,7 @@ const parts = [
 
 export function Hero() {
   return (
-    <section id="home" className="sanctuary paper-grain relative px-5 sm:px-8 xl:px-12 pb-20 pt-16 md:pt-24">
+    <section id="home" className="relative px-5 sm:px-8 xl:px-12 pb-20 pt-6 md:pt-10">
       <div className="mx-auto grid max-w-7xl xl:max-w-[1400px] items-center gap-10 lg:gap-16 lg:grid-cols-[1.1fr_0.9fr]">
         <Reveal>
           <h1 className="display-xl text-foreground">

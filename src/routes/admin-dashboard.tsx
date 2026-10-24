@@ -323,31 +323,31 @@ function AdminDashboardPage() {
   };
 
   useEffect(() => {
-    if (session) {
-      loadRecords(true);
-      loadOrders();
-      loadCliniciansList();
+    if (!session) return;
 
-      // Subscribe to live postgres changes from Supabase across all sessions and devices
-      const unSubPatients = subscribeToPatientRecordsRealtime((fresh) => setRecords(fresh));
-      const unSubOrders = subscribeToMedicineOrdersRealtime((fresh) => setOrders(fresh));
-      const unSubClinicians = subscribeToCliniciansRealtime((fresh) => setClinicians(fresh));
+    loadRecords(true);
+    loadOrders();
+    loadCliniciansList();
 
-      const handlePatientUpdate = () => loadRecords();
-      const handleOrdersUpdate = () => loadOrders();
-      window.addEventListener("yc-patients-updated", handlePatientUpdate);
-      window.addEventListener("yc-orders-updated", handleOrdersUpdate);
-      window.addEventListener("storage", handlePatientUpdate);
+    // Subscribe to live postgres changes from Supabase across all sessions and devices
+    const unSubPatients = subscribeToPatientRecordsRealtime((fresh) => setRecords(fresh));
+    const unSubOrders = subscribeToMedicineOrdersRealtime((fresh) => setOrders(fresh));
+    const unSubClinicians = subscribeToCliniciansRealtime((fresh) => setClinicians(fresh));
 
-      return () => {
-        unSubPatients();
-        unSubOrders();
-        unSubClinicians();
-        window.removeEventListener("yc-patients-updated", handlePatientUpdate);
-        window.removeEventListener("yc-orders-updated", handleOrdersUpdate);
-        window.removeEventListener("storage", handlePatientUpdate);
-      };
-    }
+    const handlePatientUpdate = () => loadRecords();
+    const handleOrdersUpdate = () => loadOrders();
+    window.addEventListener("yc-patients-updated", handlePatientUpdate);
+    window.addEventListener("yc-orders-updated", handleOrdersUpdate);
+    window.addEventListener("storage", handlePatientUpdate);
+
+    return () => {
+      unSubPatients();
+      unSubOrders();
+      unSubClinicians();
+      window.removeEventListener("yc-patients-updated", handlePatientUpdate);
+      window.removeEventListener("yc-orders-updated", handleOrdersUpdate);
+      window.removeEventListener("storage", handlePatientUpdate);
+    };
   }, [session]);
 
   const handleUpdateOrderSubmit = async (e: React.FormEvent) => {
@@ -627,7 +627,7 @@ function AdminDashboardPage() {
 
             <div className="flex items-center gap-2 flex-wrap">
               <button
-                onClick={loadRecords}
+                onClick={() => loadRecords()}
                 title="Refresh database records"
                 className="press focus-gold flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground hover:text-foreground hover:border-gold/40 transition-colors"
               >

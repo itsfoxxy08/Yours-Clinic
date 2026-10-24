@@ -43,8 +43,12 @@ export function SiteHeader() {
   const toggleTheme = () => {
     const next = !dark;
     setDark(next);
+    document.documentElement.classList.add("theme-transition");
     document.documentElement.classList.toggle("dark", next);
     window.localStorage.setItem("yc-theme", next ? "dark" : "light");
+    window.setTimeout(() => {
+      document.documentElement.classList.remove("theme-transition");
+    }, 450);
   };
 
   return (
@@ -104,13 +108,13 @@ export function SiteHeader() {
             />
           </Link>
 
-          <nav aria-label="Primary" className="hidden items-center gap-7 lg:flex">
+          <nav aria-label="Primary" className="hidden items-center gap-3.5 xl:gap-5 lg:flex">
             {links.map((l) => (
               <Link
                 key={l.label}
                 to={l.to}
                 {...(l.hash ? { hash: l.hash } : {})}
-                className="link-gold focus-gold text-[0.7rem] font-extrabold uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:text-foreground"
+                className="link-gold focus-gold text-[0.7rem] font-extrabold uppercase tracking-[0.13em] text-muted-foreground transition-colors hover:text-foreground"
                 activeOptions={{ exact: true, includeHash: false }}
                 activeProps={{ className: "text-foreground", "aria-current": "page" }}
               >

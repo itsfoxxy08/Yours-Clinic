@@ -95,7 +95,7 @@ export function Awards() {
   }, [lightboxIndex, handleKeyDown]);
 
   return (
-    <section id="awards" className="scroll-mt-28 px-5 sm:px-8 xl:px-12 py-24 bg-card/40 border-y border-border/50 relative overflow-hidden">
+    <section id="awards" className="scroll-mt-28 px-5 sm:px-8 xl:px-12 py-24 relative">
       {/* Background soft ambient glow */}
       <div className="pointer-events-none absolute -top-40 right-1/4 h-96 w-96 rounded-full bg-gold/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-40 left-1/4 h-96 w-96 rounded-full bg-sage/10 blur-3xl" />

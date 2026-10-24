@@ -5,7 +5,7 @@ import { SocialLinks } from "@/components/SocialLinks";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border bg-card">
+    <footer className="border-t border-border/40 bg-card/85 backdrop-blur-md relative z-1">
       <div className="mx-auto grid max-w-7xl xl:max-w-[1400px] gap-12 px-5 sm:px-8 xl:px-12 py-16 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
           <img

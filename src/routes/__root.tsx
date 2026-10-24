@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -38,12 +39,19 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
+
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+      ? error
+      : "";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -54,9 +62,9 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <p className="mt-2 text-sm text-muted-foreground">
           Something went wrong on our end. You can try refreshing or head back home.
         </p>
-        {error?.message && (
+        {errorMessage && (
           <div className="mt-4 rounded-xl bg-destructive/10 border border-destructive/20 p-3 text-xs text-destructive font-mono text-left overflow-auto max-h-40">
-            {error.message}
+            {errorMessage}
           </div>
         )}
         <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -130,8 +138,17 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Toaster position="top-right" richColors />
+
+      {/* Global Uniform Continuous Grid & Ambient Atmosphere */}
+      <div className="site-backdrop-canvas" aria-hidden="true">
+        <div className="site-ambient-aura site-ambient-sage" />
+        <div className="site-ambient-aura site-ambient-gold" />
+        <div className="site-ambient-aura site-ambient-primary" />
+        <div className="site-grid-layer" />
+      </div>
+
       <SiteHeader />
-      <main id="main" tabIndex={-1} className="pt-[72px] md:pt-[108px] overflow-x-hidden max-w-full w-full">
+      <main id="main" tabIndex={-1} className="relative z-1 pt-[72px] md:pt-[108px] overflow-x-hidden max-w-full w-full">
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
       </main>

@@ -54,7 +54,7 @@ export function Booking() {
     "w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-sage";
 
   return (
-    <section id="book" className="border-y border-border bg-card/40 px-5 sm:px-8 xl:px-12 py-24">
+    <section id="book" className="relative px-5 sm:px-8 xl:px-12 py-24">
       <div className="mx-auto max-w-5xl xl:max-w-6xl">
         <Reveal className="text-center">
           <span className="text-xs font-semibold uppercase tracking-[0.16em] text-sage">
