@@ -32,6 +32,11 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
+              <Link to="/homecare-essentials" className="hover:text-primary">
+                HomeCare Essentials Kit
+              </Link>
+            </li>
+            <li>
               <Link to="/diseases" className="hover:text-primary">
                 General Diseases
               </Link>

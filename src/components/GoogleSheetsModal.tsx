@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   Download,
@@ -26,7 +27,29 @@ export function GoogleSheetsModal({
   onClose,
   records,
 }: GoogleSheetsModalProps) {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !mounted || typeof document === "undefined") return null;
 
   const dateStr = new Date().toISOString().slice(0, 10);
   const fileName = `Yours_Clinic_Patient_Records_GoogleSheets_${dateStr}.csv`;
@@ -76,10 +99,12 @@ export function GoogleSheetsModal({
     toast.info("Opening Google Sheets Workspace in new tab...");
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-5 animate-in fade-in"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-2 sm:p-5 animate-in fade-in"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
     >
       <div
         className="relative w-full max-w-6xl max-h-[94vh] flex flex-col rounded-2xl bg-[#ffffff] text-slate-900 border border-emerald-600/40 shadow-2xl overflow-hidden font-sans"
@@ -267,6 +292,7 @@ export function GoogleSheetsModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

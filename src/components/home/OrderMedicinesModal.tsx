@@ -32,6 +32,12 @@ interface OrderMedicinesModalProps {
 
 const MEDICINE_PACKAGES = [
   {
+    id: "homecare",
+    title: "HomeCare Essentials 15-Remedy Kit",
+    desc: "Doctor-curated everyday household kit with 15 standard remedies & safety handbook.",
+    price: 1899,
+  },
+  {
     id: "custom",
     title: "Custom Prescribed Homeopathic Remedy",
     desc: "Formulated specifically according to your Yours Clinic doctor consultation.",

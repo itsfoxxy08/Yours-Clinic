@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   Upload,
@@ -28,6 +29,27 @@ export function UploadReportModal({
   patient,
   onSuccess,
 }: UploadReportModalProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
   const [activeSource, setActiveSource] = useState<"device" | "camera">("device");
   const [title, setTitle] = useState("");
   const [reportType, setReportType] = useState<PatientReport["type"]>("prescription");
@@ -195,10 +217,14 @@ export function UploadReportModal({
     }
   };
 
-  return (
+  if (!isOpen || !patient || !mounted || typeof document === "undefined") return null;
+
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in"
       onClick={handleClose}
+      role="dialog"
+      aria-modal="true"
     >
       <div
         className="relative w-full max-w-lg rounded-3xl bg-card border border-gold/40 shadow-2xl overflow-hidden p-6 sm:p-7 glide-in"
@@ -437,6 +463,7 @@ export function UploadReportModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

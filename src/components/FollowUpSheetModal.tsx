@@ -1,4 +1,5 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Printer, Download, Sparkles, FileText, CheckCircle2 } from "lucide-react";
 import { logoBase64 } from "@/assets/logo-base64";
 import type { PatientRecord } from "@/lib/patient-service";
@@ -16,8 +17,29 @@ export function FollowUpSheetModal({
   records,
 }: FollowUpSheetModalProps) {
   const printRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !mounted || typeof document === "undefined") return null;
 
   // Group records into pages of 20 items per page (matching the exact sheet layout)
   const ROWS_PER_PAGE = 20;
@@ -251,10 +273,12 @@ export function FollowUpSheetModal({
     toast.success("📄 Follow-up Sheet downloaded in exact form layout!");
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 animate-in fade-in"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6 animate-in fade-in"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
     >
       <div
         className="relative w-full max-w-6xl max-h-[92vh] flex flex-col rounded-3xl bg-card border border-gold/40 shadow-2xl overflow-hidden"
@@ -453,6 +477,7 @@ export function FollowUpSheetModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

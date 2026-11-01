@@ -6,8 +6,9 @@ import { SocialLinks } from "@/components/SocialLinks";
 import { AdminLoginModal } from "@/components/AdminLoginModal";
 import { OrderMedicinesModal } from "@/components/home/OrderMedicinesModal";
 
-const links: { label: string; to: "/" | "/diseases"; hash?: string }[] = [
+const links: { label: string; to: "/" | "/diseases" | "/homecare-essentials"; hash?: string }[] = [
   { label: "Home", to: "/" },
+  { label: "HomeCare Essentials", to: "/homecare-essentials" },
   { label: "Diseases", to: "/diseases" },
   { label: "Our Clinicians", to: "/", hash: "clinicians" },
   { label: "Awards", to: "/", hash: "awards" },

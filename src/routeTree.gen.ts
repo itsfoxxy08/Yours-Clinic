@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminDashboardRouteImport } from './routes/admin-dashboard'
+import { Route as HomecareEssentialsRouteImport } from './routes/homecare-essentials'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as DiseasesIndexRouteImport } from './routes/diseases.index'
 import { Route as DiseasesSlugRouteImport } from './routes/diseases.$slug'
@@ -24,6 +25,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/admin-dashboard',
   path: '/admin-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomecareEssentialsRoute = HomecareEssentialsRouteImport.update({
+  id: '/homecare-essentials',
+  path: '/homecare-essentials',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -51,6 +57,7 @@ const DiseasesCategoryCategoryRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin-dashboard': typeof AdminDashboardRoute
+  '/homecare-essentials': typeof HomecareEssentialsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/diseases/$slug': typeof DiseasesSlugRoute
   '/diseases/': typeof DiseasesIndexRoute
@@ -59,6 +66,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin-dashboard': typeof AdminDashboardRoute
+  '/homecare-essentials': typeof HomecareEssentialsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/diseases/$slug': typeof DiseasesSlugRoute
   '/diseases': typeof DiseasesIndexRoute
@@ -68,6 +76,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin-dashboard': typeof AdminDashboardRoute
+  '/homecare-essentials': typeof HomecareEssentialsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/diseases/$slug': typeof DiseasesSlugRoute
   '/diseases/': typeof DiseasesIndexRoute
@@ -78,6 +87,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin-dashboard'
+    | '/homecare-essentials'
     | '/sitemap.xml'
     | '/diseases/$slug'
     | '/diseases/'
@@ -86,6 +96,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin-dashboard'
+    | '/homecare-essentials'
     | '/sitemap.xml'
     | '/diseases/$slug'
     | '/diseases'
@@ -94,6 +105,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin-dashboard'
+    | '/homecare-essentials'
     | '/sitemap.xml'
     | '/diseases/$slug'
     | '/diseases/'
@@ -103,6 +115,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  HomecareEssentialsRoute: typeof HomecareEssentialsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   DiseasesSlugRoute: typeof DiseasesSlugRoute
   DiseasesIndexRoute: typeof DiseasesIndexRoute
@@ -123,6 +136,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-dashboard'
       fullPath: '/admin-dashboard'
       preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/homecare-essentials': {
+      id: '/homecare-essentials'
+      path: '/homecare-essentials'
+      fullPath: '/homecare-essentials'
+      preLoaderRoute: typeof HomecareEssentialsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -159,6 +179,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  HomecareEssentialsRoute: HomecareEssentialsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   DiseasesSlugRoute: DiseasesSlugRoute,
   DiseasesIndexRoute: DiseasesIndexRoute,

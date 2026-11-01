@@ -148,7 +148,7 @@ function RootComponent() {
       </div>
 
       <SiteHeader />
-      <main id="main" tabIndex={-1} className="relative z-1 pt-[72px] md:pt-[108px] overflow-x-hidden max-w-full w-full">
+      <main id="main" tabIndex={-1} className="relative pt-[72px] md:pt-[108px] overflow-x-hidden max-w-full w-full">
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
       </main>

@@ -12,6 +12,7 @@ export const Route = createFileRoute("/sitemap.xml")({
       GET: () => {
         const entries = [
           urlEntry(abs("/"), "1.0", "weekly"),
+          urlEntry(abs("/homecare-essentials"), "0.95", "daily"),
           urlEntry(abs("/diseases"), "0.9", "weekly"),
           ...categories.map((c) => urlEntry(abs(`/diseases/category/${c}`), "0.7")),
           ...diseases.map((d) => urlEntry(abs(`/diseases/${d.slug}`), "0.8")),
